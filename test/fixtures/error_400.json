@@ -1,0 +1,1 @@
+{"codigo":"VALIDACION","mensaje":"Hay datos no válidos en la solicitud","detalles":{"promCarrerasContra":"El promedio de carreras en contra es obligatorio","rachaUlt3":"La racha es obligatoria","rivalFuerza":"Indica la fuerza del rival","promCarrerasFavor":"El promedio de carreras a favor es obligatorio","localVisitante":"Indica Local o Visitante"}}
