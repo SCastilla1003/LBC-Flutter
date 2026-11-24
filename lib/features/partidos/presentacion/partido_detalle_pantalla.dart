@@ -106,7 +106,10 @@ class _Dato extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Chip(avatar: Icon(icono, size: 16), label: Text(texto));
+      Chip(
+        avatar: Icon(icono, size: 16, color: Theme.of(context).colorScheme.primary),
+        label: Text(texto),
+      );
 }
 
 class _Marcador extends StatelessWidget {
@@ -126,47 +129,24 @@ class _Marcador extends StatelessWidget {
         p.idEquipoGanador != null && p.idEquipoGanador == p.equipoLocal.id;
     final ganaV =
         p.idEquipoGanador != null && p.idEquipoGanador == p.equipoVisitante.id;
-    final tinta = tema.colorScheme.onSurface;
-    final oscuro = tema.brightness == Brightness.dark;
+    // Tablero de estadio: verde noche, cifras amarillas y canto amarillo.
+    const tinta = ColoresMarca.tintaBarra;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: oscuro
-              ? const [Color(0xFF251E1B), Color(0xFF2D2420)]
-              : const [
-                  ColoresMarca.blanco,
-                  Color(0xFFFFFCF6),
-                  Color(0xFFFFF7EA),
-                ],
-        ),
-        border: Border.all(
-          color: oscuro
-              ? tema.colorScheme.outlineVariant
-              : ColoresMarca.rojo.withValues(alpha: 0.13),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        gradient: ColoresMarca.tablero,
         boxShadow: [
           BoxShadow(
-            color: oscuro
-                ? Colors.black.withValues(alpha: 0.30)
-                : ColoresMarca.rojoProfundo.withValues(alpha: 0.07),
-            blurRadius: 22,
-            offset: const Offset(0, 9),
+            color: ColoresMarca.verdeNoche.withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 4,
-            decoration: const BoxDecoration(
-              gradient: ColoresMarca.franjaInstitucional,
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
             child: Row(
@@ -203,20 +183,17 @@ class _Marcador extends StatelessWidget {
                                   '${p.carrerasEquipoLocal}-${p.carrerasEquipoVisitante}',
                               builder: (context, t) => Text(
                                 '${(p.carrerasEquipoLocal * t).round()} – ${(p.carrerasEquipoVisitante * t).round()}',
-                                style: estiloCifra(tema.textTheme.displaySmall)
+                                style: estiloMarcador(tema.textTheme.displayMedium)
                                     ?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      color: tema.colorScheme.primary,
-                                      letterSpacing: -1.5,
+                                      fontSize: 56,
+                                      color: ColoresMarca.amarillo,
                                     ),
                               ),
                             )
                           : Text(
-                              'vs',
-                              style: tema.textTheme.headlineMedium?.copyWith(
-                                color: tema.colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w800,
-                              ),
+                              'VS',
+                              style: estiloMarcador(tema.textTheme.headlineMedium)
+                                  ?.copyWith(color: ColoresMarca.amarillo, letterSpacing: 1),
                             ),
                     ),
                     Expanded(
@@ -254,7 +231,7 @@ class _Marcador extends StatelessWidget {
                               ),
                               Container(
                                 width: 2,
-                                color: tema.colorScheme.outlineVariant,
+                                color: ColoresMarca.verdeNoche,
                               ),
                               Expanded(
                                 flex: ((1 - fraccionL) * 1000).round(),
@@ -270,6 +247,7 @@ class _Marcador extends StatelessWidget {
               ],
             ),
           ),
+          Container(height: 5, color: ColoresMarca.amarillo),
         ],
       ),
     );
@@ -343,9 +321,12 @@ class _Lado extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: tema.textTheme.titleSmall?.copyWith(
-              fontWeight: gana ? FontWeight.w900 : FontWeight.w600,
-              color: tinta,
+            style: tema.textTheme.titleMedium?.copyWith(
+              fontFamily: FuentesLbc.titular,
+              fontSize: 18,
+              height: 1.05,
+              fontWeight: gana ? FontWeight.w800 : FontWeight.w700,
+              color: gana ? ColoresMarca.amarillo : tinta,
             ),
           ),
           Text(

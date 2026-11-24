@@ -105,51 +105,95 @@ class _Marcador extends StatelessWidget {
     final tema = Theme.of(context);
     final p = partido;
     final marcado = p.estado == EstadoPartidoLiga.enJuego || p.estado == EstadoPartidoLiga.finalizado;
-    return Card(
+    const tinta = ColoresMarca.tintaBarra;
+    final ganaLocal = p.ganadorId == p.equipoLocal.id;
+    final ganaVisita = p.ganadorId == p.equipoVisita.id;
+    final estiloCarreras = estiloMarcador(tema.textTheme.displayMedium)?.copyWith(fontSize: 64);
+    Widget carreras(int v, bool gana) => Text(
+          '$v',
+          style: estiloCarreras?.copyWith(
+            color: gana ? ColoresMarca.amarillo : tinta.withValues(alpha: p.ganadorId == null ? 1 : 0.7),
+          ),
+        );
+    // Tablero de estadio: verde noche, cifras grandes y canto amarillo.
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        gradient: ColoresMarca.tablero,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: ColoresMarca.verdeNoche.withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          Container(
-            height: 4,
-            decoration: const BoxDecoration(
-              gradient: ColoresMarca.franjaInstitucional,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ChipEstadoPartido(estado: p.estado),
-                    Text(
-                      DateFormat("EEE d MMM · h:mm a", 'es').format(p.fechaHora),
-                      style: tema.textTheme.labelMedium?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+                    Flexible(
+                      child: Text(
+                        DateFormat("EEE d MMM · h:mm a", 'es').format(p.fechaHora),
+                        overflow: TextOverflow.ellipsis,
+                        style: tema.textTheme.labelMedium?.copyWith(color: tinta.withValues(alpha: 0.75)),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 Row(
                   children: [
-                    Expanded(child: _Lado(equipo: p.equipoLocal, ganador: p.ganadorId == p.equipoLocal.id)),
-                    Text(
-                      marcado ? '${p.marcador.local}  –  ${p.marcador.visita}' : 'vs',
-                      style: tema.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: p.ganadorId == p.equipoVisita.id, derecha: true)),
+                    Expanded(child: _Lado(equipo: p.equipoLocal, ganador: ganaLocal)),
+                    if (marcado)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          carreras(p.marcador.local, ganaLocal),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              '–',
+                              style: estiloCarreras?.copyWith(fontSize: 40, color: tinta.withValues(alpha: 0.5)),
+                            ),
+                          ),
+                          carreras(p.marcador.visita, ganaVisita),
+                        ],
+                      )
+                    else
+                      Text('VS', style: estiloCarreras?.copyWith(fontSize: 40, color: ColoresMarca.amarillo)),
+                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: ganaVisita, derecha: true)),
                   ],
                 ),
                 if (p.estadio != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    p.estadio!.nombre,
-                    style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.stadium_outlined, size: 15, color: tinta.withValues(alpha: 0.7)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          p.estadio!.nombre,
+                          overflow: TextOverflow.ellipsis,
+                          style: tema.textTheme.bodySmall?.copyWith(color: tinta.withValues(alpha: 0.75)),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
             ),
           ),
+          Container(height: 5, color: ColoresMarca.amarillo),
         ],
       ),
     );
@@ -171,21 +215,24 @@ class _Lado extends StatelessWidget {
       textAlign: derecha ? TextAlign.right : TextAlign.left,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: tema.textTheme.titleSmall?.copyWith(
-        fontWeight: ganador ? FontWeight.w900 : FontWeight.w600,
-        color: ganador ? ColoresMarca.verdeTexto : tema.colorScheme.onSurface,
+      style: tema.textTheme.titleMedium?.copyWith(
+        fontFamily: FuentesLbc.titular,
+        fontSize: 18,
+        height: 1.05,
+        fontWeight: ganador ? FontWeight.w800 : FontWeight.w700,
+        color: ganador ? ColoresMarca.amarillo : ColoresMarca.tintaBarra,
       ),
     );
-    final escudo = EscudoLiga(equipo: equipo, tamano: 52);
-    final columna = Column(
+    final escudo = EscudoLiga(equipo: equipo, tamano: 56);
+    return Column(
       crossAxisAlignment: derecha ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [escudo, const SizedBox(height: 8), nombre],
+      children: [escudo, const SizedBox(height: 10), nombre],
     );
-    return columna;
   }
 }
 
 /// Marcador por entrada: visita arriba, local abajo. Las entradas sin jugar salen con "·".
+/// Cabecera verde noche como un tablero; la columna de carreras va resaltada.
 class _TablaEntradas extends StatelessWidget {
   const _TablaEntradas({required this.partido});
 
@@ -196,62 +243,100 @@ class _TablaEntradas extends StatelessWidget {
     final p = partido;
     final entradas = p.lineScore.entradas;
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
     String celda(int? v) => v?.toString() ?? '·';
+    final cifra = estiloMarcador(tema.textTheme.titleMedium)?.copyWith(fontSize: 18, color: esquema.onSurface);
+    final cabecera =
+        estiloMarcador(tema.textTheme.labelLarge)?.copyWith(fontSize: 14, color: ColoresMarca.tintaBarra);
 
-    DataRow fila(String abrev, int? Function(EntradaLineScore) pick, int r, int h, int e) => DataRow(cells: [
-          DataCell(Text(abrev, style: const TextStyle(fontWeight: FontWeight.w800))),
-          for (final en in entradas) DataCell(Text(celda(pick(en)), style: estiloCifra(tema.textTheme.bodyMedium))),
-          DataCell(Text('$r', style: const TextStyle(fontWeight: FontWeight.w900))),
-          DataCell(Text('$h', style: estiloCifra(tema.textTheme.bodyMedium))),
-          DataCell(Text('$e', style: estiloCifra(tema.textTheme.bodyMedium))),
-        ]);
+    Widget c(String t, TextStyle? e, {Color? fondo, double alto = 40, Alignment al = Alignment.center}) => Container(
+          height: alto,
+          alignment: al,
+          color: fondo,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(t, style: e),
+        );
+
+    final resalte = esquema.secondaryContainer;
+    final tintaResalte = esquema.onSecondaryContainer;
+
+    TableRow fila(String abrev, int? Function(EntradaLineScore) pick, int r, int h, int e, {bool ultima = false}) =>
+        TableRow(
+          decoration: BoxDecoration(
+            border: ultima ? null : Border(bottom: BorderSide(color: esquema.outlineVariant)),
+          ),
+          children: [
+            c(abrev, cifra?.copyWith(fontSize: 16, letterSpacing: 0.8), al: Alignment.centerLeft),
+            for (final en in entradas) c(celda(pick(en)), cifra),
+            c('$r', cifra?.copyWith(fontSize: 20, color: tintaResalte), fondo: resalte),
+            c('$h', cifra),
+            c('$e', cifra),
+          ],
+        );
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 4),
-              child: Text('Marcador por entrada', style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowHeight: 36,
-                dataRowMinHeight: 36,
-                dataRowMaxHeight: 40,
-                columnSpacing: 14,
-                columns: [
-                  const DataColumn(label: Text('')),
-                  for (final en in entradas) DataColumn(numeric: true, label: Text('${en.numero}')),
-                  const DataColumn(numeric: true, label: Text('R', style: TextStyle(fontWeight: FontWeight.w900))),
-                  const DataColumn(numeric: true, label: Text('H')),
-                  const DataColumn(numeric: true, label: Text('E')),
-                ],
-                rows: [
-                  fila(p.equipoVisita.abreviatura, (e) => e.visita, p.marcador.visita, p.hits.visita, p.errores.visita),
-                  fila(p.equipoLocal.abreviatura, (e) => e.local, p.marcador.local, p.hits.local, p.errores.local),
-                ],
-              ),
-            ),
-            if (p.lineScore.entradasExtra)
-              Padding(
-                padding: const EdgeInsets.only(left: 8, top: 6),
-                child: Text(
-                  'Partido de ${entradas.length} entradas (más de las ${p.lineScore.entradasProgramadas} programadas).',
-                  style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Text('Marcador por entrada', style: tema.textTheme.titleLarge?.copyWith(fontSize: 20)),
+          ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Table(
+                defaultColumnWidth: const FixedColumnWidth(34),
+                columnWidths: {
+                  0: const FixedColumnWidth(58),
+                  entradas.length + 1: const FixedColumnWidth(40),
+                  entradas.length + 2: const FixedColumnWidth(36),
+                  entradas.length + 3: const FixedColumnWidth(36),
+                },
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                border: TableBorder(
+                  left: BorderSide(color: esquema.outlineVariant),
+                  right: BorderSide(color: esquema.outlineVariant),
+                  bottom: BorderSide(color: esquema.outlineVariant),
                 ),
+                children: [
+                  TableRow(
+                    decoration: const BoxDecoration(color: ColoresMarca.verdeNoche),
+                    children: [
+                      c('', cabecera, alto: 32),
+                      for (final en in entradas) c('${en.numero}', cabecera, alto: 32),
+                      c('R', cabecera?.copyWith(color: ColoresMarca.amarillo), alto: 32),
+                      c('H', cabecera, alto: 32),
+                      c('E', cabecera, alto: 32),
+                    ],
+                  ),
+                  fila(p.equipoVisita.abreviatura, (e) => e.visita, p.marcador.visita, p.hits.visita,
+                      p.errores.visita),
+                  fila(p.equipoLocal.abreviatura, (e) => e.local, p.marcador.local, p.hits.local, p.errores.local,
+                      ultima: true),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+          if (p.lineScore.entradasExtra)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Text(
+                'Partido de ${entradas.length} entradas (más de las ${p.lineScore.entradasProgramadas} programadas).',
+                style: tema.textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
-/// Situación en vivo: outs, cuenta, bateador, lanzador y corredores.
+// Situación en vivo: outs, cuenta, bateador, lanzador y corredores.
 class _Situacion extends StatelessWidget {
   const _Situacion({required this.situacion});
 
@@ -274,12 +359,22 @@ class _Situacion extends StatelessWidget {
         );
 
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: EdgeInsets.zero,
       child: TarjetaLiga(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('En vivo', style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(color: ColoresMarca.rojo, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text('En vivo', style: tema.textTheme.titleLarge?.copyWith(fontSize: 20)),
+              ],
+            ),
             const SizedBox(height: 6),
             linea('Outs', '${s.outs} / 3'),
             linea('Cuenta', '${s.bolas} bolas · ${s.strikes} strikes'),

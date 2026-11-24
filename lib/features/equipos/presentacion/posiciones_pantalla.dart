@@ -111,17 +111,10 @@ class _Portada extends StatelessWidget {
         height: 60,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [ColoresMarca.dorado, Color(0xFFFFE7A3)],
-          ),
-          border: Border.all(
-            color: ColoresMarca.doradoOscuro.withValues(alpha: 0.35),
-          ),
+          color: ColoresMarca.amarillo,
           boxShadow: [
             BoxShadow(
-              color: ColoresMarca.doradoOscuro.withValues(alpha: 0.20),
+              color: ColoresMarca.doradoOscuro.withValues(alpha: 0.25),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -129,7 +122,7 @@ class _Portada extends StatelessWidget {
         ),
         child: const Icon(
           Icons.emoji_events_rounded,
-          color: ColoresMarca.rojoProfundo,
+          color: ColoresMarca.tintaSobreAmarillo,
           size: 30,
         ),
       ),
@@ -255,9 +248,7 @@ class _Tabla extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Clasificación',
-                    style: tema.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: tema.textTheme.titleLarge?.copyWith(fontSize: 21),
                   ),
                 ),
                 Text(
@@ -269,16 +260,19 @@ class _Tabla extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(),
           LayoutBuilder(
             builder: (context, c) {
               final ancha = c.maxWidth >= 600;
               return Column(
                 children: [
                   _Encabezado(ancha: ancha),
-                  const Divider(),
-                  for (final p in posiciones)
-                    _Fila(p: p, ancha: ancha, idTemporada: idTemporada),
+                  for (var i = 0; i < posiciones.length; i++)
+                    _Fila(
+                      p: posiciones[i],
+                      ancha: ancha,
+                      idTemporada: idTemporada,
+                      par: i.isEven,
+                    ),
                 ],
               );
             },
@@ -298,17 +292,23 @@ class _Encabezado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final estilo = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(fontWeight: FontWeight.w800);
+    // Cabecera tipo tablero: verde noche con la columna de % en amarillo.
+    final estilo = estiloMarcador(Theme.of(context).textTheme.labelLarge)
+        ?.copyWith(fontSize: 14, color: ColoresMarca.tintaBarra);
     Widget n(String t, [String? ayuda]) => SizedBox(
       width: _anchoNum,
       child: Tooltip(
         message: ayuda ?? t,
-        child: Text(t, textAlign: TextAlign.end, style: estilo),
+        child: Text(
+          t,
+          textAlign: TextAlign.end,
+          style: t == '%' ? estilo?.copyWith(color: ColoresMarca.amarillo) : estilo,
+        ),
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+    return Container(
+      color: ColoresMarca.verdeNoche,
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
       child: Row(
         children: [
           SizedBox(width: 32, child: Text('#', style: estilo)),
@@ -335,11 +335,13 @@ class _Fila extends StatelessWidget {
     required this.p,
     required this.ancha,
     required this.idTemporada,
+    this.par = false,
   });
 
   final Posicion p;
   final bool ancha;
   final String idTemporada;
+  final bool par;
 
   @override
   Widget build(BuildContext context) {
@@ -355,11 +357,12 @@ class _Fila extends StatelessWidget {
     );
     final color = ColoresEquipo.de(context, p.color);
     final podio = p.posicion <= 3;
+    // El líder resalta en amarillo suave; el resto alterna filas (cebra).
     final fondo = p.posicion == 1
-        ? tema.colorScheme.primaryContainer.withValues(alpha: 0.42)
-        : podio
-        ? tema.colorScheme.surfaceContainer.withValues(alpha: 0.55)
-        : Colors.transparent;
+        ? tema.colorScheme.secondaryContainer
+        : par
+        ? tema.colorScheme.surfaceContainerLowest
+        : tema.colorScheme.surfaceContainerLow;
     return Material(
       color: fondo,
       child: InkWell(
@@ -378,7 +381,7 @@ class _Fila extends StatelessWidget {
                             Icons.emoji_events_rounded,
                             size: 15,
                             color: switch (p.posicion) {
-                              1 => ColoresMarca.doradoOscuro,
+                              1 => tema.colorScheme.onSecondaryContainer,
                               2 => const Color(0xFF8C8C8C),
                               _ => const Color(0xFFB87333),
                             },
@@ -386,13 +389,18 @@ class _Fila extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             '${p.posicion}',
-                            style: cifra?.copyWith(fontWeight: FontWeight.w800),
+                            style: estiloMarcador(tema.textTheme.titleMedium)
+                                ?.copyWith(fontSize: 18),
                           ),
                         ],
                       )
                     : Text(
                         '${p.posicion}',
-                        style: cifra?.copyWith(fontWeight: FontWeight.w700),
+                        style: estiloMarcador(tema.textTheme.titleMedium)
+                            ?.copyWith(
+                              fontSize: 18,
+                              color: tema.colorScheme.onSurfaceVariant,
+                            ),
                       ),
               ),
               FranjaColor(color: color, alto: 32),
@@ -408,7 +416,9 @@ class _Fila extends StatelessWidget {
                 child: Text(
                   p.nombre,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: podio ? FontWeight.w700 : FontWeight.w600,
+                  ),
                 ),
               ),
               n('${p.ganados}'),

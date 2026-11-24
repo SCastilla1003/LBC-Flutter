@@ -24,16 +24,19 @@ Widget _app(Widget hijo, {Brightness brillo = Brightness.light}) => MaterialApp(
 
 void main() {
   group('identidad visual', () {
-    test('el blanco es la base y la franja usa rojo, amarillo y verde', () {
+    test('el blanco es la base, verde y amarillo secundarios, rojo terciario', () {
       final tema = TemaLbc.claro();
       expect(ColoresMarca.primario, ColoresMarca.blanco);
       expect(tema.appBarTheme.backgroundColor, ColoresMarca.blanco);
       expect(tema.colorScheme.surfaceContainerLowest, ColoresMarca.blanco);
       expect(tema.scaffoldBackgroundColor.computeLuminance(), greaterThan(0.9));
+      expect(tema.colorScheme.primary, ColoresMarca.verdeCampo);
+      expect(tema.colorScheme.secondary, ColoresMarca.amarillo);
+      expect(tema.colorScheme.tertiary, ColoresMarca.rojo);
       expect(ColoresMarca.franjaInstitucional.colors, [
-        ColoresMarca.rojo,
-        ColoresMarca.dorado,
-        ColoresMarca.verde,
+        ColoresMarca.verdeCampo,
+        ColoresMarca.verdeVivo,
+        ColoresMarca.amarillo,
       ]);
     });
   });

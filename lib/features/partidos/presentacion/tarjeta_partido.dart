@@ -25,11 +25,11 @@ class TarjetaPartido extends StatelessWidget {
       if (p.estadio?.nombre != null) p.estadio!.nombre!,
     ].join(' · ');
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/temporadas/$idTemporada/partidos/${p.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -41,7 +41,7 @@ class TarjetaPartido extends StatelessWidget {
                 ),
                 ChipEstado(estado: p.estado),
               ]),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               _FilaEquipo(
                 equipo: p.equipoLocal,
                 carreras: p.finalizado || p.estado == EstadoPartido.enJuego ? p.carrerasEquipoLocal : null,
@@ -75,14 +75,22 @@ class _FilaEquipo extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final color = ColoresEquipo.de(context, equipo.color);
-    final peso = ganador ? FontWeight.w800 : FontWeight.w500;
+    final peso = ganador ? FontWeight.w800 : FontWeight.w600;
     return Row(children: [
-      ImagenApi(urlFoto: equipo.urlFoto, nombre: equipo.nombre ?? '?', tamano: 28, color: color),
+      ImagenApi(urlFoto: equipo.urlFoto, nombre: equipo.nombre ?? '?', tamano: 30, color: color),
       const SizedBox(width: 10),
       Expanded(
         child: Text.rich(
           TextSpan(children: [
-            TextSpan(text: equipo.nombre ?? 'Equipo eliminado', style: TextStyle(fontWeight: peso)),
+            TextSpan(
+              text: equipo.nombre ?? 'Equipo eliminado',
+              style: TextStyle(
+                fontFamily: FuentesLbc.titular,
+                fontSize: 17,
+                fontWeight: ganador ? FontWeight.w800 : FontWeight.w700,
+                color: ganador ? tema.colorScheme.onSurface : tema.colorScheme.onSurface.withValues(alpha: 0.85),
+              ),
+            ),
             TextSpan(
                 text: '  $etiqueta',
                 style: tema.textTheme.labelSmall?.copyWith(color: tema.colorScheme.onSurfaceVariant)),
@@ -93,10 +101,14 @@ class _FilaEquipo extends StatelessWidget {
       if (ganador) Icon(Icons.check_circle_rounded, size: 16, color: ColoresEstado.victoria, semanticLabel: 'Ganó'),
       if (carreras != null)
         SizedBox(
-          width: 36,
+          width: 40,
           child: Text('$carreras',
               textAlign: TextAlign.end,
-              style: estiloCifra(tema.textTheme.titleMedium)?.copyWith(fontWeight: peso)),
+              style: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(
+                fontSize: 24,
+                fontWeight: peso == FontWeight.w800 ? FontWeight.w800 : FontWeight.w700,
+                color: ganador ? tema.colorScheme.onSurface : tema.colorScheme.onSurfaceVariant,
+              )),
         ),
     ]);
   }
@@ -111,17 +123,20 @@ class ChipEstado extends StatelessWidget {
   Widget build(BuildContext context) {
     final esquema = Theme.of(context).colorScheme;
     final (fondo, tinta, icono) = switch (estado) {
-      EstadoPartido.finalizado => (esquema.surfaceContainerHighest, esquema.onSurfaceVariant, Icons.flag_rounded),
-      EstadoPartido.enJuego => (esquema.tertiaryContainer, esquema.onTertiaryContainer, Icons.play_circle_rounded),
-      EstadoPartido.programado => (esquema.secondaryContainer, esquema.onSecondaryContainer, Icons.schedule_rounded),
+      EstadoPartido.finalizado => (ColoresMarca.verdeNoche, ColoresMarca.tintaBarra, Icons.flag_rounded),
+      EstadoPartido.enJuego => (ColoresMarca.rojo, ColoresMarca.blanco, Icons.play_circle_rounded),
+      EstadoPartido.programado => (esquema.primaryContainer, esquema.onPrimaryContainer, Icons.schedule_rounded),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: fondo, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: fondo, borderRadius: BorderRadius.circular(6)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icono, size: 14, color: tinta),
+        Icon(icono, size: 13, color: tinta),
         const SizedBox(width: 4),
-        Text(estado.etiqueta, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: tinta)),
+        Text(
+          estado.etiqueta,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: tinta, letterSpacing: 0.6),
+        ),
       ]),
     );
   }

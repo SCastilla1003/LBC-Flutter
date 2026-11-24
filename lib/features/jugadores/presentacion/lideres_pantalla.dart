@@ -6,6 +6,7 @@ import '../../../core/charts/base_graficas.dart';
 import '../../../core/charts/ranking_animado.dart';
 import '../../../core/red/fallo_api.dart';
 import '../../../core/tema/colores_equipo.dart';
+import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/hero_lbc.dart';
@@ -249,16 +250,19 @@ class _PortadaLideres extends StatelessWidget {
         width: 58,
         height: 58,
         decoration: BoxDecoration(
-          color: esquema.primaryContainer.withValues(alpha: 0.7),
+          color: esquema.secondary,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: esquema.primary.withValues(alpha: 0.25),
-            width: 1.5,
-          ),
+          boxShadow: [
+            BoxShadow(
+              color: ColoresMarca.doradoOscuro.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Icon(
           Icons.workspace_premium_rounded,
-          color: esquema.onPrimaryContainer,
+          color: esquema.onSecondary,
           size: 30,
         ),
       ),

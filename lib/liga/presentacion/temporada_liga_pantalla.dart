@@ -143,8 +143,16 @@ class _TarjetaPartido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
     final p = partido;
     final marcado = p.estado == EstadoPartidoLiga.enJuego || p.estado == EstadoPartidoLiga.finalizado;
+    final cifra = estiloMarcador(tema.textTheme.headlineMedium)?.copyWith(fontSize: 34);
+    Widget carreras(int v, bool gana) => Text(
+          '$v',
+          style: cifra?.copyWith(
+            color: p.ganadorId == null || gana ? esquema.onSurface : esquema.onSurfaceVariant.withValues(alpha: 0.7),
+          ),
+        );
     return TarjetaLiga(
       onTap: () => context.go('/temporadas/$idTemporada/partidos/${p.id}'),
       child: Column(
@@ -154,9 +162,11 @@ class _TarjetaPartido extends StatelessWidget {
             children: [
               ChipEstadoPartido(estado: p.estado),
               const Spacer(),
+              Icon(Icons.schedule_rounded, size: 14, color: esquema.onSurfaceVariant),
+              const SizedBox(width: 4),
               Text(
                 DateFormat('h:mm a', 'es').format(p.fechaHora),
-                style: tema.textTheme.labelMedium?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+                style: tema.textTheme.labelMedium?.copyWith(color: esquema.onSurfaceVariant),
               ),
             ],
           ),
@@ -166,10 +176,19 @@ class _TarjetaPartido extends StatelessWidget {
               Expanded(child: _Equipo(equipo: p.equipoLocal, ganador: p.ganadorId == p.equipoLocal.id)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  marcado ? '${p.marcador.local} – ${p.marcador.visita}' : 'vs',
-                  style: tema.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
-                ),
+                child: marcado
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          carreras(p.marcador.local, p.ganadorId == p.equipoLocal.id),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text('–', style: cifra?.copyWith(fontSize: 24, color: esquema.outline)),
+                          ),
+                          carreras(p.marcador.visita, p.ganadorId == p.equipoVisita.id),
+                        ],
+                      )
+                    : Text('VS', style: cifra?.copyWith(fontSize: 22, color: esquema.primary, letterSpacing: 1)),
               ),
               Expanded(
                 child: _Equipo(
@@ -181,11 +200,22 @@ class _TarjetaPartido extends StatelessWidget {
             ],
           ),
           if (p.estadio != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              p.estadio!.nombre,
-              textAlign: TextAlign.center,
-              style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Container(height: 1, color: esquema.outlineVariant),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.stadium_outlined, size: 14, color: esquema.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    p.estadio!.nombre,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -209,13 +239,18 @@ class _Equipo extends StatelessWidget {
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       textAlign: alineadoDerecha ? TextAlign.right : TextAlign.left,
-      style: tema.textTheme.labelLarge?.copyWith(
-        fontWeight: ganador ? FontWeight.w900 : FontWeight.w600,
-        color: ganador ? ColoresMarca.verdeTexto : tema.colorScheme.onSurface,
+      style: tema.textTheme.titleMedium?.copyWith(
+        fontFamily: FuentesLbc.titular,
+        fontSize: 17,
+        height: 1.05,
+        fontWeight: ganador ? FontWeight.w800 : FontWeight.w700,
+        color: ganador ? tema.colorScheme.primary : tema.colorScheme.onSurface,
       ),
     );
     final escudo = EscudoLiga(equipo: equipo, tamano: 40);
-    final hijos = alineadoDerecha ? [Expanded(child: nombre), const SizedBox(width: 8), escudo] : [escudo, const SizedBox(width: 8), Expanded(child: nombre)];
+    final hijos = alineadoDerecha
+        ? [Expanded(child: nombre), const SizedBox(width: 8), escudo]
+        : [escudo, const SizedBox(width: 8), Expanded(child: nombre)];
     return Row(mainAxisAlignment: alineadoDerecha ? MainAxisAlignment.end : MainAxisAlignment.start, children: hijos);
   }
 }
@@ -229,6 +264,9 @@ class _PestanaPosiciones extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final valor = ref.watch(posicionesLigaProvider(idTemporada));
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final cabecera = estiloMarcador(tema.textTheme.labelLarge)?.copyWith(fontSize: 14, color: ColoresMarca.tintaBarra);
+    final cifra = estiloCifra(tema.textTheme.bodyMedium)?.copyWith(fontWeight: FontWeight.w600);
     return RecargableSimple(
       onRefresh: () => ref.refresh(posicionesLigaProvider(idTemporada).future).then((_) {}, onError: (_) {}),
       child: VistaAsync<List<PosicionLiga>>(
@@ -240,36 +278,84 @@ class _PestanaPosiciones extends ConsumerWidget {
         datos: (lista) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Column(
-                children: [
-                  Row(children: [
-                    const SizedBox(width: 26),
-                    const Expanded(child: SizedBox()),
-                    for (final t in ['G', 'P', 'PCT', 'CF', 'CC']) SizedBox(width: 40, child: Text(t, textAlign: TextAlign.center, style: tema.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w800))),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                // Cabecera de tabla tipo tablero.
+                Container(
+                  color: ColoresMarca.verdeNoche,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  child: Row(children: [
+                    SizedBox(width: 30, child: Text('#', style: cabecera)),
+                    Expanded(child: Text('Equipo', style: cabecera)),
+                    for (final t in ['G', 'P', 'PCT', 'CF', 'CC'])
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          t,
+                          textAlign: TextAlign.center,
+                          style: t == 'PCT' ? cabecera?.copyWith(color: ColoresMarca.amarillo) : cabecera,
+                        ),
+                      ),
                   ]),
-                  const Divider(),
-                  for (var i = 0; i < lista.length; i++)
-                    InkWell(
+                ),
+                for (var i = 0; i < lista.length; i++)
+                  Material(
+                    color: i == 0
+                        ? esquema.secondaryContainer
+                        : (i.isOdd ? esquema.surfaceContainerLow : esquema.surfaceContainerLowest),
+                    child: InkWell(
                       onTap: () => context.go('/temporadas/$idTemporada/equipos/${lista[i].equipo.id}'),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         child: Row(children: [
-                          SizedBox(width: 26, child: Text('${i + 1}', style: tema.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800))),
-                          EscudoLiga(equipo: lista[i].equipo, tamano: 28),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(lista[i].equipo.nombre, maxLines: 1, overflow: TextOverflow.ellipsis, style: tema.textTheme.labelLarge)),
-                          SizedBox(width: 40, child: Text('${lista[i].ganados}', textAlign: TextAlign.center)),
-                          SizedBox(width: 40, child: Text('${lista[i].perdidos}', textAlign: TextAlign.center)),
-                          SizedBox(width: 40, child: Text(lista[i].pct.toStringAsFixed(3), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700))),
-                          SizedBox(width: 40, child: Text('${lista[i].carrerasFavor}', textAlign: TextAlign.center)),
-                          SizedBox(width: 40, child: Text('${lista[i].carrerasContra}', textAlign: TextAlign.center)),
+                          SizedBox(
+                            width: 30,
+                            child: Text(
+                              '${i + 1}',
+                              style: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(
+                                fontSize: 22,
+                                color: i == 0 ? esquema.onSecondaryContainer : esquema.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          EscudoLiga(equipo: lista[i].equipo, tamano: 30),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Row(children: [
+                              Flexible(
+                                child: Text(
+                                  lista[i].equipo.nombre,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tema.textTheme.labelLarge,
+                                ),
+                              ),
+                              if (i == 0) ...[
+                                const SizedBox(width: 4),
+                                Icon(Icons.emoji_events_rounded, size: 15, color: esquema.onSecondaryContainer),
+                              ],
+                            ]),
+                          ),
+                          SizedBox(width: 40, child: Text('${lista[i].ganados}', textAlign: TextAlign.center, style: cifra)),
+                          SizedBox(width: 40, child: Text('${lista[i].perdidos}', textAlign: TextAlign.center, style: cifra)),
+                          SizedBox(
+                            width: 40,
+                            child: Text(
+                              lista[i].pct.toStringAsFixed(3),
+                              textAlign: TextAlign.center,
+                              style: cifra?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          SizedBox(
+                              width: 40, child: Text('${lista[i].carrerasFavor}', textAlign: TextAlign.center, style: cifra)),
+                          SizedBox(
+                              width: 40, child: Text('${lista[i].carrerasContra}', textAlign: TextAlign.center, style: cifra)),
                         ]),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -308,7 +394,11 @@ class _PestanaEquipos extends ConsumerWidget {
                     child: Column(children: [
                       EscudoLiga(equipo: e, tamano: 56),
                       const SizedBox(height: 10),
-                      Text(e.nombre, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(e.nombre,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontFamily: FuentesLbc.titular, fontSize: 17, fontWeight: FontWeight.w700, height: 1.1)),
                     ]),
                   ),
                 ),

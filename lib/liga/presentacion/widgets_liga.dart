@@ -7,10 +7,10 @@ import '../datos/modelos_liga.dart';
 String nombreJugador(JugadorResumenLiga j) => '${j.nombres} ${j.apellidos}';
 
 String etiquetaEstadoTemporada(EstadoTemporadaLiga e) => switch (e) {
-      EstadoTemporadaLiga.borrador => 'Borrador',
-      EstadoTemporadaLiga.activa => 'En curso',
-      EstadoTemporadaLiga.finalizada => 'Finalizada',
-    };
+  EstadoTemporadaLiga.borrador => 'Borrador',
+  EstadoTemporadaLiga.activa => 'En curso',
+  EstadoTemporadaLiga.finalizada => 'Finalizada',
+};
 
 /// Escudo circular: foto si el equipo tiene escudo, si no la abreviatura sobre su color.
 class EscudoLiga extends StatelessWidget {
@@ -21,6 +21,7 @@ class EscudoLiga extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
     final color = ColoresEquipo.de(context, equipo.color);
     final iniciales = Container(
       alignment: Alignment.center,
@@ -29,18 +30,30 @@ class EscudoLiga extends StatelessWidget {
         equipo.abreviatura.toUpperCase(),
         style: TextStyle(
           color: ColoresMarca.blanco,
-          fontWeight: FontWeight.w900,
-          fontSize: tamano * 0.28,
-          letterSpacing: 0.4,
+          fontFamily: FuentesLbc.titular,
+          fontWeight: FontWeight.w800,
+          fontSize: tamano * 0.34,
+          letterSpacing: 0.6,
+          height: 1,
         ),
       ),
     );
+    // Aro blanco y contorno fino, como un parche de gorra.
     return Container(
       width: tamano,
       height: tamano,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: ColoresMarca.dorado, width: 2),
+        color: esquema.surfaceContainerLowest,
+        border: Border.all(color: esquema.surfaceContainerLowest, width: 2),
+        boxShadow: [
+          BoxShadow(color: esquema.outlineVariant, spreadRadius: 1),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ClipOval(
         child: equipo.escudoUrl == null
@@ -55,7 +68,7 @@ class EscudoLiga extends StatelessWidget {
   }
 }
 
-/// Píldora con el estado del partido. EN VIVO lleva un punto que pulsa.
+/// Píldora con el estado del partido. EN VIVO va en rojo sólido con un punto.
 class ChipEstadoPartido extends StatelessWidget {
   const ChipEstadoPartido({super.key, required this.estado});
 
@@ -63,30 +76,76 @@ class ChipEstadoPartido extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (texto, color, enVivo) = switch (estado) {
-      EstadoPartidoLiga.enJuego => ('EN VIVO', ColoresMarca.rojo, true),
-      EstadoPartidoLiga.finalizado => ('FINAL', ColoresMarca.verde, false),
-      EstadoPartidoLiga.alineacionPublicada => ('ALINEACIÓN LISTA', ColoresMarca.doradoOscuro, false),
-      EstadoPartidoLiga.suspendido => ('SUSPENDIDO', const Color(0xFF7A7A7A), false),
-      EstadoPartidoLiga.programado => ('PROGRAMADO', const Color(0xFF4A6FA5), false),
+    final esquema = Theme.of(context).colorScheme;
+    // (texto, fondo, tinta, borde, punto en vivo)
+    final (texto, fondo, tinta, borde, enVivo) = switch (estado) {
+      EstadoPartidoLiga.enJuego => (
+        'EN VIVO',
+        ColoresMarca.rojo,
+        ColoresMarca.blanco,
+        null,
+        true,
+      ),
+      EstadoPartidoLiga.finalizado => (
+        'FINAL',
+        ColoresMarca.verdeNoche,
+        ColoresMarca.tintaBarra,
+        null,
+        false,
+      ),
+      EstadoPartidoLiga.alineacionPublicada => (
+        'ALINEACIÓN LISTA',
+        ColoresMarca.amarillo,
+        ColoresMarca.tintaSobreAmarillo,
+        null,
+        false,
+      ),
+      EstadoPartidoLiga.suspendido => (
+        'SUSPENDIDO',
+        esquema.surfaceContainerHigh,
+        esquema.onSurfaceVariant,
+        esquema.outlineVariant,
+        false,
+      ),
+      EstadoPartidoLiga.programado => (
+        'PROGRAMADO',
+        esquema.primaryContainer,
+        esquema.onPrimaryContainer,
+        esquema.primary.withValues(alpha: 0.3),
+        false,
+      ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        color: fondo,
+        borderRadius: BorderRadius.circular(6),
+        border: borde == null ? null : Border.all(color: borde),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (enVivo) ...[
-            Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: ColoresMarca.blanco,
+                shape: BoxShape.circle,
+              ),
+            ),
             const SizedBox(width: 6),
           ],
           Text(
             texto,
-            style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.6),
+            style: TextStyle(
+              color: tinta,
+              fontFamily: FuentesLbc.titular,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              letterSpacing: 1,
+              height: 1.1,
+            ),
           ),
         ],
       ),
@@ -94,7 +153,7 @@ class ChipEstadoPartido extends StatelessWidget {
   }
 }
 
-/// Título de sección con la franja institucional (rojo, amarillo, verde).
+/// Título de sección: titular condensado con el subrayado amarillo de la marca.
 class EncabezadoSeccion extends StatelessWidget {
   const EncabezadoSeccion(this.texto, {super.key});
 
@@ -104,21 +163,34 @@ class EncabezadoSeccion extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 18, 4, 10),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(4, 20, 4, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: const BoxDecoration(
-              gradient: ColoresMarca.franjaInstitucionalVertical,
-              borderRadius: BorderRadius.all(Radius.circular(4)),
-            ),
-          ),
-          const SizedBox(width: 10),
           Text(
             texto,
-            style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 0.2),
+            style: tema.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: ColoresMarca.amarillo,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  color: tema.colorScheme.outlineVariant,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -126,9 +198,14 @@ class EncabezadoSeccion extends StatelessWidget {
   }
 }
 
-/// Tarjeta blanca con sombra suave (modo claro) o superficie oscura (modo oscuro).
+/// Tarjeta blanca con borde fino (modo claro) o superficie oscura (modo oscuro).
 class TarjetaLiga extends StatelessWidget {
-  const TarjetaLiga({super.key, required this.child, this.onTap, this.padding = const EdgeInsets.all(16)});
+  const TarjetaLiga({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   final Widget child;
   final VoidCallback? onTap;
@@ -137,10 +214,10 @@ class TarjetaLiga extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
         child: Padding(padding: padding, child: child),
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/sesion/sesion.dart';
+import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/hero_lbc.dart';
 import '../datos/servicio_google.dart';
@@ -77,9 +78,7 @@ class CuentaPantalla extends ConsumerWidget {
                         Container(
                           height: 4,
                           decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFB5121B), Color(0xFFFFD166)],
-                            ),
+                            gradient: ColoresMarca.franjaInstitucional,
                           ),
                         ),
                         Padding(

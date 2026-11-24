@@ -23,25 +23,26 @@ class Seccion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                width: 4,
-                height: 34,
-                decoration: BoxDecoration(
-                  gradient: ColoresMarca.franjaInstitucionalVertical,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 10),
               if (icono != null) ...[
-                Icon(icono, size: 18, color: tema.colorScheme.primary),
-                const SizedBox(width: 6),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: esquema.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icono, size: 17, color: esquema.primary),
+                ),
+                const SizedBox(width: 10),
               ],
               Expanded(
                 child: Column(
@@ -49,17 +50,18 @@ class Seccion extends StatelessWidget {
                   children: [
                     Text(
                       titulo,
-                      style: tema.textTheme.titleMedium?.copyWith(
+                      style: tema.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w800,
+                        height: 1.1,
                       ),
                     ),
                     if (subtitulo != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.only(top: 3),
                         child: Text(
                           subtitulo!,
                           style: tema.textTheme.bodySmall?.copyWith(
-                            color: tema.colorScheme.onSurfaceVariant,
+                            color: esquema.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -69,7 +71,24 @@ class Seccion extends StatelessWidget {
               ?accion,
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          // Subrayado de marca: trazo amarillo corto sobre una regla fina.
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: ColoresMarca.amarillo,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: Container(height: 1, color: esquema.outlineVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           child,
         ],
       ),
@@ -95,18 +114,20 @@ class Cifra extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    // La cifra destacada es una placa de tablero: verde noche con el valor en
+    // amarillo. Las demás, tarjetas blancas con borde fino.
+    final colorValor = destacada ? ColoresMarca.amarillo : esquema.onSurface;
+    final colorEtiqueta = destacada
+        ? ColoresMarca.tintaBarra
+        : esquema.onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       decoration: BoxDecoration(
-        color: destacada
-            ? tema.colorScheme.primaryContainer
-            : tema.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(14),
-        border: destacada
-            ? null
-            : Border.all(
-                color: tema.colorScheme.outlineVariant.withValues(alpha: 0.65),
-              ),
+        color: destacada ? null : esquema.surfaceContainerLowest,
+        gradient: destacada ? ColoresMarca.tablero : null,
+        borderRadius: BorderRadius.circular(RadioLbc.tarjeta),
+        border: destacada ? null : Border.all(color: esquema.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,20 +135,16 @@ class Cifra extends StatelessWidget {
         children: [
           Text(
             valor,
-            style: estiloCifra(tema.textTheme.titleLarge)?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: destacada ? tema.colorScheme.onPrimaryContainer : null,
-            ),
+            style: estiloMarcador(tema.textTheme.headlineMedium)
+                ?.copyWith(fontSize: 30, color: colorValor),
           ),
+          const SizedBox(height: 4),
           Text(
             etiqueta,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: tema.textTheme.labelMedium?.copyWith(
-              color: destacada
-                  ? tema.colorScheme.onPrimaryContainer
-                  : tema.colorScheme.onSurfaceVariant,
-            ),
+            style: estiloEtiqueta(tema.textTheme.labelMedium)
+                ?.copyWith(color: colorEtiqueta, letterSpacing: 0.6),
           ),
           if (referencia != null)
             Text(
@@ -135,7 +152,11 @@ class Cifra extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: tema.textTheme.labelSmall?.copyWith(
-                color: tema.colorScheme.onSurfaceVariant,
+                color: destacada
+                    ? ColoresMarca.tintaBarra.withValues(alpha: 0.75)
+                    : esquema.onSurfaceVariant,
+                letterSpacing: 0.2,
+                fontWeight: FontWeight.w500,
               ),
             ),
         ],
@@ -177,11 +198,11 @@ class FranjaColor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 4,
+    width: 5,
     height: alto,
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(3),
     ),
   );
 }

@@ -21,7 +21,7 @@ class EstiloGrafica {
   Color get rejilla => _tema.colorScheme.outlineVariant.withValues(alpha: 0.5);
   Color get eje => _tema.colorScheme.outline;
   Color get neutro =>
-      oscuro ? const Color(0xFF55544F) : const Color(0xFFD6D4CE);
+      oscuro ? const Color(0xFF4A5750) : const Color(0xFFD5DBD6);
   Color get superficie => _tema.cardTheme.color ?? _tema.colorScheme.surface;
   Color get tooltip => _tema.colorScheme.inverseSurface;
   Color get textoTooltip => _tema.colorScheme.onInverseSurface;
@@ -39,30 +39,30 @@ class EstiloGrafica {
   TextStyle get etiquetaSuave => _tema.textTheme.labelSmall!.copyWith(
     color: _tema.colorScheme.onSurfaceVariant,
   );
-  TextStyle get valor =>
-      estiloCifra(_tema.textTheme.labelLarge)!
-          .copyWith(fontWeight: FontWeight.w700);
+  TextStyle get valor => estiloMarcador(
+    _tema.textTheme.labelLarge,
+  )!.copyWith(fontSize: 16, color: _tema.colorScheme.onSurface);
   TextStyle get tooltipTexto => _tema.textTheme.labelMedium!.copyWith(
     color: textoTooltip,
     fontWeight: FontWeight.w600,
   );
 
-  /// Rampa ordinal cálida (dorado → rojo LBC) para categorías ordenadas,
-  /// p. ej. sencillo → doble → triple → jonrón.
+  /// Rampa ordinal de la marca (amarillo → verde campo) para categorías
+  /// ordenadas, p. ej. sencillo → doble → triple → jonrón.
   List<Color> rampa(int n) {
     const claro = [
-      Color(0xFFF0B429),
-      Color(0xFFEA8C3C),
-      Color(0xFFDC5A45),
-      Color(0xFFC2242B),
-      Color(0xFF8A0D16),
+      Color(0xFFFFC629),
+      Color(0xFFB5C13A),
+      Color(0xFF5DAF4E),
+      Color(0xFF17894A),
+      Color(0xFF0B5A31),
     ];
     const oscuroR = [
-      Color(0xFFFFD166),
-      Color(0xFFF0A35E),
-      Color(0xFFE66A5B),
-      Color(0xFFD24049),
-      Color(0xFFB5121B),
+      Color(0xFFFFD54F),
+      Color(0xFFC9D65B),
+      Color(0xFF8FD66E),
+      Color(0xFF52C47C),
+      Color(0xFF2FA866),
     ];
     final base = oscuro ? oscuroR : claro;
     if (n >= base.length) return base;
@@ -153,7 +153,7 @@ class TarjetaGrafica extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final color = acento ?? ColoresMarca.rojo;
+    final color = acento ?? tema.colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Card(
@@ -161,14 +161,8 @@ class TarjetaGrafica extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 3,
-              decoration: const BoxDecoration(
-                gradient: ColoresMarca.franjaInstitucional,
-              ),
-            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -179,8 +173,8 @@ class TarjetaGrafica extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(10),
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(icono, size: 18, color: color),
                       ),
@@ -191,14 +185,23 @@ class TarjetaGrafica extends StatelessWidget {
                           children: [
                             Text(
                               titulo,
-                              style: tema.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.1,
+                              style: tema.textTheme.titleLarge?.copyWith(
+                                fontSize: 20,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Container(
+                              width: 22,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: ColoresMarca.amarillo,
+                                borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                             if (subtitulo != null)
                               Padding(
-                                padding: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.only(top: 6),
                                 child: Text(
                                   subtitulo!,
                                   style: tema.textTheme.labelSmall?.copyWith(

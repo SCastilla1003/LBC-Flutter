@@ -65,9 +65,9 @@ class _SeccionAlineacion extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          EscudoLiga(equipo: e.equipo, tamano: 40),
+          EscudoLiga(equipo: e.equipo, tamano: 46),
           const SizedBox(width: 10),
-          Expanded(child: Text(e.equipo.nombre, style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+          Expanded(child: Text(e.equipo.nombre, style: tema.textTheme.headlineSmall)),
         ]),
         const EncabezadoSeccion('Orden de bateo'),
         TarjetaLiga(
@@ -78,11 +78,21 @@ class _SeccionAlineacion extends StatelessWidget {
                 const Padding(padding: EdgeInsets.all(12), child: Text('Sin orden de bateo todavía.')),
               for (final b in e.bateo)
                 ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: ColoresMarca.rojo,
-                    foregroundColor: ColoresMarca.blanco,
-                    radius: 14,
-                    child: Text('${b.orden}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                  leading: Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: ColoresMarca.verdeNoche,
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Text(
+                      '${b.orden}',
+                      style: estiloMarcador(tema.textTheme.titleMedium)?.copyWith(
+                        color: ColoresMarca.amarillo,
+                        fontSize: 17,
+                      ),
+                    ),
                   ),
                   title: Text(nombreJugador(b.jugador), style: const TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text('${b.posicion} · batea ${_lado(b.jugador.batea)}'),
@@ -176,14 +186,14 @@ class _SeccionPitcheo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          EscudoLiga(equipo: e.equipo, tamano: 40),
+          EscudoLiga(equipo: e.equipo, tamano: 46),
           const SizedBox(width: 10),
-          Expanded(child: Text(e.equipo.nombre, style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
+          Expanded(child: Text(e.equipo.nombre, style: tema.textTheme.headlineSmall)),
         ]),
         const EncabezadoSeccion('Lanzador inicial'),
         TarjetaLiga(
           child: Row(children: [
-            const Icon(Icons.sports_baseball, color: ColoresMarca.rojo),
+            Icon(Icons.sports_baseball, color: tema.colorScheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -203,7 +213,7 @@ class _SeccionPitcheo extends StatelessWidget {
               children: [
                 for (final r in e.relevistas)
                   ListTile(
-                    leading: const Icon(Icons.sports_baseball_outlined, color: ColoresMarca.verde),
+                    leading: Icon(Icons.sports_baseball_outlined, color: tema.colorScheme.primary),
                     title: Text(nombreJugador(r), style: const TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Text('lanza ${r.lanza == LadoLanzamiento.zurdo ? 'zurdo' : 'derecho'}'),
                   ),

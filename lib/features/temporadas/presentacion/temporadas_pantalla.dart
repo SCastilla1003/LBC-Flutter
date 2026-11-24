@@ -81,12 +81,11 @@ class _TarjetaTemporada extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 74,
+                width: 84,
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF4D0710), ColoresMarca.rojo],
+                  gradient: ColoresMarca.tablero,
+                  border: Border(
+                    right: BorderSide(color: ColoresMarca.amarillo, width: 4),
                   ),
                 ),
                 child: Column(
@@ -94,11 +93,8 @@ class _TarjetaTemporada extends StatelessWidget {
                   children: [
                     Text(
                       '${t.anio}',
-                      style: tema.textTheme.titleLarge?.copyWith(
-                        color: ColoresMarca.dorado,
-                        fontWeight: FontWeight.w900,
-                        height: 1,
-                      ),
+                      style: estiloMarcador(tema.textTheme.headlineSmall)
+                          ?.copyWith(color: ColoresMarca.amarillo, fontSize: 28),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -124,14 +120,14 @@ class _TarjetaTemporada extends StatelessWidget {
                               t.nombreTemporada,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: tema.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
+                              style: tema.textTheme.titleLarge?.copyWith(
+                                fontSize: 20,
                               ),
                             ),
                           ),
                           Icon(
                             Icons.chevron_right_rounded,
-                            color: tema.colorScheme.outline,
+                            color: tema.colorScheme.primary,
                           ),
                         ],
                       ),
@@ -153,6 +149,7 @@ class _TarjetaTemporada extends StatelessWidget {
                               Icons.emoji_events_rounded,
                               size: 14,
                               color: ColoresMarca.doradoOscuro,
+                              semanticLabel: 'Campeón',
                             ),
                             const SizedBox(width: 4),
                             Flexible(
@@ -175,7 +172,7 @@ class _TarjetaTemporada extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: avance,
                           minHeight: 5,
-                          color: ColoresMarca.rojo,
+                          color: tema.colorScheme.primary,
                           backgroundColor: tema.colorScheme.primaryContainer,
                         ),
                       ),

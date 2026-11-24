@@ -180,30 +180,18 @@ class _Encabezado extends StatelessWidget {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: tema.brightness == Brightness.dark
-                ? const [Color(0xFF251E1B), Color(0xFF2D2420)]
-                : const [
-                    ColoresMarca.blanco,
-                    Color(0xFFFFFCF6),
-                    Color(0xFFFFF7EA),
-                  ],
-          ),
-          border: Border.all(
-            color: tema.brightness == Brightness.dark
-                ? tema.colorScheme.outlineVariant
-                : ColoresMarca.rojo.withValues(alpha: 0.13),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          color: tema.brightness == Brightness.dark
+              ? tema.colorScheme.surfaceContainer
+              : ColoresMarca.blanco,
+          border: Border.all(color: tema.colorScheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: tema.brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.30)
-                  : ColoresMarca.rojoProfundo.withValues(alpha: 0.07),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(
+                alpha: tema.brightness == Brightness.dark ? 0.28 : 0.04,
+              ),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -211,7 +199,7 @@ class _Encabezado extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              height: 3,
+              height: 4,
               decoration: const BoxDecoration(
                 gradient: ColoresMarca.franjaInstitucional,
               ),
@@ -224,12 +212,21 @@ class _Encabezado extends StatelessWidget {
                   lado(nombreA, fotoA, colorA, subA),
                   Padding(
                     padding: const EdgeInsets.only(top: 22, left: 4, right: 4),
-                    child: Text(
-                      'VS',
-                      style: tema.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: tema.colorScheme.primary,
-                        letterSpacing: 1,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        gradient: ColoresMarca.tablero,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        'VS',
+                        style: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(
+                          fontSize: 19,
+                          color: ColoresMarca.amarillo,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ),

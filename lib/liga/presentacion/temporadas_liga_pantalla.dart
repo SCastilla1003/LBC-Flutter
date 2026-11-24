@@ -44,38 +44,63 @@ class _TarjetaTemporada extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final activa = temporada.estado == EstadoTemporadaLiga.activa;
     return TarjetaLiga(
       onTap: () => context.go('/temporadas/${temporada.id}'),
-      padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 64,
-            decoration: const BoxDecoration(
-              gradient: ColoresMarca.franjaInstitucionalVertical,
-              borderRadius: BorderRadius.horizontal(right: Radius.circular(6)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  temporada.nombre,
-                  style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+      padding: EdgeInsets.zero,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Placa del año: tablero verde noche con la cifra en amarillo.
+            Container(
+              width: 92,
+              decoration: const BoxDecoration(gradient: ColoresMarca.tablero),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              child: Text(
+                '${temporada.anio}',
+                style: estiloMarcador(tema.textTheme.headlineMedium)?.copyWith(
+                  fontSize: 30,
+                  color: ColoresMarca.amarillo,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${temporada.anio} · ${etiquetaEstadoTemporada(temporada.estado)}',
-                  style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
-                ),
-              ],
+              ),
             ),
-          ),
-          Icon(Icons.chevron_right_rounded, color: tema.colorScheme.onSurfaceVariant),
-        ],
+            Container(width: 4, color: ColoresMarca.amarillo),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(temporada.nombre, style: tema.textTheme.titleLarge?.copyWith(fontSize: 21)),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: activa ? esquema.primary : esquema.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        etiquetaEstadoTemporada(temporada.estado),
+                        style: tema.textTheme.labelSmall?.copyWith(
+                          color: activa ? esquema.onPrimary : esquema.onSurfaceVariant,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Icon(Icons.chevron_right_rounded, color: esquema.primary),
+            ),
+          ],
+        ),
       ),
     );
   }

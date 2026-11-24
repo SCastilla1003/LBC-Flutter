@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../config/entorno.dart';
+import '../tema/tema_lbc.dart';
 
 /// Foto servida por la API (`urlFoto` relativa) con caché. Si no hay foto, o falla la
 /// descarga, muestra las iniciales sobre el color del equipo (o un neutro).
@@ -25,7 +26,12 @@ class ImagenApi extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = Entorno.urlAbsoluta(urlFoto);
     final radio = BorderRadius.circular(cuadrada ? tamano * 0.22 : tamano / 2);
-    final respaldo = _Iniciales(nombre: nombre, tamano: tamano, color: color, radio: radio);
+    final respaldo = _Iniciales(
+      nombre: nombre,
+      tamano: tamano,
+      color: color,
+      radio: radio,
+    );
     if (url == null) return respaldo;
     return ClipRRect(
       borderRadius: radio,
@@ -58,7 +64,12 @@ String inicialesDe(String nombre) {
 }
 
 class _Iniciales extends StatelessWidget {
-  const _Iniciales({required this.nombre, required this.tamano, required this.radio, this.color});
+  const _Iniciales({
+    required this.nombre,
+    required this.tamano,
+    required this.radio,
+    this.color,
+  });
 
   final String nombre;
   final double tamano;
@@ -69,7 +80,9 @@ class _Iniciales extends StatelessWidget {
   Widget build(BuildContext context) {
     final esquema = Theme.of(context).colorScheme;
     final fondo = color ?? esquema.secondaryContainer;
-    final tinta = ThemeData.estimateBrightnessForColor(fondo) == Brightness.dark ? Colors.white : Colors.black87;
+    final tinta = ThemeData.estimateBrightnessForColor(fondo) == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
     final iniciales = inicialesDe(nombre);
     return Container(
       width: tamano,
@@ -78,7 +91,13 @@ class _Iniciales extends StatelessWidget {
       decoration: BoxDecoration(color: fondo, borderRadius: radio),
       child: Text(
         iniciales,
-        style: TextStyle(color: tinta, fontWeight: FontWeight.w700, fontSize: tamano * 0.38),
+        style: TextStyle(
+          color: tinta,
+          fontFamily: FuentesLbc.titular,
+          fontWeight: FontWeight.w800,
+          fontSize: tamano * 0.42,
+          height: 1,
+        ),
       ),
     );
   }

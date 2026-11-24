@@ -187,16 +187,17 @@ class _Cabecera extends StatelessWidget {
                 children: [
                   Text(
                     '${(avance * 100 * t).round()}%',
-                    style: estiloCifra(tema.textTheme.labelLarge)?.copyWith(
+                    style: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(
                       color: tema.colorScheme.onSurface,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
                     ),
                   ),
                   Text(
                     'jugado',
                     style: tema.textTheme.labelSmall?.copyWith(
                       color: tema.colorScheme.onSurfaceVariant,
-                      fontSize: 8,
+                      fontSize: 9,
+                      letterSpacing: 0.4,
                     ),
                   ),
                 ],
@@ -261,7 +262,9 @@ class _Graficas extends ConsumerWidget {
                   ? null
                   : '${Formato.decimal(k.promedioCarrerasPorPartido)}/p',
               icono: Icons.directions_run_rounded,
-              tono: tema.colorScheme.secondary,
+              tono: tema.brightness == Brightness.dark
+                  ? ColoresMarca.verdeNeon
+                  : ColoresMarca.verdeNoche,
             ),
             _Kpi(
               valor: k.liderJonrones?.valor ?? 0,
@@ -283,7 +286,9 @@ class _Graficas extends ConsumerWidget {
                   : '-${k.mejorRecord!.perdidos}',
               etiqueta: k.mejorRecord?.nombre ?? 'Mejor récord',
               icono: Icons.emoji_events_rounded,
-              tono: tema.colorScheme.tertiary,
+              tono: tema.brightness == Brightness.dark
+                  ? tema.colorScheme.secondary
+                  : ColoresMarca.amarilloTexto,
               onTap: k.mejorRecord == null
                   ? null
                   : () => context.push(
@@ -433,159 +438,118 @@ class _Kpi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final acento = tono ?? tema.colorScheme.primary;
-    final tinta = tema.colorScheme.onSurface;
-    final oscuro = tema.brightness == Brightness.dark;
+    final esquema = tema.colorScheme;
+    final acento = tono ?? esquema.primary;
+    // El KPI destacado es una placa de tablero (verde noche + cifra amarilla);
+    // los demás, tarjetas blancas con borde fino.
+    final tinta = destacado ? ColoresMarca.amarillo : esquema.onSurface;
+    final tintaEtiqueta = destacado
+        ? ColoresMarca.tintaBarra
+        : esquema.onSurfaceVariant;
+    final cifra = estiloMarcador(tema.textTheme.headlineMedium)?.copyWith(
+      fontSize: 34,
+      color: tinta,
+    );
     return Semantics(
       button: onTap != null,
       label: '$etiqueta: $valor${sufijo ?? ''}',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            gradient: destacado
-                ? (oscuro
-                      ? const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF2D2420), Color(0xFF3A2B24)],
-                        )
-                      : const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            ColoresMarca.blanco,
-                            Color(0xFFFFFBF3),
-                            Color(0xFFFFF4E0),
-                          ],
-                        ))
-                : null,
-            color: destacado ? null : tema.colorScheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: destacado
-                  ? (oscuro
-                        ? ColoresMarca.dorado.withValues(alpha: 0.5)
-                        : ColoresMarca.rojo.withValues(alpha: 0.38))
-                  : tema.colorScheme.outlineVariant.withValues(alpha: 0.7),
-              width: destacado ? 1.4 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(RadioLbc.tarjeta),
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: destacado ? ColoresMarca.tablero : null,
+              color: destacado ? null : esquema.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(RadioLbc.tarjeta),
+              border: destacado
+                  ? null
+                  : Border.all(color: esquema.outlineVariant),
+              boxShadow: [
+                BoxShadow(
+                  color: destacado
+                      ? ColoresMarca.verdeNoche.withValues(alpha: 0.25)
+                      : Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: destacado
-                    ? (oscuro
-                          ? Colors.black.withValues(alpha: 0.3)
-                          : ColoresMarca.rojo.withValues(alpha: 0.09))
-                    : Colors.black.withValues(alpha: 0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      gradient: destacado
-                          ? const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                ColoresMarca.rojo,
-                                ColoresMarca.rojoOscuro,
-                              ],
-                            )
-                          : null,
-                      color: destacado ? null : acento.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icono,
-                      size: 17,
-                      color: destacado ? ColoresMarca.blanco : acento,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (extra != null)
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
+                      width: 30,
+                      height: 30,
                       decoration: BoxDecoration(
                         color: destacado
-                            ? (oscuro
-                                  ? tema.colorScheme.primaryContainer
-                                  : ColoresMarca.rojoSuave.withValues(
-                                      alpha: 0.55,
-                                    ))
-                            : tema.colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(99),
+                            ? ColoresMarca.amarillo
+                            : acento.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        extra!,
-                        style: tema.textTheme.labelSmall?.copyWith(
+                      child: Icon(
+                        icono,
+                        size: 17,
+                        color: destacado
+                            ? ColoresMarca.tintaSobreAmarillo
+                            : acento,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (extra != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
                           color: destacado
-                              ? (oscuro
-                                    ? tema.colorScheme.onPrimaryContainer
-                                    : ColoresMarca.rojoProfundo)
-                              : tema.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 10,
+                              ? ColoresMarca.tintaBarra.withValues(alpha: 0.14)
+                              : esquema.surfaceContainer,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          extra!,
+                          style: estiloCifra(tema.textTheme.labelSmall)
+                              ?.copyWith(
+                                color: destacado
+                                    ? ColoresMarca.tintaBarra
+                                    : esquema.onSurfaceVariant,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10.5,
+                                letterSpacing: 0.2,
+                              ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 9),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Flexible(
-                    child: ContadorAnimado(
-                      valor: valor,
-                      estilo: tema.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: tinta,
-                        letterSpacing: -0.7,
-                      ),
-                    ),
-                  ),
-                  if (sufijo != null)
-                    Text(
-                      sufijo!,
-                      style: estiloCifra(tema.textTheme.headlineSmall)
-                          ?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: tinta,
-                            letterSpacing: -0.7,
-                          ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                etiqueta,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tema.textTheme.labelMedium?.copyWith(
-                  color: destacado
-                      ? (oscuro
-                            ? ColoresMarca.rojoClaro
-                            : ColoresMarca.rojoOscuro)
-                      : tema.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: ContadorAnimado(valor: valor, estilo: cifra),
+                    ),
+                    if (sufijo != null) Text(sufijo!, style: cifra),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  etiqueta,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: estiloEtiqueta(tema.textTheme.labelMedium)?.copyWith(
+                    color: tintaEtiqueta,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

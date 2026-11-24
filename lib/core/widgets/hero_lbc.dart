@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import '../tema/tema_lbc.dart';
 import 'logo_lbc.dart';
 
-/// Portada de marca sobre superficie blanca, con una franja tricolor
-/// (rojo, amarillo y verde) y el diamante dibujado en líneas finas.
+/// Portada de marca: tarjeta blanca con un lomo verde-amarillo (como el canto
+/// de un cromo), titular condensado de tablero y el campo de béisbol dibujado
+/// en líneas muy finas al fondo.
 ///
-/// El blanco es la base; el color aparece en la franja, el icono, las
-/// pastillas y los detalles. En modo oscuro la portada se adapta al tema.
+/// El blanco domina; el verde aporta la interacción y el amarillo el detalle.
+/// En modo oscuro la portada se adapta al tema.
 class HeroLbc extends StatelessWidget {
   const HeroLbc({
     super.key,
@@ -39,172 +40,139 @@ class HeroLbc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
     final oscuro = tema.brightness == Brightness.dark;
-    final tinta = tema.colorScheme.onSurface;
-    final suave = tema.colorScheme.onSurfaceVariant;
-    final cuerpo = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final tinta = esquema.onSurface;
+    final suave = esquema.onSurfaceVariant;
+    final acento = esquema.primary;
+
+    final textos = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // La franja institucional es el acento de color de toda portada.
-        Container(
-          height: 5,
-          decoration: const BoxDecoration(
-            gradient: ColoresMarca.franjaInstitucional,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Transform.rotate(
+              angle: math.pi / 4,
+              child: Container(
+                width: 7,
+                height: 7,
+                color: ColoresMarca.amarillo,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Flexible(
+              child: Text(
+                etiqueta.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: estiloEtiqueta(
+                  tema.textTheme.labelSmall,
+                )?.copyWith(color: acento, fontSize: 11.5, letterSpacing: 1.8),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: compacto ? 8 : 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (marca != null) ...[
+              marca!,
+              const SizedBox(width: 12),
+            ] else if (icono != null) ...[
+              _InsigniaIcono(icono: icono!, compacto: compacto),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                titulo,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    (compacto
+                            ? tema.textTheme.headlineSmall
+                            : tema.textTheme.headlineMedium)
+                        ?.copyWith(color: tinta, height: 1.02),
+              ),
+            ),
+          ],
+        ),
+        if (subtitulo != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitulo!,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: tema.textTheme.bodyMedium?.copyWith(
+              color: suave,
+              height: 1.35,
+            ),
+          ),
+        ],
+        if (contenido != null) ...[
+          const SizedBox(height: 14),
+          DefaultTextStyle.merge(
+            style: tema.textTheme.labelMedium!.copyWith(color: tinta),
+            child: contenido!,
+          ),
+        ],
+      ],
+    );
+
+    final cuerpo = Stack(
+      children: [
+        // Lomo del cromo: del verde del campo al amarillo de los trofeos.
+        const Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 6,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: ColoresMarca.franjaInstitucionalVertical,
+            ),
           ),
         ),
-        CustomPaint(
-          painter: _PatronEstadio(
-            color: oscuro ? ColoresMarca.tintaBarra : ColoresMarca.rojo,
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(compacto ? 18 : 22),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 26,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              gradient: ColoresMarca.franjaInstitucional,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              etiqueta.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: tema.textTheme.labelSmall?.copyWith(
-                                color: oscuro
-                                    ? ColoresMarca.rojoClaro
-                                    : ColoresMarca.rojo,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.8,
-                              ),
-                            ),
-                          ),
-                        ],
+        Padding(
+          padding: const EdgeInsets.only(left: 6),
+          child: CustomPaint(
+            painter: _PatronEstadio(
+              color: oscuro ? ColoresMarca.verdeNeon : ColoresMarca.verdeCampo,
+            ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                compacto ? 16 : 20,
+                compacto ? 16 : 20,
+                compacto ? 16 : 20,
+                compacto ? 16 : 20,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: textos),
+                  if (accion != null) ...[
+                    const SizedBox(width: 16),
+                    accion!,
+                  ] else if (onTap != null) ...[
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: esquema.primary,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (marca != null) ...[
-                            marca!,
-                            const SizedBox(width: 12),
-                          ] else if (icono != null) ...[
-                            Container(
-                              width: compacto ? 38 : 44,
-                              height: compacto ? 38 : 44,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    ColoresMarca.rojo,
-                                    ColoresMarca.rojoOscuro,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(
-                                  color: ColoresMarca.dorado.withValues(
-                                    alpha: 0.8,
-                                  ),
-                                  width: 1.4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: ColoresMarca.rojo.withValues(
-                                      alpha: oscuro ? 0.30 : 0.18,
-                                    ),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                icono,
-                                color: ColoresMarca.blanco,
-                                size: compacto ? 21 : 25,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Expanded(
-                            child: Text(
-                              titulo,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  (compacto
-                                          ? tema.textTheme.titleLarge
-                                          : tema.textTheme.headlineMedium)
-                                      ?.copyWith(
-                                        color: tinta,
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.04,
-                                        letterSpacing: -0.5,
-                                      ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (subtitulo != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          subtitulo!,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: tema.textTheme.bodyMedium?.copyWith(
-                            color: suave,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                      if (contenido != null) ...[
-                        const SizedBox(height: 14),
-                        DefaultTextStyle.merge(
-                          style: tema.textTheme.labelMedium!.copyWith(
-                            color: tinta,
-                          ),
-                          child: contenido!,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (accion != null) ...[
-                  const SizedBox(width: 16),
-                  accion!,
-                ] else if (onTap != null) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: ColoresMarca.rojoSuave.withValues(alpha: 0.7),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: ColoresMarca.rojo.withValues(alpha: 0.25),
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: esquema.onPrimary,
+                        size: 19,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: ColoresMarca.rojoOscuro,
-                      size: 18,
-                    ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -216,30 +184,14 @@ class HeroLbc extends StatelessWidget {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: oscuro
-                ? const [Color(0xFF251E1B), Color(0xFF2D2420)]
-                : const [
-                    ColoresMarca.blanco,
-                    Color(0xFFFFFCF6),
-                    Color(0xFFFFF7EA),
-                  ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: oscuro
-                ? tema.colorScheme.outlineVariant
-                : ColoresMarca.rojo.withValues(alpha: 0.13),
-          ),
+          color: oscuro ? esquema.surfaceContainer : ColoresMarca.blanco,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: esquema.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: oscuro
-                  ? Colors.black.withValues(alpha: 0.30)
-                  : ColoresMarca.rojoProfundo.withValues(alpha: 0.07),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: oscuro ? 0.28 : 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -247,11 +199,44 @@ class HeroLbc extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            splashColor: ColoresMarca.rojo.withValues(alpha: 0.06),
-            highlightColor: ColoresMarca.rojo.withValues(alpha: 0.03),
+            splashColor: acento.withValues(alpha: 0.06),
+            highlightColor: acento.withValues(alpha: 0.03),
             child: cuerpo,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Insignia del icono: placa verde noche con el icono en amarillo.
+class _InsigniaIcono extends StatelessWidget {
+  const _InsigniaIcono({required this.icono, required this.compacto});
+
+  final IconData icono;
+  final bool compacto;
+
+  @override
+  Widget build(BuildContext context) {
+    final lado = compacto ? 40.0 : 46.0;
+    return Container(
+      width: lado,
+      height: lado,
+      decoration: BoxDecoration(
+        gradient: ColoresMarca.tablero,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: ColoresMarca.verdeNoche.withValues(alpha: 0.22),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Icon(
+        icono,
+        color: ColoresMarca.amarillo,
+        size: compacto ? 21 : 24,
       ),
     );
   }
@@ -269,14 +254,24 @@ class MarcaTitulo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const LogoLbc(tamano: 36, radio: 11, sombra: false),
+        const LogoLbc(tamano: 34, radio: 9, sombra: false),
         const SizedBox(width: 10),
         Text(
           texto,
           style: tema.textTheme.titleLarge?.copyWith(
             color: tema.colorScheme.onSurface,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Container(
+          width: 6,
+          height: 6,
+          decoration: const BoxDecoration(
+            color: ColoresMarca.amarillo,
+            shape: BoxShape.circle,
           ),
         ),
       ],
@@ -284,8 +279,8 @@ class MarcaTitulo extends StatelessWidget {
   }
 }
 
-/// Pastilla suave para datos dentro de [HeroLbc]. Usa el amarillo de la liga
-/// como fondo y deja el texto oscuro para mantener el contraste.
+/// Pastilla para datos dentro de [HeroLbc]. Fondo amarillo suave con texto
+/// oscuro para mantener el contraste.
 class PastillaHero extends StatelessWidget {
   const PastillaHero({super.key, required this.texto, this.icono});
 
@@ -294,14 +289,13 @@ class PastillaHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final esquema = tema.colorScheme;
+    final esquema = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: esquema.secondaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: ColoresMarca.dorado.withValues(alpha: 0.45)),
+        color: esquema.secondaryContainer,
+        borderRadius: BorderRadius.circular(RadioLbc.pildora),
+        border: Border.all(color: esquema.secondary.withValues(alpha: 0.6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -317,8 +311,9 @@ class PastillaHero extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: esquema.onSecondaryContainer,
-                fontSize: 11,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
             ),
           ),
@@ -328,8 +323,8 @@ class PastillaHero extends StatelessWidget {
   }
 }
 
-/// Campo de béisbol muy tenue: diamante, líneas de foul y arcos de outfield.
-/// El trazo es intencionalmente bajo para que nunca compita con el texto.
+/// Campo de béisbol muy tenue: arcos de outfield, diamante, líneas de foul y
+/// las costuras de una pelota. El trazo es bajo para no competir con el texto.
 class _PatronEstadio extends CustomPainter {
   _PatronEstadio({required this.color});
 
@@ -339,117 +334,91 @@ class _PatronEstadio extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
 
-    // Resplandor dorado en la esquina superior derecha.
+    // Luz amarilla de estadio en la esquina superior derecha.
     final brillo = Paint()
       ..shader =
           RadialGradient(
             colors: [
-              ColoresMarca.dorado.withValues(alpha: 0.18),
-              ColoresMarca.dorado.withValues(alpha: 0),
+              ColoresMarca.amarillo.withValues(alpha: 0.16),
+              ColoresMarca.amarillo.withValues(alpha: 0),
             ],
           ).createShader(
             Rect.fromCircle(
-              center: Offset(size.width * 0.92, size.height * 0.05),
-              radius: size.width * 0.52,
+              center: Offset(size.width * 0.96, 0),
+              radius: size.width * 0.45,
             ),
           );
     canvas.drawRect(Offset.zero & size, brillo);
-
-    // Un halo verde de campo en la esquina inferior izquierda.
-    final verdeCampo = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              ColoresMarca.verde.withValues(alpha: 0.08),
-              ColoresMarca.verde.withValues(alpha: 0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.04, size.height * 1.02),
-              radius: size.width * 0.52,
-            ),
-          );
-    canvas.drawRect(Offset.zero & size, verdeCampo);
 
     final trazo = Paint()
       ..color = color.withValues(alpha: 0.10)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.1;
 
-    final home = Offset(size.width * 0.84, size.height * 0.78);
-    final radio = math.min(size.width * 0.42, size.height * 1.15);
-    // Arcos de outfield.
-    canvas.drawArc(
-      Rect.fromCircle(center: home, radius: radio),
-      math.pi * 1.06,
-      math.pi * 0.68,
-      false,
-      trazo,
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: home, radius: radio * 0.62),
-      math.pi * 1.06,
-      math.pi * 0.68,
-      false,
-      trazo..color = color.withValues(alpha: 0.06),
-    );
+    // Arcos de outfield desde home (abajo a la derecha).
+    final home = Offset(size.width * 0.86, size.height * 1.05);
+    final radio = math.min(size.width * 0.40, size.height * 1.25);
+    for (final (f, a) in [(1.0, 0.10), (0.66, 0.07)]) {
+      canvas.drawArc(
+        Rect.fromCircle(center: home, radius: radio * f),
+        math.pi * 1.1,
+        math.pi * 0.62,
+        false,
+        trazo..color = color.withValues(alpha: a),
+      );
+    }
 
-    // Diamante.
-    final centro = Offset(size.width * 0.86, size.height * 0.28);
-    final d = math.min(size.width, size.height) * 0.19;
+    // Diamante con sus bases.
+    final centro = Offset(size.width * 0.86, size.height * 0.62);
+    final d = math.min(size.width, size.height) * 0.17;
     final primera = centro + Offset(d, 0);
     final segunda = centro + Offset(0, -d);
     final tercera = centro + Offset(-d, 0);
-    final homePlaca = centro + Offset(0, d);
+    final placa = centro + Offset(0, d);
     final campo = Path()
-      ..moveTo(homePlaca.dx, homePlaca.dy)
+      ..moveTo(placa.dx, placa.dy)
       ..lineTo(primera.dx, primera.dy)
       ..lineTo(segunda.dx, segunda.dy)
       ..lineTo(tercera.dx, tercera.dy)
       ..close();
-    canvas.drawPath(campo, Paint()..color = color.withValues(alpha: 0.03));
-    canvas.drawPath(campo, trazo..color = color.withValues(alpha: 0.09));
-
-    // Bases como pequeños cuadros.
-    for (final base in [primera, segunda, tercera, homePlaca]) {
+    canvas.drawPath(campo, Paint()..color = color.withValues(alpha: 0.035));
+    canvas.drawPath(campo, trazo..color = color.withValues(alpha: 0.10));
+    for (final base in [primera, segunda, tercera]) {
       canvas.save();
       canvas.translate(base.dx, base.dy);
       canvas.rotate(math.pi / 4);
       canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: 7, height: 7),
-        trazo,
+        Rect.fromCenter(center: Offset.zero, width: 6, height: 6),
+        Paint()..color = ColoresMarca.amarillo.withValues(alpha: 0.35),
       );
       canvas.restore();
     }
 
-    // Líneas de foul desde home.
-    canvas.drawLine(
-      homePlaca,
-      homePlaca + Offset(size.width * 0.30, -size.height * 0.65),
-      trazo,
-    );
-    canvas.drawLine(
-      homePlaca,
-      homePlaca + Offset(-size.width * 0.14, -size.height * 0.72),
-      trazo,
-    );
-
-    // Costuras de béisbol en diagonal.
+    // Costuras de pelota: dos arcos con puntadas, abajo a la izquierda.
     final costura = Paint()
-      ..color = color.withValues(alpha: 0.045)
+      ..color = color.withValues(alpha: 0.07)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    for (var i = 0; i < 4; i++) {
-      final x = size.width * (0.08 + i * 0.12);
-      final path = Path()
-        ..moveTo(x, size.height)
-        ..quadraticBezierTo(
-          x + 24,
-          size.height * 0.66,
-          x + 8,
-          size.height * 0.46,
-        );
-      canvas.drawPath(path, costura);
+      ..strokeWidth = 1.2;
+    final c = Offset(size.width * 0.02, size.height * 1.15);
+    final r = size.height * 0.75;
+    for (final signo in [-1.0, 1.0]) {
+      final centroArco = c + Offset(signo * r * 0.55, 0);
+      final rect = Rect.fromCircle(center: centroArco, radius: r * 0.7);
+      final inicio = signo < 0 ? -math.pi * 0.35 : -math.pi * 0.65;
+      canvas.drawArc(
+        rect,
+        inicio,
+        signo < 0 ? -math.pi * 0.3 : math.pi * 0.3,
+        false,
+        costura,
+      );
+      for (var i = 0; i <= 5; i++) {
+        final ang = inicio + (signo < 0 ? -1 : 1) * math.pi * 0.3 * i / 5;
+        final p = centroArco + Offset(math.cos(ang), math.sin(ang)) * r * 0.7;
+        final n = Offset(math.cos(ang), math.sin(ang));
+        final t = Offset(-n.dy, n.dx);
+        canvas.drawLine(p - n * 4 - t * 2, p + n * 4 + t * 2, costura);
+      }
     }
   }
 

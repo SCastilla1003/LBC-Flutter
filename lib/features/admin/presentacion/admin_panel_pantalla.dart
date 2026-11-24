@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/hero_lbc.dart';
@@ -86,9 +87,12 @@ class _Contenido extends ConsumerWidget {
               ),
               Card(
                 child: ListTile(
-                  leading: const Icon(Icons.calendar_month_rounded),
-                  title: const Text('Temporadas'),
-                  trailing: Text('${temporadas.length}'),
+                  leading: const _InsigniaMenu(icono: Icons.calendar_month_rounded),
+                  title: const Text('Temporadas', style: _estiloMenu),
+                  trailing: Text(
+                    '${temporadas.length}',
+                    style: estiloMarcador(Theme.of(context).textTheme.titleLarge),
+                  ),
                   onTap: () => context.push('/admin/temporadas'),
                 ),
               ),
@@ -127,9 +131,12 @@ class _Contenido extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: Card(
                       child: ListTile(
-                        leading: Icon(icono),
-                        title: Text(titulo),
-                        trailing: const Icon(Icons.chevron_right_rounded),
+                        leading: _InsigniaMenu(icono: icono),
+                        title: Text(titulo, style: _estiloMenu),
+                        trailing: Icon(
+                          Icons.chevron_right_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         onTap: () =>
                             context.push('/admin/t/${actual.id}/$ruta'),
                       ),
@@ -140,6 +147,33 @@ class _Contenido extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+const _estiloMenu = TextStyle(
+  fontFamily: FuentesLbc.titular,
+  fontSize: 19,
+  fontWeight: FontWeight.w700,
+);
+
+/// Icono de menú sobre una placa verde suave.
+class _InsigniaMenu extends StatelessWidget {
+  const _InsigniaMenu({required this.icono});
+
+  final IconData icono;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: esquema.primaryContainer,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Icon(icono, size: 20, color: esquema.primary),
     );
   }
 }

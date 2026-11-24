@@ -176,13 +176,7 @@ class _FormularioState extends ConsumerState<_Formulario> {
           Container(
             height: 4,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  ColoresMarca.rojo,
-                  ColoresMarca.rojoOscuro,
-                  ColoresMarca.dorado,
-                ],
-              ),
+              gradient: ColoresMarca.franjaInstitucional,
             ),
           ),
           Padding(
@@ -310,14 +304,14 @@ class _Pregunta extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: tema.colorScheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(99),
+                    color: tema.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     valor!,
-                    style: estiloCifra(tema.textTheme.titleMedium)?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: tema.colorScheme.primary,
+                    style: estiloMarcador(tema.textTheme.titleMedium)?.copyWith(
+                      fontSize: 18,
+                      color: tema.colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
@@ -464,8 +458,8 @@ class _Resultado extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       r.gana ? 'Gana' : 'No gana',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w900, color: color),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(color: color),
                     ),
                   ],
                 ),

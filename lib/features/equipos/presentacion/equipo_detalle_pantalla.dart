@@ -108,191 +108,230 @@ class _Cabecera extends StatelessWidget {
     final color = ColoresEquipo.de(context, equipo.color);
     final r = equipo.registro;
     final claro = Theme.of(context).brightness == Brightness.light;
+    // Cabecera de equipo: banda verde noche con una franja diagonal del color
+    // del equipo, costuras tenues y canto amarillo.
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColoresMarca.rojoProfundo,
-            Color.lerp(ColoresMarca.rojo, color, 0.55)!,
-            color,
-          ],
-        ),
+        borderRadius: BorderRadius.circular(16),
+        gradient: ColoresMarca.tablero,
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.24),
+            color: ColoresMarca.verdeNoche.withValues(alpha: 0.25),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Wrap(
-              spacing: 20,
-              runSpacing: 16,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.spaceAround,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.20),
+      child: CustomPaint(
+        painter: _FondoEquipo(color: color),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Wrap(
+                spacing: 20,
+                runSpacing: 16,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.spaceAround,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: ColoresMarca.blanco,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ImagenApi(
+                          urlFoto: equipo.urlFoto,
+                          nombre: equipo.nombre,
+                          tamano: 76,
+                          color: color,
+                          cuadrada: true,
                         ),
                       ),
-                      child: ImagenApi(
-                        urlFoto: equipo.urlFoto,
-                        nombre: equipo.nombre,
-                        tamano: 64,
-                        color: color,
-                        cuadrada: true,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 240),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            equipo.nombre,
-                            style: tema.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: ColoresMarca.tintaBarra,
-                              letterSpacing: -0.3,
+                      const SizedBox(width: 14),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 240),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              equipo.nombre,
+                              style: tema.textTheme.headlineMedium?.copyWith(
+                                color: ColoresMarca.tintaBarra,
+                                height: 1,
+                              ),
                             ),
-                          ),
-                          if (equipo.ciudad != null)
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.place_outlined,
-                                  size: 14,
-                                  color: ColoresMarca.tintaBarra.withValues(
-                                    alpha: 0.72,
+                            if (equipo.ciudad != null)
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.place_outlined,
+                                    size: 14,
+                                    color: ColoresMarca.tintaBarra.withValues(
+                                      alpha: 0.72,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 2),
-                                Flexible(
-                                  child: Text(
-                                    equipo.ciudad!,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tema.textTheme.bodySmall?.copyWith(
-                                      color: ColoresMarca.tintaBarra.withValues(
-                                        alpha: 0.76,
+                                  const SizedBox(width: 2),
+                                  Flexible(
+                                    child: Text(
+                                      equipo.ciudad!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: tema.textTheme.bodySmall?.copyWith(
+                                        color: ColoresMarca.tintaBarra
+                                            .withValues(alpha: 0.76),
                                       ),
                                     ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ColoresMarca.amarillo,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${r.ganados}-${r.perdidos} · ${Formato.promedio(r.porcentajeVictorias)}',
+                                style:
+                                    estiloMarcador(
+                                      tema.textTheme.titleMedium,
+                                    )?.copyWith(
+                                      color: ColoresMarca.tintaSobreAmarillo,
+                                      fontSize: 17,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 14,
+                              runSpacing: 6,
+                              children: [
+                                _Mini(
+                                  icono: Icons.add_circle_outline,
+                                  valor: '${r.carrerasFavor}',
+                                  tooltip: 'Carreras a favor',
+                                  color: ColoresMarca.tintaBarra.withValues(
+                                    alpha: 0.82,
+                                  ),
+                                ),
+                                _Mini(
+                                  icono: Icons.remove_circle_outline,
+                                  valor: '${r.carrerasContra}',
+                                  tooltip: 'Carreras en contra',
+                                  color: ColoresMarca.tintaBarra.withValues(
+                                    alpha: 0.82,
+                                  ),
+                                ),
+                                _Mini(
+                                  icono: Icons.balance_rounded,
+                                  valor: Formato.conSigno(r.diferencial),
+                                  tooltip: 'Diferencial',
+                                  color: ColoresMarca.tintaBarra.withValues(
+                                    alpha: 0.82,
                                   ),
                                 ),
                               ],
                             ),
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ColoresMarca.dorado,
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: Text(
-                              '${r.ganados}-${r.perdidos} · ${Formato.promedio(r.porcentajeVictorias)}',
-                              style: estiloCifra(tema.textTheme.labelMedium)
-                                  ?.copyWith(
-                                    color: ColoresMarca.tintaSobreAmarillo,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 14,
-                            runSpacing: 6,
-                            children: [
-                              _Mini(
-                                icono: Icons.add_circle_outline,
-                                valor: '${r.carrerasFavor}',
-                                tooltip: 'Carreras a favor',
-                                color: ColoresMarca.tintaBarra.withValues(
-                                  alpha: 0.82,
-                                ),
-                              ),
-                              _Mini(
-                                icono: Icons.remove_circle_outline,
-                                valor: '${r.carrerasContra}',
-                                tooltip: 'Carreras en contra',
-                                color: ColoresMarca.tintaBarra.withValues(
-                                  alpha: 0.82,
-                                ),
-                              ),
-                              _Mini(
-                                icono: Icons.balance_rounded,
-                                valor: Formato.conSigno(r.diferencial),
-                                tooltip: 'Diferencial',
-                                color: ColoresMarca.tintaBarra.withValues(
-                                  alpha: 0.82,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: claro
-                        ? tema.colorScheme.surfaceContainerLowest
-                        : tema.colorScheme.surfaceContainer,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        blurRadius: 14,
-                        offset: const Offset(0, 5),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  child: AnilloRegistro(
-                    ganados: r.ganados,
-                    perdidos: r.perdidos,
-                    empates: r.empates,
-                    centro: '${r.ganados}-${r.perdidos}',
-                    subcentro: Formato.promedio(r.porcentajeVictorias),
-                    tamano: 108,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: claro
+                          ? tema.colorScheme.surfaceContainerLowest
+                          : tema.colorScheme.surfaceContainer,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.18),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: AnilloRegistro(
+                      ganados: r.ganados,
+                      perdidos: r.perdidos,
+                      empates: r.empates,
+                      centro: '${r.ganados}-${r.perdidos}',
+                      subcentro: Formato.promedio(r.porcentajeVictorias),
+                      tamano: 108,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 4,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [ColoresMarca.dorado, Colors.transparent],
+                ],
               ),
             ),
-          ),
-        ],
+            Container(height: 5, color: ColoresMarca.amarillo),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Fondo de la cabecera: franja diagonal con el color del equipo y costuras.
+class _FondoEquipo extends CustomPainter {
+  _FondoEquipo({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * 0.70, 0)
+        ..lineTo(w * 0.86, 0)
+        ..lineTo(w * 0.62, h)
+        ..lineTo(w * 0.46, h)
+        ..close(),
+      Paint()..color = color.withValues(alpha: 0.35),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * 0.87, 0)
+        ..lineTo(w * 0.89, 0)
+        ..lineTo(w * 0.65, h)
+        ..lineTo(w * 0.63, h)
+        ..close(),
+      Paint()..color = ColoresMarca.amarillo.withValues(alpha: 0.5),
+    );
+    // Costuras de pelota en la esquina superior izquierda.
+    final costura = Paint()
+      ..color = ColoresMarca.tintaBarra.withValues(alpha: 0.06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    final rect = Rect.fromCircle(
+      center: Offset(-w * 0.05, -h * 0.2),
+      radius: h * 0.9,
+    );
+    canvas.drawArc(rect, 0.1, 1.2, false, costura);
+    canvas.drawArc(rect.deflate(18), 0.1, 1.2, false, costura);
+  }
+
+  @override
+  bool shouldRepaint(_FondoEquipo old) => old.color != color;
 }
 
 class _Mini extends StatelessWidget {

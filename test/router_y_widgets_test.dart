@@ -98,6 +98,21 @@ void main() {
       )));
       expect(find.byType(EsqueletoLista), findsOneWidget);
     });
+
+    testWidgets('los esqueletos caben dentro de una lista recargable', (tester) async {
+      for (final cargando in const <Widget?>[null, EsqueletoDetalle()]) {
+        await tester.pumpWidget(_envolver(RecargableSimple(
+          onRefresh: () async {},
+          child: VistaAsync<int>(
+            valor: const AsyncValue.loading(),
+            onReintentar: _nada,
+            cargando: cargando,
+            datos: (d) => Text('$d'),
+          ),
+        )));
+        expect(tester.takeException(), isNull);
+      }
+    });
   });
 
   testWidgets('sin API_BASE_URL la app no muestra datos: pide configurarla', (tester) async {

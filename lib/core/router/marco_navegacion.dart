@@ -5,7 +5,7 @@ import '../tema/tema_lbc.dart';
 import '../widgets/logo_lbc.dart';
 
 /// Barra inferior en móvil y riel lateral en tablet/web. La base es blanca;
-/// la franja tricolor y los indicadores rojos aportan la identidad de la liga.
+/// la franja verde-amarilla y el indicador verde aportan la identidad de la liga.
 class MarcoNavegacion extends StatelessWidget {
   const MarcoNavegacion({super.key, required this.shell});
 
@@ -81,9 +81,9 @@ class MarcoNavegacion extends StatelessWidget {
           color: Theme.of(context).colorScheme.surfaceContainerLowest,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 18,
-              offset: const Offset(0, -4),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 14,
+              offset: const Offset(0, -3),
             ),
           ],
         ),
@@ -129,17 +129,8 @@ class _MarcaRail extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: esquema.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: esquema.outlineVariant.withValues(alpha: 0.8),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(RadioLbc.tarjeta),
+        border: Border.all(color: esquema.outlineVariant),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -172,10 +163,10 @@ class _MarcaRail extends StatelessWidget {
                       children: [
                         Text(
                           'LBC',
-                          style: tema.textTheme.titleMedium?.copyWith(
+                          style: tema.textTheme.titleLarge?.copyWith(
                             color: esquema.onSurface,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.6,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
                             height: 1,
                           ),
                         ),
@@ -185,7 +176,8 @@ class _MarcaRail extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: tema.textTheme.labelSmall?.copyWith(
                             color: esquema.onSurfaceVariant,
-                            fontSize: 9,
+                            fontSize: 10,
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ],
