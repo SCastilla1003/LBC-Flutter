@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/hero_lbc.dart';
 import '../../../core/widgets/vista_async.dart';
 import '../../temporadas/datos/modelos_temporada.dart';
 import '../../temporadas/datos/temporadas_repositorio.dart';
@@ -16,7 +17,9 @@ class TemporadaAdmin extends Notifier<String?> {
   void elegir(String? id) => state = id;
 }
 
-final temporadaAdminProvider = NotifierProvider<TemporadaAdmin, String?>(TemporadaAdmin.new);
+final temporadaAdminProvider = NotifierProvider<TemporadaAdmin, String?>(
+  TemporadaAdmin.new,
+);
 
 class AdminPanelPantalla extends ConsumerWidget {
   const AdminPanelPantalla({super.key});
@@ -46,55 +49,95 @@ class _Contenido extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final elegida = ref.watch(temporadaAdminProvider);
-    final actual = temporadas.where((t) => t.id == elegida).firstOrNull ?? temporadas.firstOrNull;
+    final actual =
+        temporadas.where((t) => t.id == elegida).firstOrNull ??
+        temporadas.firstOrNull;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
         AnchoMaximo(
           ancho: 760,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.calendar_month_rounded),
-                title: const Text('Temporadas'),
-                trailing: Text('${temporadas.length}'),
-                onTap: () => context.push('/admin/temporadas'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              HeroLbc(
+                compacto: true,
+                etiqueta: 'Solo administradores',
+                titulo: 'Panel de administración',
+                subtitulo:
+                    'Temporadas, equipos, partidos y estadios de la liga.',
+                icono: Icons.admin_panel_settings_rounded,
+                contenido: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    PastillaHero(
+                      icono: Icons.calendar_month_rounded,
+                      texto: '${temporadas.length} temporadas',
+                    ),
+                    if (actual != null)
+                      PastillaHero(
+                        icono: Icons.push_pin_rounded,
+                        texto: actual.nombreTemporada,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            if (actual == null)
-              const EstadoVacio(mensaje: 'Sin temporadas', icono: Icons.calendar_today_outlined)
-            else ...[
-              DropdownButtonFormField<String>(
-                initialValue: actual.id,
-                decoration: const InputDecoration(labelText: 'Temporada'),
-                items: [
-                  for (final t in temporadas)
-                    DropdownMenuItem(value: t.id, child: Text('${t.nombreTemporada} (${t.anio})')),
-                ],
-                onChanged: (id) => ref.read(temporadaAdminProvider.notifier).elegir(id),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.calendar_month_rounded),
+                  title: const Text('Temporadas'),
+                  trailing: Text('${temporadas.length}'),
+                  onTap: () => context.push('/admin/temporadas'),
+                ),
               ),
-              const SizedBox(height: 16),
-              for (final (icono, titulo, ruta) in [
-                (Icons.groups_rounded, 'Equipos y jugadores', 'equipos'),
-                (Icons.person_search_rounded, 'Agentes libres', 'agentes-libres'),
-                (Icons.sports_baseball_rounded, 'Partidos', 'partidos'),
-                (Icons.stadium_rounded, 'Estadios', 'estadios'),
-              ])
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Card(
-                    child: ListTile(
-                      leading: Icon(icono),
-                      title: Text(titulo),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => context.push('/admin/t/${actual.id}/$ruta'),
+              const SizedBox(height: 24),
+              if (actual == null)
+                const EstadoVacio(
+                  mensaje: 'Sin temporadas',
+                  icono: Icons.calendar_today_outlined,
+                )
+              else ...[
+                DropdownButtonFormField<String>(
+                  initialValue: actual.id,
+                  decoration: const InputDecoration(labelText: 'Temporada'),
+                  items: [
+                    for (final t in temporadas)
+                      DropdownMenuItem(
+                        value: t.id,
+                        child: Text(t.nombreTemporada),
+                      ),
+                  ],
+                  onChanged: (id) =>
+                      ref.read(temporadaAdminProvider.notifier).elegir(id),
+                ),
+                const SizedBox(height: 16),
+                for (final (icono, titulo, ruta) in [
+                  (Icons.groups_rounded, 'Equipos y jugadores', 'equipos'),
+                  (
+                    Icons.person_search_rounded,
+                    'Agentes libres',
+                    'agentes-libres',
+                  ),
+                  (Icons.sports_baseball_rounded, 'Partidos', 'partidos'),
+                  (Icons.stadium_rounded, 'Estadios', 'estadios'),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Card(
+                      child: ListTile(
+                        leading: Icon(icono),
+                        title: Text(titulo),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () =>
+                            context.push('/admin/t/${actual.id}/$ruta'),
+                      ),
                     ),
                   ),
-                ),
+              ],
             ],
-          ]),
+          ),
         ),
       ],
     );

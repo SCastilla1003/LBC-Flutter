@@ -12,44 +12,76 @@ abstract final class Anim {
 /// Colores y estilos de las gráficas (ejes y rejilla recesivos; texto nunca en color de serie).
 class EstiloGrafica {
   EstiloGrafica(BuildContext context)
-      : _tema = Theme.of(context),
-        oscuro = Theme.of(context).brightness == Brightness.dark;
+    : _tema = Theme.of(context),
+      oscuro = Theme.of(context).brightness == Brightness.dark;
 
   final ThemeData _tema;
   final bool oscuro;
 
   Color get rejilla => _tema.colorScheme.outlineVariant.withValues(alpha: 0.5);
   Color get eje => _tema.colorScheme.outline;
-  Color get neutro => oscuro ? const Color(0xFF55544F) : const Color(0xFFD6D4CE);
+  Color get neutro =>
+      oscuro ? const Color(0xFF55544F) : const Color(0xFFD6D4CE);
   Color get superficie => _tema.cardTheme.color ?? _tema.colorScheme.surface;
   Color get tooltip => _tema.colorScheme.inverseSurface;
   Color get textoTooltip => _tema.colorScheme.onInverseSurface;
   Color get victoria => ColoresEstado.victoria;
   Color get derrota => ColoresEstado.derrota;
-  Color get advertencia => const Color(0xFFFAB219);
+  Color get advertencia => ColoresMarca.doradoOscuro;
+  Color get acento => _tema.colorScheme.primary;
 
-  TextStyle get ejeTexto =>
-      _tema.textTheme.labelSmall!.copyWith(color: _tema.colorScheme.onSurfaceVariant, fontSize: 10);
-  TextStyle get etiqueta => _tema.textTheme.labelMedium!.copyWith(color: _tema.colorScheme.onSurface);
-  TextStyle get etiquetaSuave => _tema.textTheme.labelSmall!.copyWith(color: _tema.colorScheme.onSurfaceVariant);
-  TextStyle get valor => estiloCifra(_tema.textTheme.labelLarge)!.copyWith(fontWeight: FontWeight.w700);
-  TextStyle get tooltipTexto =>
-      _tema.textTheme.labelMedium!.copyWith(color: textoTooltip, fontWeight: FontWeight.w600);
+  TextStyle get ejeTexto => _tema.textTheme.labelSmall!.copyWith(
+    color: _tema.colorScheme.onSurfaceVariant,
+    fontSize: 10,
+  );
+  TextStyle get etiqueta =>
+      _tema.textTheme.labelMedium!.copyWith(color: _tema.colorScheme.onSurface);
+  TextStyle get etiquetaSuave => _tema.textTheme.labelSmall!.copyWith(
+    color: _tema.colorScheme.onSurfaceVariant,
+  );
+  TextStyle get valor =>
+      estiloCifra(_tema.textTheme.labelLarge)!
+          .copyWith(fontWeight: FontWeight.w700);
+  TextStyle get tooltipTexto => _tema.textTheme.labelMedium!.copyWith(
+    color: textoTooltip,
+    fontWeight: FontWeight.w600,
+  );
 
-  /// Rampa ordinal de un solo tono (azul) para categorías ordenadas (p. ej. tipos de hit).
+  /// Rampa ordinal cálida (dorado → rojo LBC) para categorías ordenadas,
+  /// p. ej. sencillo → doble → triple → jonrón.
   List<Color> rampa(int n) {
-    const claro = [Color(0xFF86B6EF), Color(0xFF5598E7), Color(0xFF2A78D6), Color(0xFF1C5CAB), Color(0xFF104281)];
-    const oscuroR = [Color(0xFF184F95), Color(0xFF256ABF), Color(0xFF3987E5), Color(0xFF6DA7EC), Color(0xFF9EC5F4)];
+    const claro = [
+      Color(0xFFF0B429),
+      Color(0xFFEA8C3C),
+      Color(0xFFDC5A45),
+      Color(0xFFC2242B),
+      Color(0xFF8A0D16),
+    ];
+    const oscuroR = [
+      Color(0xFFFFD166),
+      Color(0xFFF0A35E),
+      Color(0xFFE66A5B),
+      Color(0xFFD24049),
+      Color(0xFFB5121B),
+    ];
     final base = oscuro ? oscuroR : claro;
     if (n >= base.length) return base;
     // Reparte n pasos a lo largo de la rampa
-    return [for (var i = 0; i < n; i++) base[(i * (base.length - 1) / (n - 1).clamp(1, 99)).round()]];
+    return [
+      for (var i = 0; i < n; i++)
+        base[(i * (base.length - 1) / (n - 1).clamp(1, 99)).round()],
+    ];
   }
 }
 
 /// Anima de 0 a 1 al aparecer y cada vez que cambia [clave] (filtro, métrica, temporada).
 class EntradaAnimada extends StatelessWidget {
-  const EntradaAnimada({super.key, required this.clave, required this.builder, this.duracion = Anim.entrada});
+  const EntradaAnimada({
+    super.key,
+    required this.clave,
+    required this.builder,
+    this.duracion = Anim.entrada,
+  });
 
   final Object clave;
   final Widget Function(BuildContext context, double t) builder;
@@ -69,7 +101,13 @@ class EntradaAnimada extends StatelessWidget {
 
 /// Número que sube hasta su valor al aparecer.
 class ContadorAnimado extends StatelessWidget {
-  const ContadorAnimado({super.key, required this.valor, this.decimales = 0, this.estilo, this.formato});
+  const ContadorAnimado({
+    super.key,
+    required this.valor,
+    this.decimales = 0,
+    this.estilo,
+    this.formato,
+  });
 
   final num valor;
   final int decimales;
@@ -90,37 +128,100 @@ class ContadorAnimado extends StatelessWidget {
   }
 }
 
-/// Tarjeta de una gráfica: título corto en forma de pregunta, leyenda opcional y la gráfica.
+/// Tarjeta de una gráfica: filo tricolor (rojo, amarillo y verde), icono,
+/// título corto en forma de pregunta, leyenda opcional y la gráfica.
 class TarjetaGrafica extends StatelessWidget {
-  const TarjetaGrafica({super.key, required this.titulo, required this.child, this.leyenda, this.accion});
+  const TarjetaGrafica({
+    super.key,
+    required this.titulo,
+    required this.child,
+    this.subtitulo,
+    this.icono = Icons.insights_rounded,
+    this.leyenda,
+    this.accion,
+    this.acento,
+  });
 
   final String titulo;
+  final String? subtitulo;
+  final IconData icono;
   final Widget child;
   final List<ItemLeyenda>? leyenda;
   final Widget? accion;
+  final Color? acento;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final color = acento ?? ColoresMarca.rojo;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Row(children: [
-              Expanded(
-                child: Text(titulo, style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 3,
+              decoration: const BoxDecoration(
+                gradient: ColoresMarca.franjaInstitucional,
               ),
-              ?accion,
-            ]),
-            if (leyenda != null && leyenda!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(spacing: 12, runSpacing: 4, children: leyenda!),
-            ],
-            const SizedBox(height: 12),
-            child,
-          ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icono, size: 18, color: color),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              titulo,
+                              style: tema.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.1,
+                              ),
+                            ),
+                            if (subtitulo != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  subtitulo!,
+                                  style: tema.textTheme.labelSmall?.copyWith(
+                                    color: tema.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      ?accion,
+                    ],
+                  ),
+                  if (leyenda != null && leyenda!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(spacing: 12, runSpacing: 4, children: leyenda!),
+                  ],
+                  const SizedBox(height: 12),
+                  child,
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -153,31 +254,52 @@ class ItemLeyenda extends StatelessWidget {
     final estilo = EstiloGrafica(context);
     final contenido = Opacity(
       opacity: activo ? 1 : 0.35,
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (colores != null && colores!.isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: SizedBox(
-              width: 14,
-              height: 10,
-              child: Row(children: [for (final c in colores!) Expanded(child: Container(color: c))]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (colores != null && colores!.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: SizedBox(
+                width: 14,
+                height: 10,
+                child: Row(
+                  children: [
+                    for (final c in colores!)
+                      Expanded(child: Container(color: c)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
+              width: linea ? 14 : 10,
+              height: linea ? 3 : 10,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(linea ? 2 : 3),
+              ),
             ),
-          )
-        else
-          Container(
-            width: linea ? 14 : 10,
-            height: linea ? 3 : 10,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(linea ? 2 : 3)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              texto,
+              style: estilo.etiquetaSuave,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        const SizedBox(width: 6),
-        Flexible(child: Text(texto, style: estilo.etiquetaSuave, maxLines: 1, overflow: TextOverflow.ellipsis)),
-      ]),
+        ],
+      ),
     );
     if (onTap == null) return contenido;
     return InkWell(
       borderRadius: BorderRadius.circular(6),
       onTap: onTap,
-      child: Padding(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2), child: contenido),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: contenido,
+      ),
     );
   }
 }
@@ -193,7 +315,10 @@ class BurbujaTooltip extends StatelessWidget {
     final e = EstiloGrafica(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: e.tooltip, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: e.tooltip,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Text(texto, style: e.tooltipTexto),
     );
   }

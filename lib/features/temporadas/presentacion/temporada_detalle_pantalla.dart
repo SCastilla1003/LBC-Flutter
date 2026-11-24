@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/charts/barras_apiladas.dart';
 import '../../../core/charts/base_graficas.dart';
 import '../../../core/tema/colores_equipo.dart';
+import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/hero_lbc.dart';
 import '../../../core/widgets/imagen_api.dart';
 import '../../../core/widgets/vista_async.dart';
 import '../../equipos/datos/modelos_equipo.dart';
@@ -34,23 +36,37 @@ class TemporadaDetallePantalla extends ConsumerWidget {
               tooltip: 'Ver en Inicio y Líderes',
               icon: const Icon(Icons.push_pin_outlined),
               onPressed: () {
-                ref.read(temporadaSeleccionadaProvider.notifier).elegir(idTemporada);
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('Temporada fijada en Inicio y Líderes')));
+                ref
+                    .read(temporadaSeleccionadaProvider.notifier)
+                    .elegir(idTemporada);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Temporada fijada en Inicio y Líderes'),
+                  ),
+                );
               },
             ),
           ],
-          bottom: const TabBar(tabs: [Tab(text: 'Equipos'), Tab(text: 'Partidos'), Tab(text: 'Estadios')]),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Equipos'),
+              Tab(text: 'Partidos'),
+              Tab(text: 'Estadios'),
+            ],
+          ),
         ),
         body: VistaAsync(
           valor: detalle,
           cargando: const EsqueletoDetalle(),
-          onReintentar: () => ref.invalidate(temporadaDetalleProvider(idTemporada)),
-          datos: (t) => TabBarView(children: [
-            _PestanaEquipos(temporada: t),
-            ListaPartidos(idTemporada: idTemporada),
-            _PestanaEstadios(temporada: t),
-          ]),
+          onReintentar: () =>
+              ref.invalidate(temporadaDetalleProvider(idTemporada)),
+          datos: (t) => TabBarView(
+            children: [
+              _PestanaEquipos(temporada: t),
+              ListaPartidos(idTemporada: idTemporada),
+              _PestanaEstadios(temporada: t),
+            ],
+          ),
         ),
       ),
     );
@@ -72,44 +88,93 @@ class _PestanaEquipos extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           AnchoMaximo(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                FilledButton.tonalIcon(
-                  onPressed: () => context.push('/temporadas/${t.id}/posiciones'),
-                  icon: const Icon(Icons.leaderboard_outlined),
-                  label: const Text('Tabla de posiciones'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ref.read(temporadaSeleccionadaProvider.notifier).elegir(t.id);
-                    context.go('/lideres');
-                  },
-                  icon: const Icon(Icons.emoji_events_outlined),
-                  label: const Text('Líderes'),
-                ),
-              ]),
-              const SizedBox(height: 20),
-              if (t.equipos.isEmpty)
-                const EstadoVacio(mensaje: 'Sin equipos', icono: Icons.groups_outlined)
-              else
-                LayoutBuilder(builder: (context, c) {
-                  final columnas = (c.maxWidth / 320).floor().clamp(1, 3);
-                  return Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HeroLbc(
+                  compacto: true,
+                  etiqueta: 'Temporada ${t.anio} · LBC',
+                  titulo: t.nombreTemporada,
+                  subtitulo: t.campeon?.nombre != null
+                      ? 'Campeón: ${t.campeon!.nombre}. Revive la campaña equipo por equipo.'
+                      : 'Todos los equipos, partidos y escenarios de la temporada.',
+                  icono: Icons.calendar_month_rounded,
+                  contenido: Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
-                      for (final e in t.equipos)
-                        SizedBox(
-                            width: (c.maxWidth - (columnas - 1) * 10) / columnas,
-                            child: TarjetaEquipo(equipo: e, idTemporada: t.id)),
+                      PastillaHero(
+                        icono: Icons.groups_rounded,
+                        texto: '${t.equipos.length} equipos',
+                      ),
+                      PastillaHero(
+                        icono: Icons.sports_baseball_rounded,
+                        texto:
+                            '${t.partidosFinalizados}/${t.totalPartidos} partidos',
+                      ),
+                      if (t.totalAgentesLibres > 0)
+                        PastillaHero(
+                          icono: Icons.person_search_rounded,
+                          texto: '${t.totalAgentesLibres} agentes libres',
+                        ),
                     ],
-                  );
-                }),
-              if (t.totalAgentesLibres > 0) ...[
-                const SizedBox(height: 24),
-                _AgentesLibres(idTemporada: t.id),
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          context.push('/temporadas/${t.id}/posiciones'),
+                      icon: const Icon(Icons.leaderboard_outlined),
+                      label: const Text('Tabla de posiciones'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(temporadaSeleccionadaProvider.notifier)
+                            .elegir(t.id);
+                        context.go('/lideres');
+                      },
+                      icon: const Icon(Icons.emoji_events_outlined),
+                      label: const Text('Líderes'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (t.equipos.isEmpty)
+                  const EstadoVacio(
+                    mensaje: 'Sin equipos',
+                    icono: Icons.groups_outlined,
+                  )
+                else
+                  LayoutBuilder(
+                    builder: (context, c) {
+                      final columnas = (c.maxWidth / 320).floor().clamp(1, 3);
+                      return Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          for (final e in t.equipos)
+                            SizedBox(
+                              width:
+                                  (c.maxWidth - (columnas - 1) * 10) / columnas,
+                              child: TarjetaEquipo(
+                                equipo: e,
+                                idTemporada: t.id,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                if (t.totalAgentesLibres > 0) ...[
+                  const SizedBox(height: 24),
+                  _AgentesLibres(idTemporada: t.id),
+                ],
               ],
-            ]),
+            ),
           ),
         ],
       ),
@@ -118,7 +183,11 @@ class _PestanaEquipos extends ConsumerWidget {
 }
 
 class TarjetaEquipo extends StatelessWidget {
-  const TarjetaEquipo({super.key, required this.equipo, required this.idTemporada});
+  const TarjetaEquipo({
+    super.key,
+    required this.equipo,
+    required this.idTemporada,
+  });
 
   final Equipo equipo;
   final String idTemporada;
@@ -131,33 +200,75 @@ class TarjetaEquipo extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/temporadas/$idTemporada/equipos/${equipo.id}'),
-        child: Row(children: [
-          Container(width: 6, height: 76, color: color),
-          const SizedBox(width: 12),
-          ImagenApi(urlFoto: equipo.urlFoto, nombre: equipo.nombre, tamano: 48, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(equipo.nombre,
-                  style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                  overflow: TextOverflow.ellipsis),
-              Text(
-                [if (equipo.ciudad != null) equipo.ciudad!, '${equipo.totalBateadores + equipo.totalLanzadores} jugadores']
-                    .join(' · '),
-                style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+        onTap: () =>
+            context.push('/temporadas/$idTemporada/equipos/${equipo.id}'),
+        child: Row(
+          children: [
+            Container(width: 6, height: 76, color: color),
+            const SizedBox(width: 12),
+            ImagenApi(
+              urlFoto: equipo.urlFoto,
+              nombre: equipo.nombre,
+              tamano: 48,
+              color: color,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    equipo.nombre,
+                    style: tema.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    [
+                      if (equipo.ciudad != null) equipo.ciudad!,
+                      '${equipo.totalBateadores + equipo.totalLanzadores} jugadores',
+                    ].join(' · '),
+                    style: tema.textTheme.bodySmall?.copyWith(
+                      color: tema.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('${r.ganados}-${r.perdidos}',
-                  style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-              Text(Formato.promedio(r.porcentajeVictorias), style: tema.textTheme.labelSmall),
-            ]),
-          ),
-        ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${r.ganados}-${r.perdidos}',
+                    style: estiloCifra(tema.textTheme.titleMedium)
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 3),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      Formato.promedio(r.porcentajeVictorias),
+                      style: estiloCifra(tema.textTheme.labelSmall)?.copyWith(
+                        color: tema.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -174,26 +285,45 @@ class _AgentesLibres extends ConsumerWidget {
     return Seccion(
       titulo: 'Agentes libres',
       child: agentes.when(
-        loading: () => const SizedBox(height: 120, child: EsqueletoLista(filas: 2)),
-        error: (e, _) =>
-            EstadoError(error: e, compacto: true, onReintentar: () => ref.invalidate(agentesLibresProvider(idTemporada))),
+        loading: () =>
+            const SizedBox(height: 120, child: EsqueletoLista(filas: 2)),
+        error: (e, _) => EstadoError(
+          error: e,
+          compacto: true,
+          onReintentar: () =>
+              ref.invalidate(agentesLibresProvider(idTemporada)),
+        ),
         data: (a) => Card(
-          child: Column(children: [
-            for (final b in a.bateadores)
-              ListTile(
-                leading: ImagenApi(urlFoto: b.urlFoto, nombre: b.nombre, tamano: 36),
-                title: Text(b.nombre),
-                subtitle: Text('Bateador · ${b.posicion ?? 'Sin posición'}'),
-                onTap: () => context.push('/temporadas/$idTemporada/bateadores/${b.id}'),
-              ),
-            for (final l in a.lanzadores)
-              ListTile(
-                leading: ImagenApi(urlFoto: l.urlFoto, nombre: l.nombre, tamano: 36),
-                title: Text(l.nombre),
-                subtitle: Text('Lanzador · ${l.posicion ?? 'Sin posición'}'),
-                onTap: () => context.push('/temporadas/$idTemporada/lanzadores/${l.id}'),
-              ),
-          ]),
+          child: Column(
+            children: [
+              for (final b in a.bateadores)
+                ListTile(
+                  leading: ImagenApi(
+                    urlFoto: b.urlFoto,
+                    nombre: b.nombre,
+                    tamano: 36,
+                  ),
+                  title: Text(b.nombre),
+                  subtitle: Text('Bateador · ${b.posicion ?? 'Sin posición'}'),
+                  onTap: () => context.push(
+                    '/temporadas/$idTemporada/bateadores/${b.id}',
+                  ),
+                ),
+              for (final l in a.lanzadores)
+                ListTile(
+                  leading: ImagenApi(
+                    urlFoto: l.urlFoto,
+                    nombre: l.nombre,
+                    tamano: 36,
+                  ),
+                  title: Text(l.nombre),
+                  subtitle: Text('Lanzador · ${l.posicion ?? 'Sin posición'}'),
+                  onTap: () => context.push(
+                    '/temporadas/$idTemporada/lanzadores/${l.id}',
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -209,40 +339,63 @@ class _PestanaEstadios extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final estadios = temporada.estadios;
     return RecargableSimple(
-      onRefresh: () => ref.refresh(temporadaDetalleProvider(temporada.id).future),
+      onRefresh: () =>
+          ref.refresh(temporadaDetalleProvider(temporada.id).future),
       child: estadios.isEmpty
-          ? const EstadoVacio(mensaje: 'Sin estadios', icono: Icons.stadium_outlined)
+          ? const EstadoVacio(
+              mensaje: 'Sin estadios',
+              icono: Icons.stadium_outlined,
+            )
           : Padding(
               padding: const EdgeInsets.all(16),
               child: AnchoMaximo(
                 ancho: 800,
-                child: Builder(builder: (context) {
-                  final e = EstiloGrafica(context);
-                  final jugado = e.rampa(3)[1];
-                  final orden = [...estadios]
-                    ..sort((a, b) => (b.partidosJugados + b.partidosProgramados).compareTo(a.partidosJugados + a.partidosProgramados));
-                  return TarjetaGrafica(
-                    titulo: '¿Dónde se juega?',
-                    leyenda: [ItemLeyenda(color: jugado, texto: 'Jugados'), ItemLeyenda(color: e.neutro, texto: 'Por jugar')],
-                    child: BarrasApiladas(
-                      clave: orden.map((s) => s.id).join(),
-                      altoBarra: 18,
-                      filas: [
-                        for (final Estadio s in orden)
-                          FilaApilada(
-                            id: s.id,
-                            nombre: s.ubicacion == null ? s.nombre : '${s.nombre} · ${s.ubicacion}',
-                            inicio: const Icon(Icons.stadium_rounded),
-                            valorFinal: '${s.partidosJugados + s.partidosProgramados}',
-                            segmentos: [
-                              SegmentoBarra(valor: s.partidosJugados.toDouble(), color: jugado),
-                              SegmentoBarra(valor: s.partidosProgramados.toDouble(), color: e.neutro),
-                            ],
-                          ),
+                child: Builder(
+                  builder: (context) {
+                    final e = EstiloGrafica(context);
+                    final jugado = e.rampa(3)[1];
+                    final orden = [...estadios]
+                      ..sort(
+                        (a, b) => (b.partidosJugados + b.partidosProgramados)
+                            .compareTo(
+                              a.partidosJugados + a.partidosProgramados,
+                            ),
+                      );
+                    return TarjetaGrafica(
+                      titulo: '¿Dónde se juega?',
+                      leyenda: [
+                        ItemLeyenda(color: jugado, texto: 'Jugados'),
+                        ItemLeyenda(color: e.neutro, texto: 'Por jugar'),
                       ],
-                    ),
-                  );
-                }),
+                      child: BarrasApiladas(
+                        clave: orden.map((s) => s.id).join(),
+                        altoBarra: 18,
+                        filas: [
+                          for (final Estadio s in orden)
+                            FilaApilada(
+                              id: s.id,
+                              nombre: s.ubicacion == null
+                                  ? s.nombre
+                                  : '${s.nombre} · ${s.ubicacion}',
+                              inicio: const Icon(Icons.stadium_rounded),
+                              valorFinal:
+                                  '${s.partidosJugados + s.partidosProgramados}',
+                              segmentos: [
+                                SegmentoBarra(
+                                  valor: s.partidosJugados.toDouble(),
+                                  color: jugado,
+                                ),
+                                SegmentoBarra(
+                                  valor: s.partidosProgramados.toDouble(),
+                                  color: e.neutro,
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
     );

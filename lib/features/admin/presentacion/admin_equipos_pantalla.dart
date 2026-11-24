@@ -166,7 +166,7 @@ class _DialogoEquipoState extends ConsumerState<_DialogoEquipo> {
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Obligatorio' : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _ciudad, decoration: const InputDecoration(labelText: 'Ciudad (opcional)')),
+            TextFormField(controller: _ciudad, decoration: const InputDecoration(labelText: 'Ciudad')),
             const SizedBox(height: 16),
             Text('Color', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
@@ -203,7 +203,7 @@ class _MuestraColor extends StatelessWidget {
     final color = ColoresEquipo.de(context, clave);
     final nombre = ColoresEquipo.nombres[clave]!;
     return Tooltip(
-      message: usado ? '$nombre (lo usa otro equipo)' : nombre,
+      message: nombre,
       child: InkWell(
         onTap: usado ? null : onTap,
         borderRadius: BorderRadius.circular(20),

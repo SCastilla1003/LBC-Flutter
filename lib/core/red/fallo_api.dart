@@ -76,7 +76,7 @@ sealed class FalloApi implements Exception {
         if (status >= 500) {
           return FalloServidor(mensaje ?? 'El servidor tuvo un problema. Inténtalo más tarde.');
         }
-        return FalloDesconocido(mensaje ?? 'Respuesta inesperada del servidor ($status).');
+        return FalloDesconocido(mensaje ?? 'Respuesta inesperada del servidor.');
     }
   }
 }

@@ -132,7 +132,7 @@ class _DialogoEstadioState extends ConsumerState<_DialogoEstadio> {
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Obligatorio' : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(controller: _ubicacion, decoration: const InputDecoration(labelText: 'Ubicación (opcional)')),
+            TextFormField(controller: _ubicacion, decoration: const InputDecoration(labelText: 'Ubicación')),
           ]),
         ),
       ),

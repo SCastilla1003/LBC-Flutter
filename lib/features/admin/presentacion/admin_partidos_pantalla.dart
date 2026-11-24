@@ -180,7 +180,7 @@ class _FormularioPartidoState extends ConsumerState<_FormularioPartido> {
         valor: equipos,
         onReintentar: () => ref.invalidate(equiposProvider(widget.idTemporada)),
         esVacio: (l) => l.length < 2,
-        mensajeVacio: 'Faltan equipos (mínimo 2)',
+        mensajeVacio: 'Faltan equipos',
         datos: (listaEquipos) => Form(
           key: _form,
           child: ListView(
@@ -205,7 +205,7 @@ class _FormularioPartidoState extends ConsumerState<_FormularioPartido> {
                     ),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.schedule_rounded),
-                      label: Text(_hora == null ? 'Hora (opcional)' : _hora!.format(context)),
+                      label: Text(_hora == null ? 'Hora' : _hora!.format(context)),
                       onPressed: () async {
                         final h = await showTimePicker(context: context, initialTime: _hora ?? const TimeOfDay(hour: 19, minute: 0));
                         if (h != null) setState(() => _hora = h);
