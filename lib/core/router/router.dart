@@ -12,6 +12,9 @@ import '../../features/admin/presentacion/admin_partidos_pantalla.dart';
 import '../../features/admin/presentacion/admin_plantilla_pantalla.dart';
 import '../../features/admin/presentacion/admin_temporadas_pantalla.dart';
 import '../../features/admin/presentacion/admin_usuarios_pantalla.dart';
+import '../../features/anotador/presentacion/anotador_inicio_pantalla.dart';
+import '../../features/anotador/presentacion/anotador_pantalla.dart';
+import '../../features/anotador/presentacion/partido_control_pantalla.dart';
 import '../../features/auth/presentacion/cuenta_pantalla.dart';
 import '../../features/auth/presentacion/login_pantalla.dart';
 import '../../features/auth/presentacion/registro_pantalla.dart';
@@ -38,6 +41,12 @@ String? redireccionPorSesion(EstadoSesion sesion, Uri destino) {
       return Uri(path: '/login', queryParameters: {'destino': destino.toString()}).toString();
     }
     if (!sesion.esAdmin) return '/cuenta';
+  }
+  if (ruta.startsWith('/anotador')) {
+    if (!sesion.autenticado) {
+      return Uri(path: '/login', queryParameters: {'destino': destino.toString()}).toString();
+    }
+    if (!sesion.puedeAnotar) return '/cuenta';
   }
   if ((ruta == '/login' || ruta == '/registro') && sesion.autenticado) {
     return destino.queryParameters['destino'] ?? '/cuenta';
@@ -140,6 +149,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/login', builder: (_, s) => LoginPantalla(destino: s.uri.queryParameters['destino'])),
       GoRoute(path: '/registro', builder: (_, s) => RegistroPantalla(destino: s.uri.queryParameters['destino'])),
+      // Anotador en vivo (rol anotador o admin).
+      GoRoute(
+        path: '/anotador',
+        builder: (_, _) => const AnotadorInicioPantalla(),
+        routes: [
+          GoRoute(
+            path: 't/:t/p/:p',
+            builder: (_, s) => PartidoControlPantalla(
+                idTemporada: int.parse(s.pathParameters['t']!), idPartido: int.parse(s.pathParameters['p']!)),
+            routes: [
+              GoRoute(
+                  path: 'alineacion',
+                  builder: (_, s) => AdminAlineacionPantalla(
+                      idTemporada: int.parse(s.pathParameters['t']!),
+                      idPartido: int.parse(s.pathParameters['p']!))),
+              GoRoute(
+                  path: 'juego',
+                  builder: (_, s) => AnotadorPantalla(idPartido: int.parse(s.pathParameters['p']!))),
+            ],
+          ),
+        ],
+      ),
       GoRoute(
         path: '/admin',
         builder: (_, _) => const AdminPanelPantalla(),

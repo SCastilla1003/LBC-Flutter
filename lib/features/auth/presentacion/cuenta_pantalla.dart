@@ -34,7 +34,7 @@ class CuentaPantalla extends ConsumerWidget {
                       ? sesion.usuario!.username
                       : 'Tu cuenta LBC',
                   subtitulo: sesion.autenticado
-                      ? '${sesion.esAdmin ? 'Administrador' : 'Aficionado'} · ${sesion.usuario!.proveedor == 'google' ? 'Cuenta de Google' : 'Cuenta local'}'
+                      ? '${sesion.esAdmin ? 'Administrador' : sesion.usuario!.esAnotador ? 'Anotador' : 'Aficionado'} · ${sesion.usuario!.proveedor == 'google' ? 'Cuenta de Google' : 'Cuenta local'}'
                       : 'Entra para seguir a tu equipo, comparar jugadores y guardar tus favoritos.',
                   icono: sesion.autenticado
                       ? Icons.person_rounded
@@ -201,7 +201,11 @@ class CuentaPantalla extends ConsumerWidget {
                       ),
                       subtitle: Text(
                         [
-                          sesion.esAdmin ? 'Administrador' : 'Aficionado',
+                          sesion.esAdmin
+                              ? 'Administrador'
+                              : sesion.usuario!.esAnotador
+                                  ? 'Anotador'
+                                  : 'Aficionado',
                           sesion.usuario!.proveedor == 'google'
                               ? 'Cuenta de Google'
                               : 'Cuenta local',
@@ -216,6 +220,14 @@ class CuentaPantalla extends ConsumerWidget {
                       icon: const Icon(Icons.admin_panel_settings_outlined),
                       label: const Text('Panel de administración'),
                     ),
+                  if (sesion.puedeAnotar) ...[
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      onPressed: () => context.push('/anotador'),
+                      icon: const Icon(Icons.sports_baseball_outlined),
+                      label: const Text('Anotar partidos'),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: () async {

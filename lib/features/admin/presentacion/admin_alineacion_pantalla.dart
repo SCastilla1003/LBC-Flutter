@@ -43,8 +43,9 @@ final _editorProvider = FutureProvider.autoDispose.family<_DatosEditor, (int, in
 });
 
 /// Editor de la alineación de un partido: lanzador inicial, orden de bateo
-/// (9 turnos con posición) y banca de cada equipo. Se guarda como borrador o
-/// se publica; al publicar, el partido pasa a "Alineación lista".
+/// (9 turnos con posición) y banca de cada equipo. Se puede guardar incompleta
+/// (el partido sigue "Programado"); publicarla la muestra a los aficionados.
+/// Completa solo se exige para iniciar el partido.
 class AdminAlineacionPantalla extends ConsumerWidget {
   const AdminAlineacionPantalla({super.key, required this.idTemporada, required this.idPartido});
 
@@ -167,7 +168,7 @@ class _EditorState extends ConsumerState<_Editor> {
       await showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(
-          title: Text(publicar ? 'Falta completar la alineación' : 'Revisa la alineación'),
+          title: Text(publicar ? 'Para publicarla falta completar la alineación' : 'Revisa la alineación'),
           content: Text(errores.map((e) => '• $e').join('\n')),
           actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Entendido'))],
         ),
@@ -181,7 +182,7 @@ class _EditorState extends ConsumerState<_Editor> {
       () => ref
           .read(ligaRepositorioProvider)
           .guardarAlineacion(_partido.id, publicar: publicar, local: _local.datos(), visita: _visita.datos()),
-      exito: publicar ? 'Alineación publicada' : 'Borrador guardado',
+      exito: publicar ? 'Alineación publicada' : 'Alineación guardada',
     );
     if (mounted) setState(() => _guardando = false);
   }
@@ -241,7 +242,7 @@ class _EditorState extends ConsumerState<_Editor> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: _guardando ? null : () => _guardar(publicar: false),
-                          child: Text(publicada ? 'Guardar cambios' : 'Guardar borrador'),
+                          child: const Text('Guardar'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -251,7 +252,7 @@ class _EditorState extends ConsumerState<_Editor> {
                           icon: _guardando
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                               : const Icon(Icons.campaign_rounded),
-                          label: Text(publicada ? 'Republicar' : 'Publicar'),
+                          label: Text(publicada ? 'Republicar' : 'Publicar alineación'),
                         ),
                       ),
                     ]),

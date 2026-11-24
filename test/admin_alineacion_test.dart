@@ -161,7 +161,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('Publicar'));
+    await tester.tap(find.text('Publicar alineación'));
     await tester.pumpAndSettle();
 
     final put = servidor.peticiones.where((p) => p.$1 == 'PUT').single;
@@ -183,15 +183,15 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Publicar'));
+    await tester.tap(find.text('Publicar alineación'));
     await tester.pumpAndSettle();
-    expect(find.text('Falta completar la alineación'), findsOneWidget);
+    expect(find.text('Para publicarla falta completar la alineación'), findsOneWidget);
     expect(servidor.peticiones.where((p) => p.$1 == 'PUT'), isEmpty);
 
     // El borrador sí se guarda.
     await tester.tap(find.text('Entendido'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Guardar borrador'));
+    await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     final put = servidor.peticiones.where((p) => p.$1 == 'PUT').single;
     expect((put.$3! as Map)['publicar'], isFalse);
@@ -202,6 +202,6 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
     expect(find.text('El partido ya empezó: la alineación ya no se puede cambiar.'), findsOneWidget);
-    expect(find.text('Publicar'), findsNothing);
+    expect(find.text('Publicar alineación'), findsNothing);
   });
 }

@@ -21,6 +21,8 @@ abstract class Usuario with _$Usuario {
   factory Usuario.fromJson(Map<String, dynamic> json) => _$UsuarioFromJson(json);
 
   bool get esAdmin => roles.contains('ADMIN');
+
+  bool get esAnotador => roles.contains('ANOTADOR');
 }
 
 /// Respuesta de login / registro / Google (`AuthResponse`).
@@ -54,6 +56,9 @@ class EstadoSesion {
 
   bool get autenticado => token != null && usuario != null && !expirada;
   bool get esAdmin => autenticado && usuario!.esAdmin;
+
+  /// Admin o anotador: pueden llevar el marcador en vivo y editar alineaciones.
+  bool get puedeAnotar => autenticado && (usuario!.esAdmin || usuario!.esAnotador);
   bool get expirada => expiraEn != null && DateTime.now().isAfter(expiraEn!);
 }
 

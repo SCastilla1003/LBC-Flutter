@@ -11,6 +11,7 @@ import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/imagen_api.dart';
 import '../../../core/widgets/vista_async.dart';
+import '../../../liga/datos/juego_repositorio.dart';
 import '../../../liga/datos/liga_repositorio.dart';
 import '../../equipos/datos/equipos_repositorio.dart';
 import '../../jugadores/datos/jugadores_repositorio.dart';
@@ -34,6 +35,7 @@ void refrescarLiga(WidgetRef ref) {
   ref.invalidate(jugadoresLigaProvider);
   ref.invalidate(plantillaLigaProvider);
   ref.invalidate(agentesLibresLigaProvider);
+  ref.invalidate(estadoJuegoProvider);
   // Pantallas que aún leen el contrato anterior.
   ref.invalidate(temporadasProvider);
   ref.invalidate(temporadaActualProvider);

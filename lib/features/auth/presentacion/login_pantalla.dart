@@ -74,7 +74,12 @@ class _LoginPantallaState extends ConsumerState<LoginPantalla> {
       final r = await llamada();
       await ref.read(sesionProvider.notifier).iniciar(r);
       if (!mounted) return;
-      context.go(widget.destino ?? (r.usuario.esAdmin ? '/admin' : '/cuenta'));
+      context.go(widget.destino ??
+          (r.usuario.esAdmin
+              ? '/admin'
+              : r.usuario.esAnotador
+                  ? '/anotador'
+                  : '/cuenta'));
     } catch (e) {
       final fallo = FalloApi.desde(e);
       if (!mounted) return;
