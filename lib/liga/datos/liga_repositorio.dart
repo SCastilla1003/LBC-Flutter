@@ -89,6 +89,12 @@ final temporadasLigaProvider =
 final temporadaActualLigaProvider =
     FutureProvider<TemporadaLiga>((ref) => ref.watch(ligaRepositorioProvider).temporadaActual());
 
+final temporadaLigaProvider = FutureProvider.autoDispose
+    .family<TemporadaLiga, int>((ref, id) => ref.watch(ligaRepositorioProvider).temporada(id));
+
+final equiposTemporadaLigaProvider = FutureProvider.autoDispose
+    .family<List<EquipoRefLiga>, int>((ref, id) => ref.watch(ligaRepositorioProvider).equiposDeTemporada(id));
+
 final partidosLigaProvider = FutureProvider.autoDispose
     .family<List<PartidoResumen>, int>((ref, temporadaId) => ref.watch(ligaRepositorioProvider).partidos(temporadaId));
 

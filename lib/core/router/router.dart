@@ -13,16 +13,15 @@ import '../../features/auth/presentacion/login_pantalla.dart';
 import '../../features/auth/presentacion/registro_pantalla.dart';
 import '../../features/comparador/presentacion/comparador_pantalla.dart';
 import '../../features/equipos/presentacion/equipo_detalle_pantalla.dart';
-import '../../features/equipos/presentacion/posiciones_pantalla.dart';
 import '../../features/jugadores/presentacion/lideres_pantalla.dart';
 import '../../features/jugadores/presentacion/perfil_bateador_pantalla.dart';
 import '../../features/jugadores/presentacion/perfil_lanzador_pantalla.dart';
-import '../../features/partidos/presentacion/partido_detalle_pantalla.dart';
-import '../../features/partidos/presentacion/partidos_pantalla.dart';
 import '../../features/prediccion/presentacion/prediccion_pantalla.dart';
 import '../../features/temporadas/presentacion/inicio_pantalla.dart';
-import '../../features/temporadas/presentacion/temporada_detalle_pantalla.dart';
-import '../../features/temporadas/presentacion/temporadas_pantalla.dart';
+import '../../liga/presentacion/alineacion_liga_pantalla.dart';
+import '../../liga/presentacion/partido_liga_pantalla.dart';
+import '../../liga/presentacion/temporada_liga_pantalla.dart';
+import '../../liga/presentacion/temporadas_liga_pantalla.dart';
 import '../sesion/sesion.dart';
 import 'marco_navegacion.dart';
 
@@ -60,12 +59,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/temporadas',
-              builder: (_, _) => const TemporadasPantalla(),
+              builder: (_, _) => const TemporadasLigaPantalla(),
               routes: [
                 GoRoute(
                   path: ':t',
-                  builder: (_, s) => TemporadaDetallePantalla(idTemporada: s.pathParameters['t']!),
+                  builder: (_, s) => TemporadaLigaPantalla(idTemporada: int.parse(s.pathParameters['t']!)),
                   routes: [
+                    GoRoute(
+                      path: 'partidos/:p',
+                      builder: (_, s) => PartidoLigaPantalla(
+                        idTemporada: int.parse(s.pathParameters['t']!),
+                        idPartido: int.parse(s.pathParameters['p']!),
+                      ),
+                      routes: [
+                        GoRoute(
+                          path: 'alineacion',
+                          builder: (_, s) => AlineacionLigaPantalla(
+                            idTemporada: int.parse(s.pathParameters['t']!),
+                            idPartido: int.parse(s.pathParameters['p']!),
+                          ),
+                        ),
+                        GoRoute(
+                          path: 'pitcheo',
+                          builder: (_, s) => PitcheoLigaPantalla(
+                            idTemporada: int.parse(s.pathParameters['t']!),
+                            idPartido: int.parse(s.pathParameters['p']!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Estadísticas: se conservan tal cual y se adaptan después.
                     GoRoute(
                         path: 'comparar/:tipo',
                         builder: (_, s) => ComparadorPantalla(
@@ -74,18 +97,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                               a: s.uri.queryParameters['a'] ?? '',
                               b: s.uri.queryParameters['b'] ?? '',
                             )),
-                    GoRoute(
-                        path: 'posiciones',
-                        builder: (_, s) => PosicionesPantalla(idTemporada: s.pathParameters['t']!)),
-                    GoRoute(
-                        path: 'partidos',
-                        builder: (_, s) => PartidosPantalla(idTemporada: s.pathParameters['t']!),
-                        routes: [
-                          GoRoute(
-                              path: ':p',
-                              builder: (_, s) => PartidoDetallePantalla(
-                                  idTemporada: s.pathParameters['t']!, idPartido: s.pathParameters['p']!)),
-                        ]),
                     GoRoute(
                         path: 'equipos/:e',
                         builder: (_, s) => EquipoDetallePantalla(
