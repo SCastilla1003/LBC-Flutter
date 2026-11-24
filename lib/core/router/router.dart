@@ -11,6 +11,7 @@ import '../../features/admin/presentacion/admin_panel_pantalla.dart';
 import '../../features/admin/presentacion/admin_partidos_pantalla.dart';
 import '../../features/admin/presentacion/admin_plantilla_pantalla.dart';
 import '../../features/admin/presentacion/admin_temporadas_pantalla.dart';
+import '../../features/admin/presentacion/admin_usuarios_pantalla.dart';
 import '../../features/auth/presentacion/cuenta_pantalla.dart';
 import '../../features/auth/presentacion/login_pantalla.dart';
 import '../../features/auth/presentacion/registro_pantalla.dart';
@@ -147,6 +148,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: 'equipos', builder: (_, _) => const AdminEquiposPantalla()),
           GoRoute(path: 'jugadores', builder: (_, _) => const AdminJugadoresPantalla()),
           GoRoute(path: 'estadios', builder: (_, _) => const AdminEstadiosPantalla()),
+          GoRoute(path: 'usuarios', builder: (_, _) => const AdminUsuariosPantalla()),
           GoRoute(
               path: 't/:t/plantilla',
               builder: (_, s) => AdminPlantillasPantalla(idTemporada: int.parse(s.pathParameters['t']!))),

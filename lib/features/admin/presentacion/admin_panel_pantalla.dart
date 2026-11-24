@@ -107,7 +107,7 @@ class _Contenido extends ConsumerWidget {
                 compacto: true,
                 etiqueta: 'Solo administradores',
                 titulo: 'Panel de administración',
-                subtitulo: 'Temporadas, equipos, jugadores, estadios y partidos de la liga.',
+                subtitulo: 'Temporadas, equipos, jugadores, estadios, partidos y usuarios de la liga.',
                 icono: Icons.admin_panel_settings_rounded,
                 contenido: Wrap(
                   spacing: 8,
@@ -149,6 +149,12 @@ class _Contenido extends ConsumerWidget {
                 'Estadios',
                 'Dónde se juegan los partidos',
                 '/admin/estadios',
+              ),
+              opcion(
+                Icons.manage_accounts_rounded,
+                'Usuarios',
+                'Cuentas registradas y su rol: aficionado, anotador o admin',
+                '/admin/usuarios',
               ),
               EncabezadoSeccion(
                 actual == null ? 'Temporada' : 'Temporada ${actual.anio}',
