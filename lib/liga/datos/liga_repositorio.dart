@@ -87,6 +87,26 @@ class LigaRepositorio {
 
   Future<void> eliminarEquipo(int id) => _api.delete('/equipos/$id');
 
+  /// Inscribe un equipo en la temporada, aunque todavía no tenga jugadores.
+  Future<EquipoRefLiga> inscribirEquipo(int temporadaId, int equipoId) async => EquipoRefLiga.fromJson(
+      await _api.post('/temporadas/$temporadaId/equipos', {'equipoId': equipoId}) as Map<String, dynamic>);
+
+  /// Quita el equipo de la temporada (la API lo impide si tiene jugadores o partidos).
+  Future<void> desinscribirEquipo(int temporadaId, int equipoId) =>
+      _api.delete('/temporadas/$temporadaId/equipos/$equipoId');
+
+  /// Roster más reciente del equipo en otra temporada (la última, por año, en la que
+  /// tuvo jugadores). null si nunca ha tenido jugadores.
+  Future<({TemporadaLiga temporada, List<PlantillaLiga> plantilla})?> rosterAnterior(int temporadaId, int equipoId) async {
+    final otras = (await temporadas()).where((t) => t.id != temporadaId).toList()
+      ..sort((a, b) => b.anio != a.anio ? b.anio.compareTo(a.anio) : b.id.compareTo(a.id));
+    for (final t in otras) {
+      final p = await plantilla(t.id, equipoId);
+      if (p.isNotEmpty) return (temporada: t, plantilla: p);
+    }
+    return null;
+  }
+
   Future<EstadioLiga> crearEstadio({required String nombre, String? ubicacion}) async => EstadioLiga.fromJson(
       await _api.post('/estadios', {'nombre': nombre, 'ubicacion': ubicacion}) as Map<String, dynamic>);
 

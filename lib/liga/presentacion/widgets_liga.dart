@@ -13,7 +13,8 @@ String etiquetaEstadoTemporada(EstadoTemporadaLiga e) => switch (e) {
   EstadoTemporadaLiga.finalizada => 'Finalizada',
 };
 
-/// Escudo circular: foto si el equipo tiene escudo, si no la abreviatura sobre su color.
+/// Escudo del equipo: la imagen completa (sin recortar) sobre una placa blanca
+/// de esquinas redondeadas; si no hay escudo, la abreviatura sobre su color.
 class EscudoLiga extends StatelessWidget {
   const EscudoLiga({super.key, required this.equipo, this.tamano = 44});
 
@@ -24,6 +25,8 @@ class EscudoLiga extends StatelessWidget {
   Widget build(BuildContext context) {
     final esquema = Theme.of(context).colorScheme;
     final color = ColoresEquipo.de(context, equipo.color);
+    final radio = BorderRadius.circular(tamano * 0.24);
+    final url = Entorno.urlAbsoluta(equipo.escudoUrl);
     final iniciales = Container(
       alignment: Alignment.center,
       color: color,
@@ -39,16 +42,16 @@ class EscudoLiga extends StatelessWidget {
         ),
       ),
     );
-    // Aro blanco y contorno fino, como un parche de gorra.
     return Container(
       width: tamano,
       height: tamano,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: esquema.surfaceContainerLowest,
-        border: Border.all(color: esquema.surfaceContainerLowest, width: 2),
+        // Placa blanca: los escudos suelen venir sobre fondo blanco o transparente.
+        color: ColoresMarca.blanco,
+        borderRadius: radio,
+        border: Border.all(color: esquema.outlineVariant),
         boxShadow: [
-          BoxShadow(color: esquema.outlineVariant, spreadRadius: 1),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 6,
@@ -56,16 +59,16 @@ class EscudoLiga extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipOval(
-        child: equipo.escudoUrl == null
-            ? iniciales
-            : Image.network(
-                // El escudo puede venir como ruta de la API (/api/v1/equipos/4/escudo?v=...).
-                Entorno.urlAbsoluta(equipo.escudoUrl)!,
-                fit: BoxFit.cover,
+      child: url == null
+          ? iniciales
+          : Padding(
+              padding: EdgeInsets.all(tamano * 0.08),
+              child: Image.network(
+                url,
+                fit: BoxFit.contain,
                 errorBuilder: (_, _, _) => iniciales,
               ),
-      ),
+            ),
     );
   }
 }

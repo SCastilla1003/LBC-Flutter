@@ -69,13 +69,13 @@ class _Contenido extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final elegida = ref.watch(temporadaAdminProvider);
-    // Por defecto, la temporada en curso; si no hay, la más reciente.
+    // La más reciente arriba (por año y, a igual año, la última creada) y elegida
+    // por defecto.
+    final ordenadas = [...temporadas]
+      ..sort((a, b) => b.anio != a.anio ? b.anio.compareTo(a.anio) : b.id.compareTo(a.id));
     final actual =
-        temporadas.where((t) => t.id == elegida).firstOrNull ??
-        temporadas
-            .where((t) => t.estado == EstadoTemporadaLiga.activa)
-            .firstOrNull ??
-        temporadas.firstOrNull;
+        ordenadas.where((t) => t.id == elegida).firstOrNull ??
+        ordenadas.firstOrNull;
 
     Widget opcion(IconData icono, String titulo, String detalle, String ruta) =>
         Padding(
@@ -169,7 +169,7 @@ class _Contenido extends ConsumerWidget {
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Temporada'),
                   items: [
-                    for (final t in temporadas)
+                    for (final t in ordenadas)
                       DropdownMenuItem(
                         value: t.id,
                         child: Text(
@@ -183,8 +183,8 @@ class _Contenido extends ConsumerWidget {
                 const SizedBox(height: 14),
                 opcion(
                   Icons.groups_rounded,
-                  'Plantillas',
-                  'Jugadores de cada equipo en esta temporada',
+                  'Equipos y rosters',
+                  'Inscribir equipos y actualizar sus rosters',
                   '/admin/t/${actual.id}/plantilla',
                 ),
                 opcion(

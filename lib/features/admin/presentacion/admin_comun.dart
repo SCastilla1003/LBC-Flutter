@@ -530,9 +530,18 @@ class SelectorFoto extends StatelessWidget {
     final vista = elegida != null
         ? ClipRRect(
             borderRadius: radio,
-            child: Image.memory(elegida!.bytes, width: 80, height: 80, fit: BoxFit.cover),
+            child: Container(
+              color: cuadrada ? Colors.white : null,
+              child: Image.memory(elegida!.bytes, width: 80, height: 80, fit: cuadrada ? BoxFit.contain : BoxFit.cover),
+            ),
           )
-        : ImagenApi(urlFoto: quitada ? null : urlActual, nombre: nombre.isEmpty ? '?' : nombre, tamano: 80, cuadrada: cuadrada);
+        : ImagenApi(
+            urlFoto: quitada ? null : urlActual,
+            nombre: nombre.isEmpty ? '?' : nombre,
+            tamano: 80,
+            cuadrada: cuadrada,
+            completa: cuadrada,
+          );
     return Row(children: [
       vista,
       const SizedBox(width: 16),

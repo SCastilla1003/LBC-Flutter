@@ -52,6 +52,7 @@ class _Contenido extends ConsumerWidget {
     ref.invalidate(temporadasLigaProvider);
     ref.invalidate(posicionesLigaProvider(temporada.id));
     ref.invalidate(partidosLigaProvider(temporada.id));
+    ref.invalidate(equiposTemporadaLigaProvider(temporada.id));
     await ref.read(partidosLigaProvider(temporada.id).future);
   }
 
@@ -59,6 +60,7 @@ class _Contenido extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partidos = ref.watch(partidosLigaProvider(temporada.id));
     final posiciones = ref.watch(posicionesLigaProvider(temporada.id));
+    final equipos = ref.watch(equiposTemporadaLigaProvider(temporada.id));
     return RefreshIndicator(
       onRefresh: () => _recargar(ref),
       child: ListView(
@@ -84,7 +86,12 @@ class _Contenido extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Cabecera(temporada: temporada, partidos: lista),
-                  _Cifras(temporada: temporada, partidos: lista, posiciones: posiciones.value),
+                  _Cifras(
+                    temporada: temporada,
+                    partidos: lista,
+                    posiciones: posiciones.value,
+                    equipos: equipos.value?.length,
+                  ),
                   const SizedBox(height: 16),
                   _Graficas(temporada: temporada, partidos: lista, posiciones: posiciones),
                   _Partidos(temporada: temporada, partidos: lista),
@@ -172,11 +179,14 @@ class _Cabecera extends StatelessWidget {
 }
 
 class _Cifras extends StatelessWidget {
-  const _Cifras({required this.temporada, required this.partidos, required this.posiciones});
+  const _Cifras({required this.temporada, required this.partidos, required this.posiciones, required this.equipos});
 
   final TemporadaLiga temporada;
   final List<PartidoResumen> partidos;
   final List<PosicionLiga>? posiciones;
+
+  /// Equipos inscritos en la temporada (null mientras carga).
+  final int? equipos;
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +195,6 @@ class _Cifras extends StatelessWidget {
     final carreras = jugados.fold<int>(0, (s, p) => s + p.marcador.local + p.marcador.visita);
     final promedio = jugados.isEmpty ? null : carreras / jugados.length;
     final lider = posiciones?.firstOrNull;
-    final equipos = <int>{for (final p in partidos) ...[p.equipoLocal.id, p.equipoVisita.id]}.length;
     return RejillaCifras(
       hijos: [
         _Kpi(
@@ -210,8 +219,9 @@ class _Cifras extends StatelessWidget {
           onTap: lider == null ? null : () => context.push('/temporadas/${temporada.id}/equipos/${lider.equipo.id}'),
         ),
         _Kpi(
-          valor: equipos,
+          valor: equipos ?? 0,
           etiqueta: 'Equipos',
+          onTap: () => context.push('/temporadas/${temporada.id}'),
           icono: Icons.groups_rounded,
           tono: tema.brightness == Brightness.dark ? tema.colorScheme.secondary : ColoresMarca.amarilloTexto,
         ),

@@ -14,6 +14,7 @@ class ImagenApi extends StatelessWidget {
     this.tamano = 44,
     this.color,
     this.cuadrada = false,
+    this.completa = false,
   });
 
   final String? urlFoto;
@@ -21,6 +22,9 @@ class ImagenApi extends StatelessWidget {
   final double tamano;
   final Color? color;
   final bool cuadrada;
+
+  /// Muestra la imagen entera (escudos) en lugar de recortarla para llenar el marco.
+  final bool completa;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +43,7 @@ class ImagenApi extends StatelessWidget {
         imageUrl: url,
         width: tamano,
         height: tamano,
-        fit: BoxFit.cover,
+        fit: completa ? BoxFit.contain : BoxFit.cover,
         fadeInDuration: const Duration(milliseconds: 200),
         placeholder: (_, _) => respaldo,
         errorWidget: (_, _, _) => respaldo,

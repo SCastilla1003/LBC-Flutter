@@ -110,15 +110,20 @@ Future<void> _pintar(WidgetTester t, Widget pantalla, Map<String, Object> rutas,
 void main() {
   setUpAll(() => initializeDateFormatting('es'));
 
-  testWidgets('Inicio con la temporada recién creada (sin partidos) no falla', (t) async {
+  testWidgets('Inicio con la temporada recién creada (sin partidos) no falla y cuenta sus equipos', (t) async {
     await _pintar(t, const InicioPantalla(), {
       '/temporadas': [_temporada],
       '/temporadas/1/partidos': <Object>[],
       '/temporadas/1/posiciones': <Object>[],
+      // Un equipo inscrito, sin partidos todavía (como New York Yankees en la app).
+      '/temporadas/1/equipos': [_eq(4, 'New York Yankees', 'NYY', 'azul')],
     }, TemaLbc.oscuro());
     expect(t.takeException(), isNull);
     expect(find.text('Algo salió mal'), findsNothing);
     expect(find.text('Temporada'), findsOneWidget);
+    // La cifra de Equipos es la única "1" en pantalla (las demás están en 0).
+    expect(find.text('Equipos'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
     expect(find.text('Esta temporada todavía no tiene partidos.'), findsOneWidget);
   });
 
