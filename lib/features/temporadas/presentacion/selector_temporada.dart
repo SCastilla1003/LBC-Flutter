@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/estados.dart';
-import '../datos/temporadas_repositorio.dart';
+import '../../../liga/datos/liga_repositorio.dart';
+import '../../../liga/datos/temporada_en_foco.dart';
+import '../../../liga/presentacion/widgets_liga.dart';
 
 /// Botón de la barra superior para cambiar la temporada en foco (Inicio y Líderes).
 class SelectorTemporada extends ConsumerWidget {
@@ -27,35 +29,37 @@ class _ListaTemporadas extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final temporadas = ref.watch(temporadasProvider);
-    final elegida = ref.watch(temporadaSeleccionadaProvider);
-    final enFoco = ref.watch(idTemporadaEnFocoProvider).value;
+    final temporadas = ref.watch(temporadasLigaProvider);
+    final elegida = ref.watch(temporadaElegidaLigaProvider);
+    final enFoco = ref.watch(temporadaEnFocoLigaProvider).value?.id;
+    final esquema = Theme.of(context).colorScheme;
     return SafeArea(
       child: temporadas.when(
         loading: () => const SizedBox(height: 240, child: EsqueletoLista(filas: 3, conAvatar: false)),
-        error: (e, _) => EstadoError(error: e, compacto: true, onReintentar: () => ref.invalidate(temporadasProvider)),
+        error: (e, _) =>
+            EstadoError(error: e, compacto: true, onReintentar: () => ref.invalidate(temporadasLigaProvider)),
         data: (lista) => ListView(
           shrinkWrap: true,
           children: [
             ListTile(
-              leading: const Icon(Icons.auto_awesome_rounded),
-              title: const Text('Actual'),
-              trailing: elegida == null ? const Icon(Icons.check_rounded) : null,
+              leading: Icon(Icons.auto_awesome_rounded, color: esquema.primary),
+              title: const Text('La temporada en curso'),
+              trailing: elegida == null ? Icon(Icons.check_rounded, color: esquema.primary) : null,
               onTap: () {
-                ref.read(temporadaSeleccionadaProvider.notifier).elegir(null);
+                ref.read(temporadaElegidaLigaProvider.notifier).elegir(null);
                 Navigator.pop(context);
               },
             ),
             const Divider(),
-            for (final t in lista)
+            for (final t in [...lista]..sort((a, b) => b.anio.compareTo(a.anio)))
               ListTile(
-                title: Text(t.nombreTemporada),
-                subtitle: Text('${t.anio} · ${t.totalEquipos} equipos'),
+                title: Text(t.nombre),
+                subtitle: Text('${t.anio} · ${etiquetaEstadoTemporada(t.estado)}'),
                 trailing: elegida == t.id || (elegida == null && enFoco == t.id)
-                    ? const Icon(Icons.check_rounded)
+                    ? Icon(Icons.check_rounded, color: esquema.primary)
                     : null,
                 onTap: () {
-                  ref.read(temporadaSeleccionadaProvider.notifier).elegir(t.id);
+                  ref.read(temporadaElegidaLigaProvider.notifier).elegir(t.id);
                   Navigator.pop(context);
                 },
               ),

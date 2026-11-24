@@ -6,71 +6,59 @@ import '../../../core/charts/barras_apiladas.dart';
 import '../../../core/charts/base_graficas.dart';
 import '../../../core/charts/grafica_carrera.dart';
 import '../../../core/charts/grafica_partidos.dart';
-import '../../../core/charts/waffle.dart';
-import '../../../core/red/fallo_api.dart';
 import '../../../core/tema/colores_equipo.dart';
 import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/hero_lbc.dart';
-import '../../../core/widgets/imagen_api.dart';
-import '../../equipos/datos/equipos_repositorio.dart';
-import '../../equipos/datos/modelos_equipo.dart';
-import '../../partidos/datos/modelos_partido.dart';
-import '../../partidos/datos/partidos_repositorio.dart';
-import '../../partidos/presentacion/tarjeta_partido.dart';
-import '../datos/modelos_temporada.dart';
-import '../datos/temporadas_repositorio.dart';
+import '../../../liga/datos/liga_repositorio.dart';
+import '../../../liga/datos/modelos_liga.dart';
+import '../../../liga/datos/temporada_en_foco.dart';
+import '../../../liga/presentacion/temporada_liga_pantalla.dart';
+import '../../../liga/presentacion/widgets_liga.dart';
 import 'selector_temporada.dart';
 
+/// Inicio (contrato v1): portada de la temporada en foco, cifras clave,
+/// gráficas calculadas con los partidos y las posiciones, y los últimos y
+/// próximos partidos.
 class InicioPantalla extends ConsumerWidget {
   const InicioPantalla({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final idEnFoco = ref.watch(idTemporadaEnFocoProvider);
+    final enFoco = ref.watch(temporadaEnFocoLigaProvider);
     return Scaffold(
       appBar: AppBar(
         title: const MarcaTitulo(),
         actions: const [SelectorTemporada(), SizedBox(width: 6)],
       ),
-      body: idEnFoco.when(
+      body: enFoco.when(
         loading: () => const EsqueletoDetalle(),
-        error: (e, _) => e is FalloNoEncontrado
-            ? const EstadoVacio(
-                mensaje: 'Sin temporadas',
-                icono: Icons.calendar_today_outlined,
-              )
-            : EstadoError(
-                error: e,
-                onReintentar: () {
-                  ref.invalidate(temporadaActualProvider);
-                  ref.invalidate(idTemporadaEnFocoProvider);
-                },
-              ),
-        data: (id) => _Contenido(idTemporada: id),
+        error: (e, _) => EstadoError(error: e, onReintentar: () => ref.invalidate(temporadasLigaProvider)),
+        data: (t) => t == null
+            ? const EstadoVacio(mensaje: 'Sin temporadas', icono: Icons.calendar_today_outlined)
+            : _Contenido(temporada: t),
       ),
     );
   }
 }
 
 class _Contenido extends ConsumerWidget {
-  const _Contenido({required this.idTemporada});
+  const _Contenido({required this.temporada});
 
-  final String idTemporada;
+  final TemporadaLiga temporada;
 
   Future<void> _recargar(WidgetRef ref) async {
-    ref.invalidate(temporadaDetalleProvider(idTemporada));
-    ref.invalidate(posicionesProvider(idTemporada));
-    ref.invalidate(partidosProvider(idTemporada));
-    ref.invalidate(estadisticasTemporadaProvider(idTemporada));
-    await ref.read(estadisticasTemporadaProvider(idTemporada).future);
+    ref.invalidate(temporadasLigaProvider);
+    ref.invalidate(posicionesLigaProvider(temporada.id));
+    ref.invalidate(partidosLigaProvider(temporada.id));
+    await ref.read(partidosLigaProvider(temporada.id).future);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detalle = ref.watch(temporadaDetalleProvider(idTemporada));
-    final estadisticas = ref.watch(estadisticasTemporadaProvider(idTemporada));
+    final partidos = ref.watch(partidosLigaProvider(temporada.id));
+    final posiciones = ref.watch(posicionesLigaProvider(temporada.id));
     return RefreshIndicator(
       onRefresh: () => _recargar(ref),
       child: ListView(
@@ -78,48 +66,30 @@ class _Contenido extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           AnchoMaximo(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                detalle.when(
-                  loading: () =>
-                      const Brillo(child: Esqueleto(alto: 84, radio: 20)),
-                  error: (e, _) => EstadoError(
-                    error: e,
-                    compacto: true,
-                    onReintentar: () =>
-                        ref.invalidate(temporadaDetalleProvider(idTemporada)),
-                  ),
-                  data: (t) => _Cabecera(temporada: t),
-                ),
-                const SizedBox(height: 16),
-                estadisticas.when(
-                  loading: () => Brillo(
-                    child: Column(
-                      children: [
-                        RejillaCifras(
-                          hijos: List.generate(
-                            4,
-                            (_) => const Esqueleto(alto: 76, radio: 12),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Esqueleto(alto: 260, radio: 16),
-                      ],
-                    ),
-                  ),
-                  error: (e, _) => EstadoError(
-                    error: e,
-                    compacto: true,
-                    onReintentar: () => ref.invalidate(
-                      estadisticasTemporadaProvider(idTemporada),
-                    ),
-                  ),
-                  data: (s) =>
-                      _Graficas(estadisticas: s, idTemporada: idTemporada),
-                ),
-                _Partidos(idTemporada: idTemporada),
-              ],
+            child: partidos.when(
+              loading: () => Brillo(
+                child: Column(children: [
+                  const Esqueleto(alto: 120, radio: 16),
+                  const SizedBox(height: 16),
+                  RejillaCifras(hijos: List.generate(4, (_) => const Esqueleto(alto: 96, radio: 12))),
+                  const SizedBox(height: 16),
+                  const Esqueleto(alto: 260, radio: 12),
+                ]),
+              ),
+              error: (e, _) => EstadoError(
+                error: e,
+                onReintentar: () => ref.invalidate(partidosLigaProvider(temporada.id)),
+              ),
+              data: (lista) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Cabecera(temporada: temporada, partidos: lista),
+                  _Cifras(temporada: temporada, partidos: lista, posiciones: posiciones.value),
+                  const SizedBox(height: 16),
+                  _Graficas(temporada: temporada, partidos: lista, posiciones: posiciones),
+                  _Partidos(temporada: temporada, partidos: lista),
+                ],
+              ),
             ),
           ),
         ],
@@ -128,39 +98,32 @@ class _Contenido extends ConsumerWidget {
   }
 }
 
-class _Cabecera extends StatelessWidget {
-  const _Cabecera({required this.temporada});
+bool _jugado(PartidoResumen p) => p.estado == EstadoPartidoLiga.finalizado;
 
-  final TemporadaDetalle temporada;
+class _Cabecera extends StatelessWidget {
+  const _Cabecera({required this.temporada, required this.partidos});
+
+  final TemporadaLiga temporada;
+  final List<PartidoResumen> partidos;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final avance = temporada.totalPartidos == 0
-        ? 0.0
-        : temporada.partidosFinalizados / temporada.totalPartidos;
+    final jugados = partidos.where(_jugado).length;
+    final avance = partidos.isEmpty ? 0.0 : jugados / partidos.length;
+    final enVivo = partidos.where((p) => p.estado == EstadoPartidoLiga.enJuego).length;
     return HeroLbc(
       etiqueta: 'Temporada ${temporada.anio} · LBC',
-      titulo: temporada.nombreTemporada,
-      subtitulo: temporada.campeon != null
-          ? 'Campeón: ${temporada.campeon!.nombre ?? '—'}'
-          : 'Liga de Béisbol de Cartagena',
+      titulo: temporada.nombre,
+      subtitulo: 'Liga de Béisbol de Cartagena · ${etiquetaEstadoTemporada(temporada.estado)}',
       icono: Icons.emoji_events_rounded,
       onTap: () => context.push('/temporadas/${temporada.id}'),
       contenido: Wrap(
         spacing: 8,
         runSpacing: 6,
         children: [
-          PastillaHero(
-            icono: Icons.sports_baseball_rounded,
-            texto:
-                '${temporada.partidosFinalizados} de ${temporada.totalPartidos} partidos',
-          ),
-          if (temporada.campeon != null)
-            const PastillaHero(
-              icono: Icons.workspace_premium_rounded,
-              texto: 'Campeón vigente',
-            ),
+          PastillaHero(icono: Icons.sports_baseball_rounded, texto: '$jugados de ${partidos.length} partidos'),
+          if (enVivo > 0) PastillaHero(icono: Icons.circle, texto: '$enVivo en vivo'),
         ],
       ),
       accion: SizedBox(
@@ -177,9 +140,7 @@ class _Cabecera extends StatelessWidget {
                   strokeWidth: 6,
                   strokeCap: StrokeCap.round,
                   color: tema.colorScheme.primary,
-                  backgroundColor: tema.colorScheme.primaryContainer.withValues(
-                    alpha: 0.55,
-                  ),
+                  backgroundColor: tema.colorScheme.primaryContainer.withValues(alpha: 0.55),
                 ),
               ),
               Column(
@@ -210,94 +171,78 @@ class _Cabecera extends StatelessWidget {
   }
 }
 
-class _Graficas extends ConsumerWidget {
-  const _Graficas({required this.estadisticas, required this.idTemporada});
+class _Cifras extends StatelessWidget {
+  const _Cifras({required this.temporada, required this.partidos, required this.posiciones});
 
-  final EstadisticasTemporada estadisticas;
-  final String idTemporada;
+  final TemporadaLiga temporada;
+  final List<PartidoResumen> partidos;
+  final List<PosicionLiga>? posiciones;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = estadisticas;
-    final e = EstiloGrafica(context);
+  Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final k = s.kpis;
-    final posiciones = ref.watch(posicionesProvider(idTemporada));
+    final jugados = partidos.where(_jugado).toList();
+    final carreras = jugados.fold<int>(0, (s, p) => s + p.marcador.local + p.marcador.visita);
+    final promedio = jugados.isEmpty ? null : carreras / jugados.length;
+    final lider = posiciones?.firstOrNull;
+    final equipos = <int>{for (final p in partidos) ...[p.equipoLocal.id, p.equipoVisita.id]}.length;
+    return RejillaCifras(
+      hijos: [
+        _Kpi(
+          valor: jugados.length,
+          etiqueta: 'Jugados',
+          icono: Icons.sports_baseball_rounded,
+          tono: tema.colorScheme.primary,
+        ),
+        _Kpi(
+          valor: carreras,
+          etiqueta: 'Carreras',
+          extra: promedio == null ? null : '${Formato.decimal(promedio)}/p',
+          icono: Icons.directions_run_rounded,
+          tono: tema.brightness == Brightness.dark ? ColoresMarca.verdeNeon : ColoresMarca.verdeNoche,
+        ),
+        _Kpi(
+          valor: lider?.ganados ?? 0,
+          sufijo: lider == null ? null : '-${lider.perdidos}',
+          etiqueta: lider?.equipo.nombre ?? 'Líder',
+          icono: Icons.emoji_events_rounded,
+          destacado: true,
+          onTap: lider == null ? null : () => context.push('/temporadas/${temporada.id}/equipos/${lider.equipo.id}'),
+        ),
+        _Kpi(
+          valor: equipos,
+          etiqueta: 'Equipos',
+          icono: Icons.groups_rounded,
+          tono: tema.brightness == Brightness.dark ? tema.colorScheme.secondary : ColoresMarca.amarilloTexto,
+        ),
+      ],
+    );
+  }
+}
 
-    // Juegos sobre .500 de cada equipo a partir de la serie de partidos de la API
-    final referencias = <String, (String, Color)>{};
-    for (final p in s.carrerasPorPartido) {
-      for (final r in [p.local, p.visitante]) {
-        if (r?.id != null) {
-          referencias[r!.id!] = (
-            r.nombre ?? '?',
-            ColoresEquipo.de(context, r.color),
-          );
-        }
-      }
-    }
+class _Graficas extends StatelessWidget {
+  const _Graficas({required this.temporada, required this.partidos, required this.posiciones});
+
+  final TemporadaLiga temporada;
+  final List<PartidoResumen> partidos;
+  final AsyncValue<List<PosicionLiga>> posiciones;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = EstiloGrafica(context);
+    final jugados = partidos.where(_jugado).toList()..sort((a, b) => a.fechaHora.compareTo(b.fechaHora));
+    final equipos = <String, (String, Color)>{
+      for (final p in jugados)
+        for (final eq in [p.equipoLocal, p.equipoVisita]) '${eq.id}': (eq.nombre, ColoresEquipo.de(context, eq.color)),
+    };
     final carrera = juegosSobre500([
-      for (final p in s.carrerasPorPartido)
-        (p.local?.id, p.visitante?.id, p.carrerasLocal, p.carrerasVisitante),
+      for (final p in jugados) ('${p.equipoLocal.id}', '${p.equipoVisita.id}', p.marcador.local, p.marcador.visita),
     ]);
-
-    final h = s.distribucionHits;
-    final rampa = e.rampa(4);
+    final totalCarreras = jugados.fold<int>(0, (s, p) => s + p.marcador.local + p.marcador.visita);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        RejillaCifras(
-          hijos: [
-            _Kpi(
-              valor: k.partidosJugados,
-              etiqueta: 'Jugados',
-              icono: Icons.sports_baseball_rounded,
-              tono: tema.colorScheme.primary,
-            ),
-            _Kpi(
-              valor: k.carrerasTotales,
-              etiqueta: 'Carreras',
-              extra: k.promedioCarrerasPorPartido == null
-                  ? null
-                  : '${Formato.decimal(k.promedioCarrerasPorPartido)}/p',
-              icono: Icons.directions_run_rounded,
-              tono: tema.brightness == Brightness.dark
-                  ? ColoresMarca.verdeNeon
-                  : ColoresMarca.verdeNoche,
-            ),
-            _Kpi(
-              valor: k.liderJonrones?.valor ?? 0,
-              etiqueta: k.liderJonrones == null
-                  ? 'Jonrones'
-                  : 'HR · ${k.liderJonrones!.nombre}',
-              icono: Icons.bolt_rounded,
-              destacado: true,
-              onTap: k.liderJonrones == null
-                  ? null
-                  : () => context.push(
-                      '/temporadas/$idTemporada/bateadores/${k.liderJonrones!.idJugador}',
-                    ),
-            ),
-            _Kpi(
-              valor: k.mejorRecord?.ganados ?? 0,
-              sufijo: k.mejorRecord == null
-                  ? null
-                  : '-${k.mejorRecord!.perdidos}',
-              etiqueta: k.mejorRecord?.nombre ?? 'Mejor récord',
-              icono: Icons.emoji_events_rounded,
-              tono: tema.brightness == Brightness.dark
-                  ? tema.colorScheme.secondary
-                  : ColoresMarca.amarilloTexto,
-              onTap: k.mejorRecord == null
-                  ? null
-                  : () => context.push(
-                      '/temporadas/$idTemporada/equipos/${k.mejorRecord!.idEquipo}',
-                    ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
         TarjetaGrafica(
           titulo: '¿Quién lidera?',
           subtitulo: 'Récord de cada equipo, con la barra dividida en ganados y perdidos',
@@ -305,34 +250,43 @@ class _Graficas extends ConsumerWidget {
           accion: IconButton(
             tooltip: 'Tabla completa',
             icon: const Icon(Icons.table_rows_outlined),
-            onPressed: () =>
-                context.push('/temporadas/$idTemporada/posiciones'),
+            onPressed: () => context.push('/temporadas/${temporada.id}'),
           ),
           leyenda: [
             ItemLeyenda(
               color: e.victoria,
               texto: 'Ganados',
               colores: [
-                for (final p in posiciones.value?.take(4) ?? const <Posicion>[])
-                  ColoresEquipo.de(context, p.color),
+                for (final p in posiciones.value?.take(4) ?? const <PosicionLiga>[])
+                  ColoresEquipo.de(context, p.equipo.color),
               ],
             ),
             ItemLeyenda(color: e.neutro, texto: 'Perdidos'),
           ],
           child: posiciones.when(
-            loading: () =>
-                const SizedBox(height: 200, child: EsqueletoLista(filas: 4)),
-            error: (err, _) => EstadoError(
-              error: err,
-              compacto: true,
-              onReintentar: () =>
-                  ref.invalidate(posicionesProvider(idTemporada)),
-            ),
+            loading: () => const SizedBox(height: 200, child: EsqueletoLista(filas: 4)),
+            error: (err, _) => EstadoError(error: err, compacto: true),
             data: (lista) => lista.isEmpty
-                ? const EstadoVacio(mensaje: 'Sin equipos')
-                : _BarrasPosiciones(
-                    posiciones: lista,
-                    idTemporada: idTemporada,
+                ? const EstadoVacio(
+                    mensaje: 'Las posiciones aparecen cuando terminen los primeros partidos.',
+                    icono: Icons.leaderboard_outlined,
+                  )
+                : BarrasApiladas(
+                    clave: lista.map((p) => '${p.equipo.id}${p.ganados}${p.perdidos}').join(),
+                    filas: [
+                      for (final p in lista)
+                        FilaApilada(
+                          id: '${p.equipo.id}',
+                          nombre: p.equipo.nombre,
+                          inicio: EscudoLiga(equipo: p.equipo, tamano: 32),
+                          valorFinal: Formato.promedio(p.pct),
+                          onTap: () => context.push('/temporadas/${temporada.id}/equipos/${p.equipo.id}'),
+                          segmentos: [
+                            SegmentoBarra(valor: p.ganados.toDouble(), color: ColoresEquipo.de(context, p.equipo.color)),
+                            SegmentoBarra(valor: p.perdidos.toDouble(), color: e.neutro),
+                          ],
+                        ),
+                    ],
                   ),
           ),
         ),
@@ -344,71 +298,71 @@ class _Graficas extends ConsumerWidget {
             child: GraficaCarrera(
               series: [
                 for (final c in carrera.entries)
-                  if (referencias[c.key] != null)
-                    SerieCarrera(
-                      id: c.key,
-                      nombre: referencias[c.key]!.$1,
-                      color: referencias[c.key]!.$2,
-                      valores: c.value,
-                    ),
+                  if (equipos[c.key] != null)
+                    SerieCarrera(id: c.key, nombre: equipos[c.key]!.$1, color: equipos[c.key]!.$2, valores: c.value),
               ],
             ),
           ),
-        if (s.carrerasPorPartido.isNotEmpty)
+        if (jugados.isNotEmpty)
           TarjetaGrafica(
             titulo: '¿Cuántas carreras hay por partido?',
             subtitulo: 'Cada punto es un partido; toca para abrir su ficha',
             icono: Icons.show_chart_rounded,
             child: GraficaPartidos(
-              promedio: k.promedioCarrerasPorPartido,
-              onTap: (id) =>
-                  context.push('/temporadas/$idTemporada/partidos/$id'),
+              promedio: totalCarreras / jugados.length,
+              onTap: (id) => context.push('/temporadas/${temporada.id}/partidos/$id'),
               puntos: [
-                for (final p in s.carrerasPorPartido)
+                for (final p in jugados)
                   PuntoPartido(
-                    id: p.idPartido,
-                    total: p.carrerasTotales,
-                    etiqueta: p.fecha == null
-                        ? ''
-                        : '${p.fecha!.day}/${p.fecha!.month}',
+                    id: '${p.id}',
+                    total: p.marcador.local + p.marcador.visita,
+                    etiqueta: '${p.fechaHora.day}/${p.fechaHora.month}',
                     detalle:
-                        '${p.local?.nombre ?? '?'} ${p.carrerasLocal} – ${p.carrerasVisitante} ${p.visitante?.nombre ?? '?'}',
+                        '${p.equipoLocal.nombre} ${p.marcador.local} – ${p.marcador.visita} ${p.equipoVisita.nombre}',
                   ),
               ],
             ),
           ),
-        if (h.total > 0)
-          TarjetaGrafica(
-            titulo: '¿Cómo se batea en la liga?',
-            subtitulo: 'Waffle: cada cuadro es el 1 % de todos los hits',
-            icono: Icons.grid_on_rounded,
-            child: GraficaWaffle(
-              clave: h.total,
-              unidad: 'hits',
-              partes: [
-                ParteWaffle(
-                  etiqueta: 'Sencillos',
-                  valor: h.sencillos.toDouble(),
-                  color: rampa[0],
-                ),
-                ParteWaffle(
-                  etiqueta: 'Dobles',
-                  valor: h.dobles.toDouble(),
-                  color: rampa[1],
-                ),
-                ParteWaffle(
-                  etiqueta: 'Triples',
-                  valor: h.triples.toDouble(),
-                  color: rampa[2],
-                ),
-                ParteWaffle(
-                  etiqueta: 'Jonrones',
-                  valor: h.homeRuns.toDouble(),
-                  color: rampa[3],
-                ),
-              ],
-            ),
+      ],
+    );
+  }
+}
+
+class _Partidos extends StatelessWidget {
+  const _Partidos({required this.temporada, required this.partidos});
+
+  final TemporadaLiga temporada;
+  final List<PartidoResumen> partidos;
+
+  @override
+  Widget build(BuildContext context) {
+    final ordenados = [...partidos]..sort((a, b) => a.fechaHora.compareTo(b.fechaHora));
+    final jugados = ordenados.where(_jugado).toList().reversed.take(3).toList();
+    final proximos = ordenados
+        .where((p) => p.estado != EstadoPartidoLiga.finalizado && p.estado != EstadoPartidoLiga.suspendido)
+        .take(3)
+        .toList();
+    if (jugados.isEmpty && proximos.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: EstadoVacio(mensaje: 'Esta temporada todavía no tiene partidos.', icono: Icons.sports_baseball_outlined),
+      );
+    }
+    Widget bloque(String titulo, List<PartidoResumen> ps) => Seccion(
+          titulo: titulo,
+          accion: TextButton(
+            onPressed: () => context.push('/temporadas/${temporada.id}'),
+            child: const Text('Todos'),
           ),
+          child: Column(
+            children: [for (final p in ps) TarjetaPartidoLiga(partido: p, idTemporada: temporada.id)],
+          ),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (proximos.isNotEmpty) bloque('Próximos', proximos),
+        if (jugados.isNotEmpty) bloque('Últimos resultados', jugados),
       ],
     );
   }
@@ -557,105 +511,3 @@ class _Kpi extends StatelessWidget {
   }
 }
 
-class _BarrasPosiciones extends StatelessWidget {
-  const _BarrasPosiciones({
-    required this.posiciones,
-    required this.idTemporada,
-  });
-
-  final List<Posicion> posiciones;
-  final String idTemporada;
-
-  @override
-  Widget build(BuildContext context) {
-    final e = EstiloGrafica(context);
-    return BarrasApiladas(
-      clave: posiciones
-          .map((p) => '${p.idEquipo}${p.ganados}${p.perdidos}')
-          .join(),
-      filas: [
-        for (final p in posiciones)
-          FilaApilada(
-            id: p.idEquipo,
-            nombre: p.nombre,
-            inicio: ImagenApi(
-              urlFoto: p.urlFoto,
-              nombre: p.nombre,
-              tamano: 32,
-              color: ColoresEquipo.de(context, p.color),
-            ),
-            valorFinal: Formato.promedio(p.porcentajeVictorias),
-            onTap: () =>
-                context.push('/temporadas/$idTemporada/equipos/${p.idEquipo}'),
-            segmentos: [
-              SegmentoBarra(
-                valor: p.ganados.toDouble(),
-                color: ColoresEquipo.de(context, p.color),
-              ),
-              if (p.empates > 0)
-                SegmentoBarra(
-                  valor: p.empates.toDouble(),
-                  color: e.neutro.withValues(alpha: 0.6),
-                ),
-              SegmentoBarra(valor: p.perdidos.toDouble(), color: e.neutro),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-class _Partidos extends ConsumerWidget {
-  const _Partidos({required this.idTemporada});
-
-  final String idTemporada;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final partidos = ref.watch(partidosProvider(idTemporada));
-    return partidos.when(
-      loading: () =>
-          const SizedBox(height: 120, child: EsqueletoLista(filas: 2)),
-      error: (e, _) => EstadoError(
-        error: e,
-        compacto: true,
-        onReintentar: () => ref.invalidate(partidosProvider(idTemporada)),
-      ),
-      data: (lista) {
-        final jugados = lista
-            .where((p) => p.finalizado)
-            .toList()
-            .reversed
-            .take(3)
-            .toList();
-        final proximos = lista
-            .where((p) => p.estado != EstadoPartido.finalizado)
-            .take(3)
-            .toList();
-        Widget bloque(String titulo, List<Partido> ps) => Seccion(
-          titulo: titulo,
-          accion: TextButton(
-            onPressed: () => context.push('/temporadas/$idTemporada/partidos'),
-            child: const Text('Todos'),
-          ),
-          child: Column(
-            children: [
-              for (final p in ps)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TarjetaPartido(partido: p, idTemporada: idTemporada),
-                ),
-            ],
-          ),
-        );
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (jugados.isNotEmpty) bloque('Últimos resultados', jugados),
-            if (proximos.isNotEmpty) bloque('Próximos', proximos),
-          ],
-        );
-      },
-    );
-  }
-}

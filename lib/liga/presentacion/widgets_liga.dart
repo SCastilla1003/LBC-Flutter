@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/entorno.dart';
 import '../../core/tema/colores_equipo.dart';
 import '../../core/tema/tema_lbc.dart';
 import '../datos/modelos_liga.dart';
@@ -59,7 +60,8 @@ class EscudoLiga extends StatelessWidget {
         child: equipo.escudoUrl == null
             ? iniciales
             : Image.network(
-                equipo.escudoUrl!,
+                // El escudo puede venir como ruta de la API (/api/v1/equipos/4/escudo?v=...).
+                Entorno.urlAbsoluta(equipo.escudoUrl)!,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => iniciales,
               ),

@@ -1,12 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/red/fallo_api.dart';
 import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
+import '../../../core/widgets/imagen_api.dart';
 import '../../../core/widgets/vista_async.dart';
 import '../../../liga/datos/liga_repositorio.dart';
 import '../../equipos/datos/equipos_repositorio.dart';
@@ -459,4 +462,102 @@ class CampoFecha extends FormField<DateTime> {
             );
           },
         );
+}
+
+/// Imagen elegida en el dispositivo, pendiente de subir.
+class FotoElegida {
+  const FotoElegida(this.bytes, this.nombre);
+
+  final Uint8List bytes;
+  final String nombre;
+}
+
+/// Abre la galería o la cámara y devuelve la imagen ya reducida (máx. 1024 px).
+Future<FotoElegida?> elegirFoto(BuildContext context) async {
+  final origen = await showModalBottomSheet<ImageSource>(
+    context: context,
+    builder: (c) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(
+          leading: const Icon(Icons.photo_library_outlined),
+          title: const Text('Elegir de la galería'),
+          onTap: () => Navigator.pop(c, ImageSource.gallery),
+        ),
+        if (!kIsWeb)
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: const Text('Tomar una foto'),
+            onTap: () => Navigator.pop(c, ImageSource.camera),
+          ),
+      ]),
+    ),
+  );
+  if (origen == null) return null;
+  final archivo = await ImagePicker().pickImage(source: origen, maxWidth: 1024, imageQuality: 85);
+  if (archivo == null) return null;
+  return FotoElegida(await archivo.readAsBytes(), archivo.name);
+}
+
+/// Foto o escudo en un formulario: muestra la actual o la recién elegida y
+/// permite cambiarla o quitarla. La subida ocurre al guardar.
+class SelectorFoto extends StatelessWidget {
+  const SelectorFoto({
+    super.key,
+    required this.etiqueta,
+    required this.nombre,
+    required this.urlActual,
+    required this.elegida,
+    required this.quitada,
+    required this.alElegir,
+    required this.alQuitar,
+    this.cuadrada = false,
+  });
+
+  final String etiqueta;
+  final String nombre;
+  final String? urlActual;
+  final FotoElegida? elegida;
+  final bool quitada;
+  final ValueChanged<FotoElegida> alElegir;
+  final VoidCallback alQuitar;
+  final bool cuadrada;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final radio = BorderRadius.circular(cuadrada ? 16 : 40);
+    final hayFoto = elegida != null || (urlActual != null && !quitada);
+    final vista = elegida != null
+        ? ClipRRect(
+            borderRadius: radio,
+            child: Image.memory(elegida!.bytes, width: 80, height: 80, fit: BoxFit.cover),
+          )
+        : ImagenApi(urlFoto: quitada ? null : urlActual, nombre: nombre.isEmpty ? '?' : nombre, tamano: 80, cuadrada: cuadrada);
+    return Row(children: [
+      vista,
+      const SizedBox(width: 16),
+      Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(etiqueta, style: tema.textTheme.labelLarge),
+          const SizedBox(height: 6),
+          Wrap(spacing: 8, runSpacing: 4, children: [
+            OutlinedButton.icon(
+              onPressed: () async {
+                final f = await elegirFoto(context);
+                if (f != null) alElegir(f);
+              },
+              icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+              label: Text(hayFoto ? 'Cambiar' : 'Subir'),
+            ),
+            if (hayFoto)
+              TextButton(
+                onPressed: alQuitar,
+                style: TextButton.styleFrom(foregroundColor: tema.colorScheme.error),
+                child: const Text('Quitar'),
+              ),
+          ]),
+        ]),
+      ),
+    ]);
+  }
 }

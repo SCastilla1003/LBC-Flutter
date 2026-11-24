@@ -94,14 +94,15 @@ class _DialogoJugador extends ConsumerStatefulWidget {
 class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
   late final _nombres = TextEditingController(text: widget.jugador?.nombres);
   late final _apellidos = TextEditingController(text: widget.jugador?.apellidos);
-  late final _foto = TextEditingController(text: widget.jugador?.fotoUrl);
+  FotoElegida? _foto;
+  bool _quitarFoto = false;
   late DateTime? _nacimiento = widget.jugador?.fechaNacimiento;
   late LadoBateo? _batea = widget.jugador?.batea;
   late LadoLanzamiento? _lanza = widget.jugador?.lanza;
 
   @override
   void dispose() {
-    for (final c in [_nombres, _apellidos, _foto]) {
+    for (final c in [_nombres, _apellidos]) {
       c.dispose();
     }
     super.dispose();
@@ -114,18 +115,39 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
     return DialogoFormulario(
       titulo: j == null ? 'Nuevo jugador' : 'Editar jugador',
       exito: j == null ? 'Jugador creado' : 'Jugador actualizado',
-      guardar: () {
+      guardar: () async {
         final datos = DatosJugador(
           nombres: _nombres.text.trim(),
           apellidos: _apellidos.text.trim(),
           fechaNacimiento: _nacimiento,
           batea: _batea,
           lanza: _lanza,
-          fotoUrl: textoOpcional(_foto),
+          // La foto se gestiona aparte (bucket); se conserva la que ya tenía.
+          fotoUrl: j?.fotoUrl,
         );
-        return j == null ? repo.crearJugador(datos) : repo.actualizarJugador(j.id, datos);
+        final guardado = j == null ? await repo.crearJugador(datos) : await repo.actualizarJugador(j.id, datos);
+        if (_foto != null) {
+          await repo.subirFotoJugador(guardado.id, _foto!.bytes, _foto!.nombre);
+        } else if (_quitarFoto && j?.fotoUrl != null) {
+          await repo.borrarFotoJugador(guardado.id);
+        }
       },
       campos: [
+        SelectorFoto(
+          etiqueta: 'Foto del jugador',
+          nombre: '${_nombres.text} ${_apellidos.text}'.trim(),
+          urlActual: j?.fotoUrl,
+          elegida: _foto,
+          quitada: _quitarFoto,
+          alElegir: (f) => setState(() {
+            _foto = f;
+            _quitarFoto = false;
+          }),
+          alQuitar: () => setState(() {
+            _foto = null;
+            _quitarFoto = true;
+          }),
+        ),
         CampoTexto(controller: _nombres, etiqueta: 'Nombres', obligatorio: true),
         CampoTexto(controller: _apellidos, etiqueta: 'Apellidos', obligatorio: true),
         CampoFecha(etiqueta: 'Fecha de nacimiento', inicial: _nacimiento, alCambiar: (v) => _nacimiento = v),
@@ -150,12 +172,6 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
               DropdownMenuItem(value: l, child: Text(etiquetaLanzamiento(l))),
           ],
           onChanged: (v) => setState(() => _lanza = v),
-        ),
-        CampoTexto(
-          controller: _foto,
-          etiqueta: 'URL de la foto',
-          teclado: TextInputType.url,
-          validador: (v) => Uri.tryParse(v)?.hasScheme == true ? null : 'URL no válida',
         ),
       ],
     );

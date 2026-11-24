@@ -111,7 +111,7 @@ class _PestanaPartidosState extends ConsumerState<_PestanaPartidos> {
                   ),
                 for (final g in grupos.entries) ...[
                   EncabezadoSeccion(g.key),
-                  for (final p in g.value) _TarjetaPartido(partido: p, idTemporada: widget.idTemporada),
+                  for (final p in g.value) TarjetaPartidoLiga(partido: p, idTemporada: widget.idTemporada),
                 ],
               ],
             ),
@@ -134,8 +134,9 @@ class _PestanaPartidosState extends ConsumerState<_PestanaPartidos> {
   }
 }
 
-class _TarjetaPartido extends StatelessWidget {
-  const _TarjetaPartido({required this.partido, required this.idTemporada});
+/// Tarjeta de un partido de la liga (también se usa en Inicio).
+class TarjetaPartidoLiga extends StatelessWidget {
+  const TarjetaPartidoLiga({super.key, required this.partido, required this.idTemporada});
 
   final PartidoResumen partido;
   final int idTemporada;

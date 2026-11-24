@@ -54,6 +54,9 @@ class LigaRepositorio {
 
   Future<List<EquipoLiga>> equipos() => _lista('/equipos', EquipoLiga.fromJson);
 
+  Future<EquipoLiga> equipo(int id) async =>
+      EquipoLiga.fromJson(await _api.get('/equipos/$id') as Map<String, dynamic>);
+
   Future<List<PlantillaLiga>> plantilla(int temporadaId, int equipoId) =>
       _lista('/temporadas/$temporadaId/equipos/$equipoId/plantilla', PlantillaLiga.fromJson);
 
@@ -61,6 +64,9 @@ class LigaRepositorio {
       _lista('/temporadas/$temporadaId/agentes-libres', PlantillaLiga.fromJson);
 
   Future<List<JugadorLiga>> jugadores() => _lista('/jugadores', JugadorLiga.fromJson);
+
+  Future<JugadorLiga> jugador(int id) async =>
+      JugadorLiga.fromJson(await _api.get('/jugadores/$id') as Map<String, dynamic>);
 
   // ── Escrituras (solo ADMIN) ───────────────────────────────────────────────
   // Los cuerpos siguen los *Request del backend (docs/CONTRATO_API.md).
@@ -97,6 +103,18 @@ class LigaRepositorio {
       JugadorLiga.fromJson(await _api.put('/jugadores/$id', d.json()) as Map<String, dynamic>);
 
   Future<void> eliminarJugador(int id) => _api.delete('/jugadores/$id');
+
+  // Fotos y escudos: se guardan en el bucket de Railway y la API los sirve.
+
+  Future<JugadorLiga> subirFotoJugador(int id, List<int> bytes, String nombreArchivo) async => JugadorLiga.fromJson(
+      await _api.subirArchivo('/jugadores/$id/foto', bytes, nombreArchivo, post: true) as Map<String, dynamic>);
+
+  Future<void> borrarFotoJugador(int id) => _api.delete('/jugadores/$id/foto');
+
+  Future<EquipoLiga> subirEscudo(int id, List<int> bytes, String nombreArchivo) async => EquipoLiga.fromJson(
+      await _api.subirArchivo('/equipos/$id/escudo', bytes, nombreArchivo, post: true) as Map<String, dynamic>);
+
+  Future<void> borrarEscudo(int id) => _api.delete('/equipos/$id/escudo');
 
   /// Inscribe un jugador en la temporada. [equipoId] nulo = agente libre.
   Future<PlantillaLiga> inscribir(int temporadaId,
@@ -339,3 +357,13 @@ class DatosAlineacionEquipo {
         'banca': banca,
       };
 }
+
+final equipoLigaProvider =
+    FutureProvider.autoDispose.family<EquipoLiga, int>((ref, id) => ref.watch(ligaRepositorioProvider).equipo(id));
+
+/// Partidos de un equipo en una temporada: (temporadaId, equipoId).
+final partidosEquipoLigaProvider = FutureProvider.autoDispose.family<List<PartidoResumen>, (int, int)>(
+    (ref, clave) => ref.watch(ligaRepositorioProvider).partidos(clave.$1, equipoId: clave.$2));
+
+final jugadorLigaProvider =
+    FutureProvider.autoDispose.family<JugadorLiga, int>((ref, id) => ref.watch(ligaRepositorioProvider).jugador(id));

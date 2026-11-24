@@ -84,9 +84,10 @@ class ClienteApi {
   Future<void> delete(String ruta) => _ejecutar(() => _dio.delete(ruta));
 
   /// Sube un archivo como multipart/form-data en el campo `archivo` (fotos).
-  Future<dynamic> subirArchivo(String ruta, List<int> bytes, String nombreArchivo) {
+  /// El contrato anterior usaba PUT; el v1 usa POST ([post] = true).
+  Future<dynamic> subirArchivo(String ruta, List<int> bytes, String nombreArchivo, {bool post = false}) {
     final form = FormData.fromMap({'archivo': MultipartFile.fromBytes(bytes, filename: nombreArchivo)});
-    return _ejecutar(() => _dio.put(ruta, data: form));
+    return _ejecutar(() => post ? _dio.post(ruta, data: form) : _dio.put(ruta, data: form));
   }
 
   Future<dynamic> _ejecutar(Future<Response<dynamic>> Function() llamada) async {

@@ -18,7 +18,9 @@ class TemporadaAdmin extends Notifier<int?> {
   void elegir(int? id) => state = id;
 }
 
-final temporadaAdminProvider = NotifierProvider<TemporadaAdmin, int?>(TemporadaAdmin.new);
+final temporadaAdminProvider = NotifierProvider<TemporadaAdmin, int?>(
+  TemporadaAdmin.new,
+);
 
 /// Panel de administración (contrato v1): catálogos de la liga y, por temporada,
 /// plantillas y partidos.
@@ -28,14 +30,31 @@ class AdminPanelPantalla extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final temporadas = ref.watch(temporadasLigaProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Panel de administración')),
-      body: RefreshIndicator(
-        onRefresh: () => ref.refresh(temporadasLigaProvider.future),
-        child: VistaAsync<List<TemporadaLiga>>(
-          valor: temporadas,
-          onReintentar: () => ref.invalidate(temporadasLigaProvider),
-          datos: (lista) => _Contenido(temporadas: lista),
+    // Si se llegó pasando por el login no hay pantalla anterior: "atrás" lleva a Cuenta.
+    final puedeVolver = Navigator.of(context).canPop();
+    return PopScope(
+      canPop: puedeVolver,
+      onPopInvokedWithResult: (salio, _) {
+        if (!salio) context.go('/cuenta');
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Panel de administración'),
+          leading: puedeVolver
+              ? null
+              : IconButton(
+                  tooltip: 'Volver a Cuenta',
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: () => context.go('/cuenta'),
+                ),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => ref.refresh(temporadasLigaProvider.future),
+          child: VistaAsync<List<TemporadaLiga>>(
+            valor: temporadas,
+            onReintentar: () => ref.invalidate(temporadasLigaProvider),
+            datos: (lista) => _Contenido(temporadas: lista),
+          ),
         ),
       ),
     );
@@ -51,18 +70,25 @@ class _Contenido extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final elegida = ref.watch(temporadaAdminProvider);
     // Por defecto, la temporada en curso; si no hay, la más reciente.
-    final actual = temporadas.where((t) => t.id == elegida).firstOrNull ??
-        temporadas.where((t) => t.estado == EstadoTemporadaLiga.activa).firstOrNull ??
+    final actual =
+        temporadas.where((t) => t.id == elegida).firstOrNull ??
+        temporadas
+            .where((t) => t.estado == EstadoTemporadaLiga.activa)
+            .firstOrNull ??
         temporadas.firstOrNull;
 
-    Widget opcion(IconData icono, String titulo, String detalle, String ruta) => Padding(
+    Widget opcion(IconData icono, String titulo, String detalle, String ruta) =>
+        Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: Card(
             child: ListTile(
               leading: _InsigniaMenu(icono: icono),
               title: Text(titulo, style: _estiloMenu),
               subtitle: Text(detalle),
-              trailing: Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.primary),
+              trailing: Icon(
+                Icons.chevron_right_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               onTap: () => context.push(ruta),
             ),
           ),
@@ -87,23 +113,53 @@ class _Contenido extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 6,
                   children: [
-                    PastillaHero(icono: Icons.calendar_month_rounded, texto: '${temporadas.length} temporadas'),
-                    if (actual != null) PastillaHero(icono: Icons.push_pin_rounded, texto: actual.nombre),
+                    PastillaHero(
+                      icono: Icons.calendar_month_rounded,
+                      texto: '${temporadas.length} temporadas',
+                    ),
+                    if (actual != null)
+                      PastillaHero(
+                        icono: Icons.push_pin_rounded,
+                        texto: actual.nombre,
+                      ),
                   ],
                 ),
               ),
               const EncabezadoSeccion('La liga'),
-              opcion(Icons.calendar_month_rounded, 'Temporadas', 'Crear, activar y cerrar temporadas',
-                  '/admin/temporadas'),
-              opcion(Icons.shield_outlined, 'Equipos', 'Nombre, abreviatura, ciudad y color', '/admin/equipos'),
-              opcion(Icons.person_rounded, 'Jugadores', 'Datos personales, bateo y lanzamiento', '/admin/jugadores'),
-              opcion(Icons.stadium_rounded, 'Estadios', 'Dónde se juegan los partidos', '/admin/estadios'),
-              EncabezadoSeccion(actual == null ? 'Temporada' : 'Temporada ${actual.anio}'),
+              opcion(
+                Icons.calendar_month_rounded,
+                'Temporadas',
+                'Crear, activar y cerrar temporadas',
+                '/admin/temporadas',
+              ),
+              opcion(
+                Icons.shield_outlined,
+                'Equipos',
+                'Nombre, abreviatura, ciudad y color',
+                '/admin/equipos',
+              ),
+              opcion(
+                Icons.person_rounded,
+                'Jugadores',
+                'Datos personales, bateo y lanzamiento',
+                '/admin/jugadores',
+              ),
+              opcion(
+                Icons.stadium_rounded,
+                'Estadios',
+                'Dónde se juegan los partidos',
+                '/admin/estadios',
+              ),
+              EncabezadoSeccion(
+                actual == null ? 'Temporada' : 'Temporada ${actual.anio}',
+              ),
               if (actual == null)
                 const Card(
                   child: Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('Crea una temporada para inscribir jugadores y programar partidos.'),
+                    child: Text(
+                      'Crea una temporada para inscribir jugadores y programar partidos.',
+                    ),
                   ),
                 )
               else ...[
@@ -116,18 +172,33 @@ class _Contenido extends ConsumerWidget {
                     for (final t in temporadas)
                       DropdownMenuItem(
                         value: t.id,
-                        child: Text('${t.nombre} · ${t.anio} · ${etiquetaEstadoTemporada(t.estado)}'),
+                        child: Text(
+                          '${t.nombre} · ${t.anio} · ${etiquetaEstadoTemporada(t.estado)}',
+                        ),
                       ),
                   ],
-                  onChanged: (id) => ref.read(temporadaAdminProvider.notifier).elegir(id),
+                  onChanged: (id) =>
+                      ref.read(temporadaAdminProvider.notifier).elegir(id),
                 ),
                 const SizedBox(height: 14),
-                opcion(Icons.groups_rounded, 'Plantillas', 'Jugadores de cada equipo en esta temporada',
-                    '/admin/t/${actual.id}/plantilla'),
-                opcion(Icons.person_search_rounded, 'Agentes libres', 'Inscritos sin equipo',
-                    '/admin/t/${actual.id}/agentes-libres'),
-                opcion(Icons.sports_baseball_rounded, 'Partidos', 'Programar, mover y borrar partidos',
-                    '/admin/t/${actual.id}/partidos'),
+                opcion(
+                  Icons.groups_rounded,
+                  'Plantillas',
+                  'Jugadores de cada equipo en esta temporada',
+                  '/admin/t/${actual.id}/plantilla',
+                ),
+                opcion(
+                  Icons.person_search_rounded,
+                  'Agentes libres',
+                  'Inscritos sin equipo',
+                  '/admin/t/${actual.id}/agentes-libres',
+                ),
+                opcion(
+                  Icons.sports_baseball_rounded,
+                  'Partidos',
+                  'Programar, mover y borrar partidos',
+                  '/admin/t/${actual.id}/partidos',
+                ),
               ],
             ],
           ),

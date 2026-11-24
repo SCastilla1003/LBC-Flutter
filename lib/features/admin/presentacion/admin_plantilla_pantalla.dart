@@ -61,15 +61,11 @@ class AdminPlantillaEquipoPantalla extends ConsumerWidget {
       titulo: idEquipo == null ? 'Agentes libres' : (equipo?.nombre ?? 'Plantilla'),
       valor: valor.whenData((l) => [...l]..sort((a, b) => (a.numero ?? 999).compareTo(b.numero ?? 999))),
       onRecargar: recargar,
-      textoNuevo: 'Inscribir jugador',
-      onNuevo: () => showDialog<void>(
-        context: context,
-        builder: (_) => _DialogoInscripcion(
-          idTemporada: idTemporada,
-          idEquipo: idEquipo,
-          yaInscritos: valor.value?.map((p) => p.jugador.id).toSet() ?? const {},
-        ),
-      ),
+      textoNuevo: 'Inscribir jugadores',
+      // Abre la lista para elegir varios a la vez, con número y posición.
+      onNuevo: () => context.push(idEquipo == null
+          ? '/admin/t/$idTemporada/agentes-libres/inscribir'
+          : '/admin/t/$idTemporada/plantilla/$idEquipo/inscribir'),
       mensajeVacio: idEquipo == null
           ? 'No hay agentes libres en esta temporada.'
           : 'Este equipo no tiene jugadores inscritos en la temporada.',
@@ -99,68 +95,6 @@ class AdminPlantillaEquipoPantalla extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// Inscribe un jugador de la liga en este equipo (o como agente libre).
-class _DialogoInscripcion extends ConsumerStatefulWidget {
-  const _DialogoInscripcion({required this.idTemporada, required this.idEquipo, required this.yaInscritos});
-
-  final int idTemporada;
-  final int? idEquipo;
-  final Set<int> yaInscritos;
-
-  @override
-  ConsumerState<_DialogoInscripcion> createState() => _DialogoInscripcionState();
-}
-
-class _DialogoInscripcionState extends ConsumerState<_DialogoInscripcion> {
-  final _numero = TextEditingController();
-  int? _jugador;
-  String? _posicion;
-
-  @override
-  void dispose() {
-    _numero.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final repo = ref.read(ligaRepositorioProvider);
-    final jugadores = (ref.watch(jugadoresLigaProvider).value ?? const <JugadorLiga>[])
-        .where((j) => !widget.yaInscritos.contains(j.id))
-        .toList()
-      ..sort((a, b) => a.apellidos.toLowerCase().compareTo(b.apellidos.toLowerCase()));
-    return DialogoFormulario(
-      titulo: 'Inscribir jugador',
-      exito: 'Jugador inscrito',
-      guardar: () => repo.inscribir(
-        widget.idTemporada,
-        jugadorId: _jugador!,
-        equipoId: widget.idEquipo,
-        numero: enteroOpcional(_numero),
-        posicion: _posicion,
-      ),
-      campos: [
-        DropdownButtonFormField<int>(
-          initialValue: _jugador,
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: 'Jugador',
-            helperText: jugadores.isEmpty ? 'Crea jugadores en "Jugadores" para poder inscribirlos.' : null,
-          ),
-          items: [
-            for (final j in jugadores)
-              DropdownMenuItem(value: j.id, child: Text('${j.apellidos}, ${j.nombres}', overflow: TextOverflow.ellipsis)),
-          ],
-          validator: (v) => v == null ? 'Elige un jugador' : null,
-          onChanged: (v) => setState(() => _jugador = v),
-        ),
-        CampoNumero(controller: _numero, etiqueta: 'Número', maximo: 99, obligatorio: false),
-        _CampoPosicion(valor: _posicion, alCambiar: (v) => setState(() => _posicion = v)),
-      ],
     );
   }
 }

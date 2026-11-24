@@ -61,12 +61,13 @@ class _DialogoEquipoState extends ConsumerState<_DialogoEquipo> {
   late final _nombre = TextEditingController(text: widget.equipo?.nombre);
   late final _abrev = TextEditingController(text: widget.equipo?.abreviatura);
   late final _ciudad = TextEditingController(text: widget.equipo?.ciudad);
-  late final _escudo = TextEditingController(text: widget.equipo?.escudoUrl);
+  FotoElegida? _escudo;
+  bool _quitarEscudo = false;
   late String? _color = ColoresEquipo.paleta.containsKey(widget.equipo?.color) ? widget.equipo?.color : null;
 
   @override
   void dispose() {
-    for (final c in [_nombre, _abrev, _ciudad, _escudo]) {
+    for (final c in [_nombre, _abrev, _ciudad]) {
       c.dispose();
     }
     super.dispose();
@@ -79,17 +80,39 @@ class _DialogoEquipoState extends ConsumerState<_DialogoEquipo> {
     return DialogoFormulario(
       titulo: e == null ? 'Nuevo equipo' : 'Editar equipo',
       exito: e == null ? 'Equipo creado' : 'Equipo actualizado',
-      guardar: () {
+      guardar: () async {
         final datos = DatosEquipo(
           nombre: _nombre.text.trim(),
           abreviatura: _abrev.text.trim().toUpperCase(),
           ciudad: textoOpcional(_ciudad),
           color: _color,
-          escudoUrl: textoOpcional(_escudo),
+          // El escudo se gestiona aparte (bucket); se conserva el que ya tenía.
+          escudoUrl: e?.escudoUrl,
         );
-        return e == null ? repo.crearEquipo(datos) : repo.actualizarEquipo(e.id, datos);
+        final guardado = e == null ? await repo.crearEquipo(datos) : await repo.actualizarEquipo(e.id, datos);
+        if (_escudo != null) {
+          await repo.subirEscudo(guardado.id, _escudo!.bytes, _escudo!.nombre);
+        } else if (_quitarEscudo && e?.escudoUrl != null) {
+          await repo.borrarEscudo(guardado.id);
+        }
       },
       campos: [
+        SelectorFoto(
+          etiqueta: 'Escudo',
+          nombre: _nombre.text.trim(),
+          urlActual: e?.escudoUrl,
+          elegida: _escudo,
+          quitada: _quitarEscudo,
+          cuadrada: true,
+          alElegir: (f) => setState(() {
+            _escudo = f;
+            _quitarEscudo = false;
+          }),
+          alQuitar: () => setState(() {
+            _escudo = null;
+            _quitarEscudo = true;
+          }),
+        ),
         CampoTexto(controller: _nombre, etiqueta: 'Nombre', obligatorio: true),
         CampoTexto(
           controller: _abrev,
@@ -119,12 +142,6 @@ class _DialogoEquipoState extends ConsumerState<_DialogoEquipo> {
               ),
           ],
           onChanged: (v) => setState(() => _color = v),
-        ),
-        CampoTexto(
-          controller: _escudo,
-          etiqueta: 'URL del escudo',
-          teclado: TextInputType.url,
-          validador: (v) => Uri.tryParse(v)?.hasScheme == true ? null : 'URL no válida',
         ),
       ],
     );
