@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../liga/datos/liga_repositorio.dart';
@@ -14,7 +15,8 @@ String etiquetaEstadoPartido(EstadoPartidoLiga e) => switch (e) {
       EstadoPartidoLiga.suspendido => 'Suspendido',
     };
 
-/// Partidos de una temporada: se programan aquí; el marcador lo lleva el anotador.
+/// Partidos de una temporada: se programan aquí y, al tocarlos, se edita su
+/// alineación. El marcador lo lleva el anotador.
 class AdminPartidosPantalla extends ConsumerWidget {
   const AdminPartidosPantalla({super.key, required this.idTemporada});
 
@@ -49,6 +51,8 @@ class AdminPartidosPantalla extends ConsumerWidget {
             ?p.estadio?.nombre,
             etiquetaEstadoPartido(p.estado),
           ].join(' · '),
+          // Tocar el partido abre su alineación.
+          onTap: () => context.push('/admin/t/$idTemporada/partidos/${p.id}/alineacion'),
           onEditar: () async {
             // Las entradas programadas solo vienen en el detalle del partido.
             int? entradas;

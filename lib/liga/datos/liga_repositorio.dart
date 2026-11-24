@@ -146,6 +146,16 @@ class LigaRepositorio {
   /// Solo se puede borrar un partido programado.
   Future<void> eliminarPartido(int id) => _api.delete('/partidos/$id');
 
+  /// Guarda la alineación de los dos equipos. Con [publicar] el partido pasa a
+  /// "Alineación lista" y la API exige que esté completa.
+  Future<Alineacion> guardarAlineacion(int partidoId,
+          {required bool publicar, required DatosAlineacionEquipo local, required DatosAlineacionEquipo visita}) async =>
+      Alineacion.fromJson(await _api.put('/partidos/$partidoId/alineacion', {
+        'publicar': publicar,
+        'local': local.json(),
+        'visita': visita.json(),
+      }) as Map<String, dynamic>);
+
   Future<List<T>> _lista<T>(String ruta, T Function(Map<String, dynamic>) desde,
       {Map<String, dynamic>? query}) async {
     final datos = await _api.get(ruta, query: query) as List;
@@ -309,3 +319,23 @@ String fechaHoraApi(DateTime d) => '${fechaApi(d)}T${_dos(d.hour)}:${_dos(d.minu
 
 /// Posiciones admitidas por la API en plantilla y alineación.
 const posicionesLiga = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+
+/// Fila del orden de bateo para la API.
+typedef TurnoBateo = ({int orden, int jugadorId, String posicion});
+
+/// `EquipoAlineacionRequest`: lanzador inicial, orden de bateo y banca.
+class DatosAlineacionEquipo {
+  const DatosAlineacionEquipo({this.lanzadorInicial, this.bateo = const [], this.banca = const []});
+
+  final int? lanzadorInicial;
+  final List<TurnoBateo> bateo;
+  final List<int> banca;
+
+  Map<String, dynamic> json() => {
+        'lanzadorInicial': lanzadorInicial,
+        'bateo': [
+          for (final b in bateo) {'orden': b.orden, 'jugadorId': b.jugadorId, 'posicion': b.posicion},
+        ],
+        'banca': banca,
+      };
+}

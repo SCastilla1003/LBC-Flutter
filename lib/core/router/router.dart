@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentacion/admin_alineacion_pantalla.dart';
 import '../../features/admin/presentacion/admin_equipos_pantalla.dart';
 import '../../features/admin/presentacion/admin_estadios_pantalla.dart';
 import '../../features/admin/presentacion/admin_jugadores_pantalla.dart';
@@ -149,7 +150,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                   AdminPlantillaEquipoPantalla(idTemporada: int.parse(s.pathParameters['t']!), idEquipo: null)),
           GoRoute(
               path: 't/:t/partidos',
-              builder: (_, s) => AdminPartidosPantalla(idTemporada: int.parse(s.pathParameters['t']!))),
+              builder: (_, s) => AdminPartidosPantalla(idTemporada: int.parse(s.pathParameters['t']!)),
+              routes: [
+                GoRoute(
+                    path: ':p/alineacion',
+                    builder: (_, s) => AdminAlineacionPantalla(
+                        idTemporada: int.parse(s.pathParameters['t']!),
+                        idPartido: int.parse(s.pathParameters['p']!))),
+              ]),
         ],
       ),
     ],
