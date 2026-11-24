@@ -197,7 +197,7 @@ void main() {
       expect(find.text('COR @ PEL'), findsOneWidget);
       expect(find.text('Alta del 2'), findsOneWidget);
       expect(find.text('Jugador 102'), findsWidgets);
-      expect(find.text('12 lanzamientos'), findsOneWidget);
+      expect(find.text('PEL · 12 lanz.'), findsOneWidget);
 
       await t.tap(find.text('Bola'));
       await t.pumpAndSettle();
@@ -214,6 +214,8 @@ void main() {
   testWidgets('sencillo con corredor en primera: se indica a dónde llega cada uno', (t) async {
     final s = await _pintar(t, const AnotadorPantalla(idPartido: 9), (_) => _estado(corredorEnPrimera: true));
     await t.scrollUntilVisible(find.text('Sencillo'), 200);
+    await t.ensureVisible(find.text('Sencillo'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Sencillo'));
     await t.pumpAndSettle();
     expect(find.text('¿A dónde llega cada uno?'), findsOneWidget);

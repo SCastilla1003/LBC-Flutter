@@ -158,7 +158,10 @@ void main() {
       expect(find.text('Jugador 102'), findsOneWidget);
       expect(find.text('Lanzador 200'), findsOneWidget);
       expect(find.text('PEL · 12 lanz.'), findsOneWidget);
-      expect(find.text('En base: 1ª Jugador 101'), findsOneWidget);
+      // Cara y nombre del corredor en primera y del próximo bateador.
+      expect(find.text('Jugador 101'), findsOneWidget);
+      expect(find.text('PRÓXIMO'), findsOneWidget);
+      expect(find.text('Jugador 103'), findsOneWidget);
       expect(find.text('Jugada a jugada'), findsOneWidget);
       expect(find.text('Cara a cara: 1-3, 1 HR · Hit 27%'), findsOneWidget);
       expect(find.text('Jugador 101: sencillo.'), findsOneWidget);
@@ -171,6 +174,51 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
   }
+
+  double x(WidgetTester t, String texto) => t.getCenter(find.text(texto)).dx;
+
+  testWidgets('el bateador sale en su caja: derecho a la izquierda, zurdo a la derecha', (t) async {
+    final estado = _estado();
+    await _pintar(t, estado, alto: 1800);
+    expect(x(t, 'AL BATE'), lessThan(x(t, 'LANZA')));
+
+    final orden = ((estado['visita'] as Map)['orden'] as List);
+    (orden[1] as Map)['jugador'] = {..._jugador(102, 'Jugador', '102'), 'batea': 'Z'};
+    await t.pumpWidget(const SizedBox());
+    await _pintar(t, estado, alto: 1800);
+    expect(x(t, 'AL BATE'), greaterThan(x(t, 'LANZA')));
+    expect(find.bySemanticsLabel(RegExp('Batea a la zurda')), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('el próximo sale a la derecha si batea el visitante y a la izquierda si batea el local', (t) async {
+    await _pintar(t, _estado(), alto: 1800);
+    expect(x(t, 'PRÓXIMO'), greaterThan(x(t, 'LANZA')));
+    await t.pumpWidget(const SizedBox());
+
+    final abajo = _estado();
+    (abajo['partido'] as Map)['mitad'] = 'BOTTOM';
+    ((abajo['partido'] as Map)['situacion'] as Map)['bateador'] = {'id': 201, 'nombre': 'Jugador 201'};
+    ((abajo['partido'] as Map)['situacion'] as Map)['lanzador'] = {'id': 100, 'nombre': 'Lanzador 100'};
+    await _pintar(t, abajo, alto: 1800);
+    expect(find.text('Jugador 202'), findsOneWidget);
+    expect(x(t, 'PRÓXIMO'), lessThan(x(t, 'LANZA')));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('tocar la cara de un jugador en el campo abre su perfil', (t) async {
+    await _pintar(t, _estado(corredorEnPrimera: true), alto: 1800, rutas: GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const PartidoLigaPantalla(idTemporada: 1, idPartido: 9)),
+      GoRoute(
+        path: '/temporadas/:t/jugadores/:j',
+        builder: (_, s) => Text('Jugador ${s.pathParameters['j']} de ${s.uri.queryParameters['e']}'),
+      ),
+    ]));
+    await t.tap(find.text('Jugador 101'));
+    await t.pumpAndSettle();
+    expect(find.text('Jugador 101 de 5'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
 
   testWidgets('los lanzamientos se ven solo si se piden', (t) async {
     final estado = _estado();

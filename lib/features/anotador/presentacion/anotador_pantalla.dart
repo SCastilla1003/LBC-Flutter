@@ -11,6 +11,7 @@ import '../../../core/widgets/vista_async.dart';
 import '../../../liga/datos/juego_repositorio.dart';
 import '../../../liga/datos/liga_repositorio.dart';
 import '../../../liga/datos/modelos_liga.dart';
+import '../../../liga/presentacion/campo_en_vivo.dart';
 import '../../../liga/presentacion/widgets_juego.dart';
 import '../../admin/presentacion/admin_comun.dart';
 
@@ -261,7 +262,7 @@ class _Cuerpo extends StatelessWidget {
                 ),
               ]),
             if (enVivo) ...[
-              _EnJuego(estado: e),
+              CampoEnVivo(juego: e),
               Padding(
                 padding: const EdgeInsets.only(top: 14, bottom: 8),
                 child: Text('LANZAMIENTO', style: estiloEtiqueta(tema.textTheme.labelSmall)),
@@ -401,73 +402,6 @@ class _Tablero extends StatelessWidget {
           ]),
         ),
       ]),
-    );
-  }
-}
-
-/// Bateador al bate (con su turno) y lanzador (con sus lanzamientos).
-class _EnJuego extends StatelessWidget {
-  const _EnJuego({required this.estado});
-
-  final EstadoJuego estado;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final s = estado.partido.situacion;
-    final of = estado.ofensiva;
-    final turno = of.orden.where((t) => t.jugador?.id == s?.bateador?.id).firstOrNull;
-    final siguiente = of.orden.where((t) => t.orden == (turno?.orden ?? of.proximo) % 9 + 1).firstOrNull;
-    final defensa = estado.defensa;
-
-    Widget linea(IconData icono, String titulo, String valor, String? detalle) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(children: [
-            Icon(icono, size: 20, color: tema.colorScheme.primary),
-            const SizedBox(width: 10),
-            SizedBox(width: 62, child: Text(titulo, style: tema.textTheme.labelMedium)),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(valor,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                if (detalle != null) Text(detalle, style: tema.textTheme.bodySmall),
-              ]),
-            ),
-          ]),
-        );
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Column(children: [
-          linea(
-            Icons.sports_cricket_rounded,
-            'Al bate',
-            s?.bateador?.nombre ?? '—',
-            [
-              if (turno != null) '${turno.orden}º en el orden · ${turno.posicion ?? ''}',
-              if (siguiente?.jugador != null)
-                'Después: ${siguiente!.jugador!.nombres} ${siguiente.jugador!.apellidos}',
-            ].join(' · '),
-          ),
-          const Divider(height: 8),
-          linea(
-            Icons.sports_baseball_rounded,
-            'Lanza',
-            s?.lanzador?.nombre ?? '—',
-            '${defensa.lanzamientos} lanzamientos',
-          ),
-          for (final (n, r) in [
-            (1, s?.corredores?.primera),
-            (2, s?.corredores?.segunda),
-            (3, s?.corredores?.tercera),
-          ])
-            if (r != null) linea(Icons.directions_run_rounded, '$nª base', r.nombre, null),
-        ]),
-      ),
     );
   }
 }

@@ -6,12 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/tema/tema_lbc.dart';
-import '../../core/widgets/imagen_api.dart';
 import '../../core/widgets/vista_async.dart';
 import '../datos/estadisticas_repositorio.dart';
 import '../datos/juego_repositorio.dart';
 import '../datos/liga_repositorio.dart';
 import '../datos/modelos_liga.dart';
+import 'campo_en_vivo.dart';
 import 'widgets_juego.dart';
 import 'widgets_liga.dart';
 
@@ -334,134 +334,33 @@ class _Lado extends StatelessWidget {
   }
 }
 
-String _lado(Object? l) => switch (l) {
-      LadoBateo.derecho || LadoLanzamiento.derecho => 'derecho',
-      LadoBateo.zurdo || LadoLanzamiento.zurdo => 'zurdo',
-      LadoBateo.ambidiestro => 'ambidiestro',
-      _ => '',
-    };
-
-/// Duelo del momento: el bateador contra el lanzador, con sus fotos.
-class _Duelo extends ConsumerWidget {
+/// Duelo del momento en el terreno: lanzador, bateador en su caja, corredores y próximo,
+/// con sus caras. Debajo, el cara a cara del bateador contra el lanzador.
+class _Duelo extends StatelessWidget {
   const _Duelo({required this.juego, required this.idTemporada});
 
   final EstadoJuego juego;
   final int idTemporada;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tema = Theme.of(context);
-    final esquema = tema.colorScheme;
+  Widget build(BuildContext context) {
     final s = juego.partido.situacion;
-    final of = juego.ofensiva;
-    final def = juego.defensa;
-    final turno = of.orden.where((t) => t.jugador != null && t.jugador!.id == s?.bateador?.id).firstOrNull;
-    final bateador = turno?.jugador;
-    final lanzador = def.lanzador;
-    final despues = (turno?.orden ?? of.proximo) % 9 + 1;
-    final siguiente = of.orden.where((t) => t.orden == despues).firstOrNull?.jugador;
-    final c = s?.corredores;
-    final enBase = [
-      if (c?.primera != null) '1ª ${c!.primera!.nombre}',
-      if (c?.segunda != null) '2ª ${c!.segunda!.nombre}',
-      if (c?.tercera != null) '3ª ${c!.tercera!.nombre}',
-    ];
-
-    Widget lado({
-      required String titulo,
-      required JugadorResumenLiga? jugador,
-      required String respaldo,
-      required List<String> detalle,
-      required EquipoRefLiga equipo,
-    }) {
-      final nombre = jugador == null ? respaldo : '${jugador.nombres} ${jugador.apellidos}';
-      return Expanded(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: jugador == null
-              ? null
-              : () => context.push('/temporadas/$idTemporada/jugadores/${jugador.id}?e=${equipo.id}'),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Column(children: [
-              Text(titulo, style: estiloEtiqueta(tema.textTheme.labelSmall)?.copyWith(color: esquema.primary)),
-              const SizedBox(height: 8),
-              ImagenApi(urlFoto: jugador?.fotoUrl, nombre: nombre, tamano: 84),
-              const SizedBox(height: 8),
-              Text(
-                nombre,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: tema.textTheme.titleMedium?.copyWith(
-                  fontFamily: FuentesLbc.titular,
-                  fontSize: 19,
-                  height: 1.1,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                [equipo.abreviatura, ...detalle.where((d) => d.isNotEmpty)].join(' · '),
-                textAlign: TextAlign.center,
-                style: tema.textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
-              ),
-            ]),
-          ),
-        ),
-      );
-    }
-
+    final bateador = juego.ofensiva.orden
+        .where((t) => t.jugador != null && t.jugador!.id == s?.bateador?.id)
+        .firstOrNull
+        ?.jugador;
+    final lanzador = juego.defensa.lanzador;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
         child: Column(children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            lado(
-              titulo: 'AL BATE',
-              jugador: bateador,
-              respaldo: s?.bateador?.nombre ?? '—',
-              equipo: of.equipo,
-              detalle: [
-                if (turno != null) '${turno.orden}º${turno.posicion == null ? '' : ' ${turno.posicion}'}',
-                if (bateador?.batea != null) 'batea ${_lado(bateador!.batea)}',
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 58),
-              child: Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(color: ColoresMarca.amarillo, shape: BoxShape.circle),
-                child: Text(
-                  'VS',
-                  style: estiloMarcador(tema.textTheme.titleMedium)
-                      ?.copyWith(color: ColoresMarca.tintaSobreAmarillo, fontSize: 16),
-                ),
-              ),
-            ),
-            lado(
-              titulo: 'LANZA',
-              jugador: lanzador,
-              respaldo: s?.lanzador?.nombre ?? '—',
-              equipo: def.equipo,
-              detalle: [
-                if (lanzador?.lanza != null) _lado(lanzador!.lanza),
-                '${def.lanzamientos} lanz.',
-              ],
-            ),
-          ]),
+          CampoEnVivo(
+            juego: juego,
+            alTocar: (j, e) => context.push('/temporadas/$idTemporada/jugadores/${j.id}?e=${e.id}'),
+          ),
           if (bateador != null && lanzador != null)
             _HistorialDuelo(bateador: bateador.id, lanzador: lanzador.id, idTemporada: idTemporada),
-          if (enBase.isNotEmpty || siguiente != null) ...[
-            const Divider(height: 20),
-            if (enBase.isNotEmpty)
-              _Dato(icono: Icons.directions_run_rounded, texto: 'En base: ${enBase.join(' · ')}'),
-            if (siguiente != null)
-              _Dato(icono: Icons.skip_next_rounded, texto: 'Próximo: ${siguiente.nombres} ${siguiente.apellidos}'),
-          ],
         ]),
       ),
     );
@@ -508,26 +407,6 @@ class _HistorialDuelo extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Dato extends StatelessWidget {
-  const _Dato({required this.icono, required this.texto});
-
-  final IconData icono;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icono, size: 18, color: tema.colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(child: Text(texto, style: tema.textTheme.bodyMedium)),
-      ]),
     );
   }
 }
