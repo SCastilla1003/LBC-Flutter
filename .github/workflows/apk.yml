@@ -1,0 +1,54 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Firma fija para que las actualizaciones se instalen sobre la versión anterior.
+      # Si los secretos no existen, se compila con la firma de depuración.
+      - name: Preparar firma de publicación
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          CLAVE_ALMACEN: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          CLAVE_LLAVE: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' \
+              "$CLAVE_ALMACEN" "$CLAVE_LLAVE" "$ALIAS" > android/key.properties
+          fi
+
+      - run: flutter pub get
+
+      - name: Compilar APK
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://lbc-springbackend-production.up.railway.app
+
+      - name: Publicar descarga
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: LBC app ${{ github.run_number }}
+          body: Descarga el archivo app-release.apk en tu celular Android y ábrelo para instalar.
+          files: build/app/outputs/flutter-apk/app-release.apk
+          make_latest: true

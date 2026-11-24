@@ -47,3 +47,7 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
+# Firma de publicación de Android (secretos: nunca en git)
+android/key.properties
+*.jks
+*.keystore
