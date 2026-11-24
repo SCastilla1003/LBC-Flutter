@@ -11,6 +11,7 @@ import '../../../core/widgets/vista_async.dart';
 import '../../../liga/datos/juego_repositorio.dart';
 import '../../../liga/datos/liga_repositorio.dart';
 import '../../../liga/datos/modelos_liga.dart';
+import '../../../liga/presentacion/widgets_juego.dart';
 import '../../admin/presentacion/admin_comun.dart';
 
 /// Etiqueta corta para los botones del anotador.
@@ -323,29 +324,6 @@ class _Cuerpo extends StatelessWidget {
   }
 }
 
-/// Flecha de alta (arriba) o baja (abajo) seguida de un texto.
-class IndicadorMitad extends StatelessWidget {
-  const IndicadorMitad({super.key, required this.mitad, required this.texto, required this.color, this.estilo});
-
-  final MitadEntrada mitad;
-  final String texto;
-  final Color color;
-  final TextStyle? estilo;
-
-  @override
-  Widget build(BuildContext context) {
-    final alta = mitad == MitadEntrada.alta;
-    return Semantics(
-      label: '${alta ? 'Alta' : 'Baja'} $texto',
-      excludeSemantics: true,
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(alta ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded, color: color, size: 22),
-        Flexible(child: Text(texto, style: estilo?.copyWith(color: color) ?? TextStyle(color: color))),
-      ]),
-    );
-  }
-}
-
 /// Marcador, entrada, diamante con corredores, conteo y outs.
 class _Tablero extends StatelessWidget {
   const _Tablero({required this.estado});
@@ -417,93 +395,11 @@ class _Tablero extends StatelessWidget {
         Expanded(
           flex: 4,
           child: Column(children: [
-            _Diamante(bases: estado.bases),
+            DiamanteBases(bases: estado.bases),
             const SizedBox(height: 8),
-            _Puntos(etiqueta: 'B', total: 4, marcados: s?.bolas ?? 0, color: ColoresMarca.verdeNeon),
-            _Puntos(etiqueta: 'S', total: 3, marcados: s?.strikes ?? 0, color: ColoresMarca.amarillo),
-            _Puntos(etiqueta: 'O', total: 3, marcados: s?.outs ?? 0, color: ColoresMarca.rojoClaro),
+            ConteoJuego(bolas: s?.bolas ?? 0, strikes: s?.strikes ?? 0, outs: s?.outs ?? 0),
           ]),
         ),
-      ]),
-    );
-  }
-}
-
-class _Diamante extends StatelessWidget {
-  const _Diamante({required this.bases});
-
-  final List<int?> bases;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget base(int n) {
-      final ocupada = bases[n] != null;
-      return Transform.rotate(
-        angle: pi / 4,
-        child: Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: ocupada ? ColoresMarca.amarillo : Colors.transparent,
-            border: Border.all(color: ocupada ? ColoresMarca.amarillo : Colors.white54, width: 2),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      );
-    }
-
-    return Semantics(
-      label: 'Corredores: ${[
-        if (bases[1] != null) 'primera',
-        if (bases[2] != null) 'segunda',
-        if (bases[3] != null) 'tercera',
-      ].join(', ').ifEmpty('ninguno')}',
-      child: SizedBox(
-        width: 84,
-        height: 60,
-        child: Stack(children: [
-          Positioned(top: 2, left: 32, child: base(2)),
-          Positioned(top: 30, left: 4, child: base(3)),
-          Positioned(top: 30, right: 4, child: base(1)),
-        ]),
-      ),
-    );
-  }
-}
-
-extension on String {
-  String ifEmpty(String otro) => isEmpty ? otro : this;
-}
-
-class _Puntos extends StatelessWidget {
-  const _Puntos({required this.etiqueta, required this.total, required this.marcados, required this.color});
-
-  final String etiqueta;
-  final int total;
-  final int marcados;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        SizedBox(
-          width: 16,
-          child: Text(etiqueta,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
-        ),
-        for (var i = 0; i < total; i++)
-          Container(
-            width: 11,
-            height: 11,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: i < marcados ? color : Colors.transparent,
-              border: Border.all(color: i < marcados ? color : Colors.white38, width: 1.5),
-            ),
-          ),
       ]),
     );
   }
@@ -521,7 +417,7 @@ class _EnJuego extends StatelessWidget {
     final s = estado.partido.situacion;
     final of = estado.ofensiva;
     final turno = of.orden.where((t) => t.jugador?.id == s?.bateador?.id).firstOrNull;
-    final siguiente = of.orden.where((t) => t.orden == of.proximo % 9 + 1).firstOrNull;
+    final siguiente = of.orden.where((t) => t.orden == (turno?.orden ?? of.proximo) % 9 + 1).firstOrNull;
     final defensa = estado.defensa;
 
     Widget linea(IconData icono, String titulo, String valor, String? detalle) => Padding(

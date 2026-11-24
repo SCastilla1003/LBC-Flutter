@@ -6,13 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/tema/tema_lbc.dart';
+import '../../core/widgets/imagen_api.dart';
 import '../../core/widgets/vista_async.dart';
+import '../datos/juego_repositorio.dart';
 import '../datos/liga_repositorio.dart';
 import '../datos/modelos_liga.dart';
+import 'widgets_juego.dart';
 import 'widgets_liga.dart';
 
-/// Partido: marcador, marcador por entrada (estilo MLB), situación en vivo y accesos
-/// a alineación y pitcheo. Si el partido está en vivo se refresca cada 8 segundos.
+/// Partido: marcador, marcador por entrada (estilo MLB) y accesos a alineación y
+/// pitcheo. En vivo muestra además la entrada, las bases, el conteo, el duelo
+/// bateador–lanzador con sus fotos y el jugada a jugada, y se refresca cada 6 segundos.
 class PartidoLigaPantalla extends ConsumerStatefulWidget {
   const PartidoLigaPantalla({super.key, required this.idTemporada, required this.idPartido});
 
@@ -29,10 +33,10 @@ class _PartidoLigaPantallaState extends ConsumerState<PartidoLigaPantalla> {
   void _vigilar(EstadoPartidoLiga estado) {
     final enVivo = estado == EstadoPartidoLiga.enJuego;
     if (enVivo && _sondeo == null) {
-      _sondeo = Timer.periodic(
-        const Duration(seconds: 8),
-        (_) => ref.invalidate(partidoDetalleLigaProvider(widget.idPartido)),
-      );
+      _sondeo = Timer.periodic(const Duration(seconds: 6), (_) {
+        ref.invalidate(estadoJuegoProvider(widget.idPartido));
+        ref.invalidate(partidoDetalleLigaProvider(widget.idPartido));
+      });
     } else if (!enVivo) {
       _sondeo?.cancel();
       _sondeo = null;
@@ -45,56 +49,76 @@ class _PartidoLigaPantallaState extends ConsumerState<PartidoLigaPantalla> {
     super.dispose();
   }
 
+  Future<void> _recargar() async {
+    ref.invalidate(estadoJuegoProvider(widget.idPartido));
+    await ref.refresh(partidoDetalleLigaProvider(widget.idPartido).future).then((_) {}, onError: (_) {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final valor = ref.watch(partidoDetalleLigaProvider(widget.idPartido));
+    final detalle = ref.watch(partidoDetalleLigaProvider(widget.idPartido));
+    final estado = detalle.value?.estado;
+    // Ya empezó: el estado del juego trae además bateador, lanzador (con fotos) y jugadas.
+    final empezado = estado != null &&
+        estado != EstadoPartidoLiga.programado &&
+        estado != EstadoPartidoLiga.alineacionPublicada;
+    final juego = empezado ? ref.watch(estadoJuegoProvider(widget.idPartido)).value : null;
+    // El del juego llega junto con el duelo y las jugadas: así todo muestra el mismo momento.
+    final valor = juego != null ? AsyncValue.data(juego.partido) : detalle;
     valor.whenData((p) => _vigilar(p.estado));
     return Scaffold(
       appBar: AppBar(title: const Text('Partido')),
       body: RecargableSimple(
-        onRefresh: () => ref.refresh(partidoDetalleLigaProvider(widget.idPartido).future).then((_) {}, onError: (_) {}),
+        onRefresh: _recargar,
         child: VistaAsync<PartidoDetalle>(
           valor: valor,
           onReintentar: () => ref.invalidate(partidoDetalleLigaProvider(widget.idPartido)),
-          datos: (p) => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              children: [
-                _Marcador(partido: p),
-                _TablaEntradas(partido: p),
-                if (p.estado == EstadoPartidoLiga.enJuego && p.situacion != null)
-                  _Situacion(situacion: p.situacion!),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.go(
-                            '/temporadas/${widget.idTemporada}/partidos/${widget.idPartido}/alineacion'),
-                        icon: const Icon(Icons.format_list_numbered),
-                        label: const Text('Alineación'),
+          datos: (p) {
+            final enCurso = p.estado == EstadoPartidoLiga.enJuego || p.estado == EstadoPartidoLiga.suspendido;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Marcador(partido: p),
+                  if (enCurso && juego != null)
+                    _Duelo(juego: juego, idTemporada: widget.idTemporada),
+                  _TablaEntradas(partido: p),
+                  if (juego != null && juego.jugadas.isNotEmpty) _JugadaAJugada(jugadas: juego.jugadas),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.go(
+                              '/temporadas/${widget.idTemporada}/partidos/${widget.idPartido}/alineacion'),
+                          icon: const Icon(Icons.format_list_numbered),
+                          label: const Text('Alineación'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => context.go(
-                            '/temporadas/${widget.idTemporada}/partidos/${widget.idPartido}/pitcheo'),
-                        icon: const Icon(Icons.sports_baseball),
-                        label: const Text('Pitcheo'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => context.go(
+                              '/temporadas/${widget.idTemporada}/partidos/${widget.idPartido}/pitcheo'),
+                          icon: const Icon(Icons.sports_baseball),
+                          label: const Text('Pitcheo'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
+/// Tablero del partido: equipos (visitante a la izquierda, como "VIS @ LOC"), carreras y,
+/// en vivo, entrada, bases ocupadas y conteo.
 class _Marcador extends StatelessWidget {
   const _Marcador({required this.partido});
 
@@ -104,7 +128,8 @@ class _Marcador extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final p = partido;
-    final marcado = p.estado == EstadoPartidoLiga.enJuego || p.estado == EstadoPartidoLiga.finalizado;
+    final enCurso = p.estado == EstadoPartidoLiga.enJuego || p.estado == EstadoPartidoLiga.suspendido;
+    final marcado = enCurso || p.estado == EstadoPartidoLiga.finalizado;
     const tinta = ColoresMarca.tintaBarra;
     final ganaLocal = p.ganadorId == p.equipoLocal.id;
     final ganaVisita = p.ganadorId == p.equipoVisita.id;
@@ -115,6 +140,8 @@ class _Marcador extends StatelessWidget {
             color: gana ? ColoresMarca.amarillo : tinta.withValues(alpha: p.ganadorId == null ? 1 : 0.7),
           ),
         );
+    final s = p.situacion;
+    final c = s?.corredores;
     // Tablero de estadio: verde noche, cifras grandes y canto amarillo.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -152,12 +179,12 @@ class _Marcador extends StatelessWidget {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    Expanded(child: _Lado(equipo: p.equipoLocal, ganador: ganaLocal)),
+                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: ganaVisita, lado: 'Visitante')),
                     if (marcado)
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          carreras(p.marcador.local, ganaLocal),
+                          carreras(p.marcador.visita, ganaVisita),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             child: Text(
@@ -165,14 +192,48 @@ class _Marcador extends StatelessWidget {
                               style: estiloCarreras?.copyWith(fontSize: 40, color: tinta.withValues(alpha: 0.5)),
                             ),
                           ),
-                          carreras(p.marcador.visita, ganaVisita),
+                          carreras(p.marcador.local, ganaLocal),
                         ],
                       )
                     else
                       Text('VS', style: estiloCarreras?.copyWith(fontSize: 40, color: ColoresMarca.amarillo)),
-                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: ganaVisita, derecha: true)),
+                    Expanded(
+                      child: _Lado(equipo: p.equipoLocal, ganador: ganaLocal, lado: 'Local', derecha: true),
+                    ),
                   ],
                 ),
+                if (enCurso) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(children: [
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          IndicadorMitad(
+                            mitad: p.mitad,
+                            texto: '${p.mitad == MitadEntrada.alta ? 'Alta' : 'Baja'} del ${p.entradaActual}',
+                            color: ColoresMarca.amarillo,
+                            estilo: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(fontSize: 20),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            p.estado == EstadoPartidoLiga.suspendido
+                                ? 'Partido suspendido'
+                                : '${s?.outs ?? 0} ${(s?.outs ?? 0) == 1 ? 'out' : 'outs'}',
+                            style: tema.textTheme.labelMedium?.copyWith(color: tinta.withValues(alpha: 0.75)),
+                          ),
+                        ]),
+                      ),
+                      DiamanteBases(bases: [null, c?.primera, c?.segunda, c?.tercera], tamano: 18),
+                      const SizedBox(width: 12),
+                      ConteoJuego(bolas: s?.bolas ?? 0, strikes: s?.strikes ?? 0, outs: s?.outs ?? 0),
+                    ]),
+                  ),
+                ],
                 if (p.estadio != null) ...[
                   const SizedBox(height: 14),
                   Row(
@@ -201,10 +262,11 @@ class _Marcador extends StatelessWidget {
 }
 
 class _Lado extends StatelessWidget {
-  const _Lado({required this.equipo, required this.ganador, this.derecha = false});
+  const _Lado({required this.equipo, required this.ganador, required this.lado, this.derecha = false});
 
   final EquipoRefLiga equipo;
   final bool ganador;
+  final String lado;
   final bool derecha;
 
   @override
@@ -226,7 +288,232 @@ class _Lado extends StatelessWidget {
     final escudo = EscudoLiga(equipo: equipo, tamano: 56);
     return Column(
       crossAxisAlignment: derecha ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [escudo, const SizedBox(height: 10), nombre],
+      children: [
+        escudo,
+        const SizedBox(height: 10),
+        nombre,
+        Text(
+          lado,
+          style: tema.textTheme.labelSmall?.copyWith(color: ColoresMarca.tintaBarra.withValues(alpha: 0.6)),
+        ),
+      ],
+    );
+  }
+}
+
+String _lado(Object? l) => switch (l) {
+      LadoBateo.derecho || LadoLanzamiento.derecho => 'derecho',
+      LadoBateo.zurdo || LadoLanzamiento.zurdo => 'zurdo',
+      LadoBateo.ambidiestro => 'ambidiestro',
+      _ => '',
+    };
+
+/// Duelo del momento: el bateador contra el lanzador, con sus fotos.
+class _Duelo extends StatelessWidget {
+  const _Duelo({required this.juego, required this.idTemporada});
+
+  final EstadoJuego juego;
+  final int idTemporada;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final s = juego.partido.situacion;
+    final of = juego.ofensiva;
+    final def = juego.defensa;
+    final turno = of.orden.where((t) => t.jugador != null && t.jugador!.id == s?.bateador?.id).firstOrNull;
+    final bateador = turno?.jugador;
+    final lanzador = def.lanzador;
+    final despues = (turno?.orden ?? of.proximo) % 9 + 1;
+    final siguiente = of.orden.where((t) => t.orden == despues).firstOrNull?.jugador;
+    final c = s?.corredores;
+    final enBase = [
+      if (c?.primera != null) '1ª ${c!.primera!.nombre}',
+      if (c?.segunda != null) '2ª ${c!.segunda!.nombre}',
+      if (c?.tercera != null) '3ª ${c!.tercera!.nombre}',
+    ];
+
+    Widget lado({
+      required String titulo,
+      required JugadorResumenLiga? jugador,
+      required String respaldo,
+      required List<String> detalle,
+      required EquipoRefLiga equipo,
+    }) {
+      final nombre = jugador == null ? respaldo : '${jugador.nombres} ${jugador.apellidos}';
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: jugador == null
+              ? null
+              : () => context.push('/temporadas/$idTemporada/jugadores/${jugador.id}?e=${equipo.id}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(children: [
+              Text(titulo, style: estiloEtiqueta(tema.textTheme.labelSmall)?.copyWith(color: esquema.primary)),
+              const SizedBox(height: 8),
+              ImagenApi(urlFoto: jugador?.fotoUrl, nombre: nombre, tamano: 84),
+              const SizedBox(height: 8),
+              Text(
+                nombre,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: tema.textTheme.titleMedium?.copyWith(
+                  fontFamily: FuentesLbc.titular,
+                  fontSize: 19,
+                  height: 1.1,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                [equipo.abreviatura, ...detalle.where((d) => d.isNotEmpty)].join(' · '),
+                textAlign: TextAlign.center,
+                style: tema.textTheme.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
+              ),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+        child: Column(children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            lado(
+              titulo: 'AL BATE',
+              jugador: bateador,
+              respaldo: s?.bateador?.nombre ?? '—',
+              equipo: of.equipo,
+              detalle: [
+                if (turno != null) '${turno.orden}º${turno.posicion == null ? '' : ' ${turno.posicion}'}',
+                if (bateador?.batea != null) 'batea ${_lado(bateador!.batea)}',
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 58),
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: ColoresMarca.amarillo, shape: BoxShape.circle),
+                child: Text(
+                  'VS',
+                  style: estiloMarcador(tema.textTheme.titleMedium)
+                      ?.copyWith(color: ColoresMarca.tintaSobreAmarillo, fontSize: 16),
+                ),
+              ),
+            ),
+            lado(
+              titulo: 'LANZA',
+              jugador: lanzador,
+              respaldo: s?.lanzador?.nombre ?? '—',
+              equipo: def.equipo,
+              detalle: [
+                if (lanzador?.lanza != null) _lado(lanzador!.lanza),
+                '${def.lanzamientos} lanz.',
+              ],
+            ),
+          ]),
+          if (enBase.isNotEmpty || siguiente != null) ...[
+            const Divider(height: 20),
+            if (enBase.isNotEmpty)
+              _Dato(icono: Icons.directions_run_rounded, texto: 'En base: ${enBase.join(' · ')}'),
+            if (siguiente != null)
+              _Dato(icono: Icons.skip_next_rounded, texto: 'Próximo: ${siguiente.nombres} ${siguiente.apellidos}'),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+class _Dato extends StatelessWidget {
+  const _Dato({required this.icono, required this.texto});
+
+  final IconData icono;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icono, size: 18, color: tema.colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(child: Text(texto, style: tema.textTheme.bodyMedium)),
+      ]),
+    );
+  }
+}
+
+/// Jugada a jugada (lo más reciente arriba). Los lanzamientos van en letra pequeña.
+class _JugadaAJugada extends StatefulWidget {
+  const _JugadaAJugada({required this.jugadas});
+
+  final List<AccionJuego> jugadas;
+
+  @override
+  State<_JugadaAJugada> createState() => _JugadaAJugadaState();
+}
+
+class _JugadaAJugadaState extends State<_JugadaAJugada> {
+  bool _lanzamientos = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final lista = _lanzamientos ? widget.jugadas : widget.jugadas.where((a) => a.tipo != 'LANZAMIENTO').toList();
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(child: Text('Jugada a jugada', style: tema.textTheme.titleLarge?.copyWith(fontSize: 20))),
+            FilterChip(
+              label: const Text('Lanzamientos'),
+              selected: _lanzamientos,
+              onSelected: (v) => setState(() => _lanzamientos = v),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          if (lista.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('Todavía no hay jugadas.', style: tema.textTheme.bodySmall),
+            ),
+          for (final a in lista)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                SizedBox(
+                  width: 40,
+                  child: IndicadorMitad(
+                    mitad: a.mitad,
+                    texto: '${a.entrada}',
+                    color: tema.colorScheme.primary,
+                    estilo: estiloCifra(tema.textTheme.labelMedium),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    a.descripcion,
+                    style: a.tipo == 'LANZAMIENTO'
+                        ? tema.textTheme.bodySmall
+                        : tema.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ]),
+            ),
+        ]),
+      ),
     );
   }
 }
@@ -331,60 +618,6 @@ class _TablaEntradas extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-// Situación en vivo: outs, cuenta, bateador, lanzador y corredores.
-class _Situacion extends StatelessWidget {
-  const _Situacion({required this.situacion});
-
-  final SituacionLiga situacion;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final s = situacion;
-    final corredores = s.corredores;
-
-    Widget linea(String titulo, String valor) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              SizedBox(width: 92, child: Text(titulo, style: tema.textTheme.labelMedium?.copyWith(color: tema.colorScheme.onSurfaceVariant))),
-              Expanded(child: Text(valor, style: tema.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700))),
-            ],
-          ),
-        );
-
-    return Padding(
-      padding: EdgeInsets.zero,
-      child: TarjetaLiga(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(color: ColoresMarca.rojo, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 8),
-                Text('En vivo', style: tema.textTheme.titleLarge?.copyWith(fontSize: 20)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            linea('Outs', '${s.outs} / 3'),
-            linea('Cuenta', '${s.bolas} bolas · ${s.strikes} strikes'),
-            linea('Bateador', s.bateador?.nombre ?? '—'),
-            linea('Lanzador', s.lanzador?.nombre ?? '—'),
-            linea('1.ª base', corredores?.primera?.nombre ?? 'Vacía'),
-            linea('2.ª base', corredores?.segunda?.nombre ?? 'Vacía'),
-            linea('3.ª base', corredores?.tercera?.nombre ?? 'Vacía'),
-          ],
-        ),
       ),
     );
   }

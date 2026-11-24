@@ -12,7 +12,7 @@ import '../../../liga/datos/juego_repositorio.dart';
 import '../../../liga/datos/modelos_liga.dart';
 import '../../../liga/presentacion/widgets_liga.dart';
 import '../../admin/presentacion/admin_comun.dart';
-import 'anotador_pantalla.dart';
+import '../../../liga/presentacion/widgets_juego.dart';
 
 /// Ficha de un partido para admin y anotador. El partido ya se ve en la app como
 /// "Programado" desde que se crea: las alineaciones se cargan cuando se tengan y
