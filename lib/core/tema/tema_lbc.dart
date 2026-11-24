@@ -512,8 +512,11 @@ abstract final class TemaLbc {
           borderRadius: BorderRadius.circular(RadioLbc.boton),
         ),
       ),
+      // En oscuro, el diálogo va un tono por encima del fondo para que se distinga.
       dialogTheme: DialogThemeData(
-        backgroundColor: esquema.surfaceContainerLowest,
+        backgroundColor: claro
+            ? esquema.surfaceContainerLowest
+            : esquema.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(RadioLbc.hoja),
@@ -539,7 +542,9 @@ abstract final class TemaLbc {
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: esquema.surfaceContainerLowest,
+        backgroundColor: claro
+            ? esquema.surfaceContainerLowest
+            : esquema.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(

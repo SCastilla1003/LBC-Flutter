@@ -7,6 +7,7 @@ import '../../features/admin/presentacion/admin_estadios_pantalla.dart';
 import '../../features/admin/presentacion/admin_jugadores_pantalla.dart';
 import '../../features/admin/presentacion/admin_panel_pantalla.dart';
 import '../../features/admin/presentacion/admin_partidos_pantalla.dart';
+import '../../features/admin/presentacion/admin_plantilla_pantalla.dart';
 import '../../features/admin/presentacion/admin_temporadas_pantalla.dart';
 import '../../features/auth/presentacion/cuenta_pantalla.dart';
 import '../../features/auth/presentacion/login_pantalla.dart';
@@ -132,19 +133,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const AdminPanelPantalla(),
         routes: [
           GoRoute(path: 'temporadas', builder: (_, _) => const AdminTemporadasPantalla()),
+          GoRoute(path: 'equipos', builder: (_, _) => const AdminEquiposPantalla()),
+          GoRoute(path: 'jugadores', builder: (_, _) => const AdminJugadoresPantalla()),
+          GoRoute(path: 'estadios', builder: (_, _) => const AdminEstadiosPantalla()),
           GoRoute(
-              path: 't/:t/equipos', builder: (_, s) => AdminEquiposPantalla(idTemporada: s.pathParameters['t']!)),
+              path: 't/:t/plantilla',
+              builder: (_, s) => AdminPlantillasPantalla(idTemporada: int.parse(s.pathParameters['t']!))),
           GoRoute(
-              path: 't/:t/equipos/:e',
-              builder: (_, s) =>
-                  AdminJugadoresPantalla(idTemporada: s.pathParameters['t']!, idEquipo: s.pathParameters['e']!)),
+              path: 't/:t/plantilla/:e',
+              builder: (_, s) => AdminPlantillaEquipoPantalla(
+                  idTemporada: int.parse(s.pathParameters['t']!), idEquipo: int.parse(s.pathParameters['e']!))),
           GoRoute(
               path: 't/:t/agentes-libres',
-              builder: (_, s) => AdminJugadoresPantalla(idTemporada: s.pathParameters['t']!, idEquipo: null)),
+              builder: (_, s) =>
+                  AdminPlantillaEquipoPantalla(idTemporada: int.parse(s.pathParameters['t']!), idEquipo: null)),
           GoRoute(
-              path: 't/:t/partidos', builder: (_, s) => AdminPartidosPantalla(idTemporada: s.pathParameters['t']!)),
-          GoRoute(
-              path: 't/:t/estadios', builder: (_, s) => AdminEstadiosPantalla(idTemporada: s.pathParameters['t']!)),
+              path: 't/:t/partidos',
+              builder: (_, s) => AdminPartidosPantalla(idTemporada: int.parse(s.pathParameters['t']!))),
         ],
       ),
     ],
