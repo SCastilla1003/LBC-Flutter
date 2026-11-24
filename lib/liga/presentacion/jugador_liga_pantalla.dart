@@ -11,6 +11,7 @@ import '../../features/jugadores/presentacion/cabecera_jugador.dart';
 import '../datos/estadisticas_repositorio.dart';
 import '../datos/liga_repositorio.dart';
 import '../datos/modelos_liga.dart';
+import 'graficas_jugador.dart';
 
 /// Perfil de un jugador en una temporada: foto en cromo, equipo, ficha y estadísticas
 /// de la temporada y de su carrera (bateo y, si lanza, pitcheo). [idEquipo] nulo = agente libre.
@@ -87,6 +88,7 @@ class JugadorLigaPantalla extends ConsumerWidget {
                       idJugador: idJugador,
                       anio: anio,
                       pitcherPrimero: j.esLanzador,
+                      color: colorDe(context, entrada?.equipo),
                     ),
                   ),
                 ],
@@ -133,12 +135,16 @@ class _Estadisticas extends ConsumerWidget {
     required this.idJugador,
     required this.anio,
     required this.pitcherPrimero,
+    required this.color,
   });
 
   final int idTemporada;
   final int idJugador;
   final int? anio;
   final bool pitcherPrimero;
+
+  /// Color del equipo: el del jugador en las gráficas.
+  final Color color;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -154,13 +160,28 @@ class _Estadisticas extends ConsumerWidget {
           );
         }
         final titulo = anio == null ? 'Esta temporada' : 'Temporada $anio';
+        void comparar(bool pitcheo) =>
+            compararCon(context, ref, idTemporada: idTemporada, idJugador: idJugador, pitcheo: pitcheo);
         final bateo = [
           if (e.temporada.bateo != null || e.carrera.bateo != null)
-            _BloqueBateo(titulo: titulo, temporada: e.temporada.bateo, carrera: e.carrera.bateo),
+            _BloqueBateo(
+              titulo: titulo,
+              temporada: e.temporada.bateo,
+              carrera: e.carrera.bateo,
+              onComparar: e.temporada.bateo == null ? null : () => comparar(false),
+            ),
+          if (e.temporada.bateo != null) GraficasBateo(idTemporada: idTemporada, idJugador: idJugador, color: color),
         ];
         final pitcheo = [
           if (e.temporada.pitcheo != null || e.carrera.pitcheo != null)
-            _BloquePitcheo(titulo: titulo, temporada: e.temporada.pitcheo, carrera: e.carrera.pitcheo),
+            _BloquePitcheo(
+              titulo: titulo,
+              temporada: e.temporada.pitcheo,
+              carrera: e.carrera.pitcheo,
+              onComparar: e.temporada.pitcheo == null ? null : () => comparar(true),
+            ),
+          if (e.temporada.pitcheo != null)
+            GraficasPitcheo(idTemporada: idTemporada, idJugador: idJugador, color: color),
         ];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -206,10 +227,13 @@ class _FilaCifras extends StatelessWidget {
 }
 
 class _Encabezado extends StatelessWidget {
-  const _Encabezado(this.texto, this.icono);
+  const _Encabezado(this.texto, this.icono, {this.onComparar});
 
   final String texto;
   final IconData icono;
+
+  /// Abre el cara a cara con otro jugador (null = sin estadísticas de la temporada).
+  final VoidCallback? onComparar;
 
   @override
   Widget build(BuildContext context) {
@@ -219,18 +243,31 @@ class _Encabezado extends StatelessWidget {
       child: Row(children: [
         Icon(icono, size: 18, color: tema.colorScheme.primary),
         const SizedBox(width: 8),
-        Text(texto.toUpperCase(), style: estiloEtiqueta(tema.textTheme.labelMedium)?.copyWith(color: tema.colorScheme.primary)),
+        Expanded(
+          child: Text(
+            texto.toUpperCase(),
+            style: estiloEtiqueta(tema.textTheme.labelMedium)?.copyWith(color: tema.colorScheme.primary),
+          ),
+        ),
+        if (onComparar != null)
+          TextButton.icon(
+            onPressed: onComparar,
+            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+            label: const Text('Comparar'),
+          ),
       ]),
     );
   }
 }
 
 class _BloqueBateo extends StatelessWidget {
-  const _BloqueBateo({required this.titulo, this.temporada, this.carrera});
+  const _BloqueBateo({required this.titulo, this.temporada, this.carrera, this.onComparar});
 
   final String titulo;
   final CifrasBateo? temporada;
   final CifrasBateo? carrera;
+  final VoidCallback? onComparar;
 
   static List<(String, String)> _resumen(CifrasBateo b) => [
         ('AB', '${b.ab}'),
@@ -249,7 +286,7 @@ class _BloqueBateo extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const _Encabezado('Bateo', Icons.sports_cricket_rounded),
+          _Encabezado('Bateo', Icons.sports_cricket_rounded, onComparar: onComparar),
           _FilaCifras(titulo: titulo, columnas: t == null ? _resumen(const CifrasBateo()) : _resumen(t)),
           if (carrera != null) _FilaCifras(titulo: 'Carrera', columnas: _resumen(carrera!)),
           if (t != null)
@@ -274,11 +311,12 @@ class _BloqueBateo extends StatelessWidget {
 }
 
 class _BloquePitcheo extends StatelessWidget {
-  const _BloquePitcheo({required this.titulo, this.temporada, this.carrera});
+  const _BloquePitcheo({required this.titulo, this.temporada, this.carrera, this.onComparar});
 
   final String titulo;
   final CifrasPitcheo? temporada;
   final CifrasPitcheo? carrera;
+  final VoidCallback? onComparar;
 
   static List<(String, String)> _resumen(CifrasPitcheo p) => [
         ('G-P', '${p.ganados}-${p.perdidos}'),
@@ -296,7 +334,7 @@ class _BloquePitcheo extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const _Encabezado('Pitcheo', Icons.sports_baseball_rounded),
+          _Encabezado('Pitcheo', Icons.sports_baseball_rounded, onComparar: onComparar),
           _FilaCifras(titulo: titulo, columnas: t == null ? _resumen(const CifrasPitcheo()) : _resumen(t)),
           if (carrera != null) _FilaCifras(titulo: 'Carrera', columnas: _resumen(carrera!)),
           if (t != null)

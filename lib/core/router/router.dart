@@ -20,8 +20,6 @@ import '../../features/auth/presentacion/login_pantalla.dart';
 import '../../features/auth/presentacion/registro_pantalla.dart';
 import '../../features/comparador/presentacion/comparador_pantalla.dart';
 import '../../features/jugadores/presentacion/lideres_pantalla.dart';
-import '../../features/jugadores/presentacion/perfil_bateador_pantalla.dart';
-import '../../features/jugadores/presentacion/perfil_lanzador_pantalla.dart';
 import '../../features/prediccion/presentacion/prediccion_pantalla.dart';
 import '../../features/temporadas/presentacion/inicio_pantalla.dart';
 import '../../liga/presentacion/alineacion_liga_pantalla.dart';
@@ -102,14 +100,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                         ),
                       ],
                     ),
-                    // Estadísticas: se conservan tal cual y se adaptan después.
+                    // Cara a cara entre dos jugadores: tipo = bateo | pitcheo.
                     GoRoute(
                         path: 'comparar/:tipo',
                         builder: (_, s) => ComparadorPantalla(
-                              idTemporada: s.pathParameters['t']!,
-                              tipo: s.pathParameters['tipo']!,
-                              a: s.uri.queryParameters['a'] ?? '',
-                              b: s.uri.queryParameters['b'] ?? '',
+                              idTemporada: int.parse(s.pathParameters['t']!),
+                              pitcheo: s.pathParameters['tipo'] == 'pitcheo',
+                              a: int.tryParse(s.uri.queryParameters['a'] ?? '') ?? 0,
+                              b: int.tryParse(s.uri.queryParameters['b'] ?? '') ?? 0,
                             )),
                     GoRoute(
                         path: 'equipos/:e',
@@ -123,14 +121,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                             idTemporada: int.parse(s.pathParameters['t']!),
                             idJugador: int.parse(s.pathParameters['j']!),
                             idEquipo: int.tryParse(s.uri.queryParameters['e'] ?? ''))),
-                    GoRoute(
-                        path: 'bateadores/:j',
-                        builder: (_, s) => PerfilBateadorPantalla(
-                            idTemporada: s.pathParameters['t']!, idJugador: s.pathParameters['j']!)),
-                    GoRoute(
-                        path: 'lanzadores/:j',
-                        builder: (_, s) => PerfilLanzadorPantalla(
-                            idTemporada: s.pathParameters['t']!, idJugador: s.pathParameters['j']!)),
                   ],
                 ),
               ],

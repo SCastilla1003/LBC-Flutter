@@ -81,7 +81,7 @@ class _PartidoLigaPantallaState extends ConsumerState<PartidoLigaPantalla> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _Marcador(partido: p),
+                  _Marcador(partido: p, idTemporada: widget.idTemporada),
                   if (enCurso && juego != null)
                     _Duelo(juego: juego, idTemporada: widget.idTemporada),
                   _TablaEntradas(partido: p),
@@ -121,9 +121,10 @@ class _PartidoLigaPantallaState extends ConsumerState<PartidoLigaPantalla> {
 /// Tablero del partido: equipos (visitante a la izquierda, como "VIS @ LOC"), carreras y,
 /// en vivo, entrada, bases ocupadas y conteo.
 class _Marcador extends StatelessWidget {
-  const _Marcador({required this.partido});
+  const _Marcador({required this.partido, required this.idTemporada});
 
   final PartidoDetalle partido;
+  final int idTemporada;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +181,7 @@ class _Marcador extends StatelessWidget {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: ganaVisita, lado: 'Visitante')),
+                    Expanded(child: _Lado(equipo: p.equipoVisita, ganador: ganaVisita, lado: 'Visitante', idTemporada: idTemporada)),
                     if (marcado)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -199,7 +200,13 @@ class _Marcador extends StatelessWidget {
                     else
                       Text('VS', style: estiloCarreras?.copyWith(fontSize: 40, color: ColoresMarca.amarillo)),
                     Expanded(
-                      child: _Lado(equipo: p.equipoLocal, ganador: ganaLocal, lado: 'Local', derecha: true),
+                      child: _Lado(
+                        equipo: p.equipoLocal,
+                        ganador: ganaLocal,
+                        lado: 'Local',
+                        derecha: true,
+                        idTemporada: idTemporada,
+                      ),
                     ),
                   ],
                 ),
@@ -263,9 +270,16 @@ class _Marcador extends StatelessWidget {
 }
 
 class _Lado extends StatelessWidget {
-  const _Lado({required this.equipo, required this.ganador, required this.lado, this.derecha = false});
+  const _Lado({
+    required this.equipo,
+    required this.ganador,
+    required this.lado,
+    required this.idTemporada,
+    this.derecha = false,
+  });
 
   final EquipoRefLiga equipo;
+  final int idTemporada;
   final bool ganador;
   final String lado;
   final bool derecha;
@@ -287,12 +301,30 @@ class _Lado extends StatelessWidget {
       ),
     );
     final escudo = EscudoLiga(equipo: equipo, tamano: 56);
+    // Escudo y nombre llevan a la página del equipo.
+    void abrir() => context.push('/temporadas/$idTemporada/equipos/${equipo.id}');
     return Column(
       crossAxisAlignment: derecha ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        escudo,
-        const SizedBox(height: 10),
-        nombre,
+        Semantics(
+          button: true,
+          label: 'Ver ${equipo.nombre}',
+          child: InkWell(
+            onTap: abrir,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                crossAxisAlignment: derecha ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  ExcludeSemantics(child: escudo),
+                  const SizedBox(height: 10),
+                  ExcludeSemantics(child: nombre),
+                ],
+              ),
+            ),
+          ),
+        ),
         Text(
           lado,
           style: tema.textTheme.labelSmall?.copyWith(color: ColoresMarca.tintaBarra.withValues(alpha: 0.6)),

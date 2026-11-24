@@ -1,195 +1,176 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../core/charts/anillo_registro.dart';
 import '../../../core/charts/barras_enfrentadas.dart';
 import '../../../core/charts/base_graficas.dart';
 import '../../../core/charts/radar_comparativo.dart';
-import '../../../core/tema/colores_equipo.dart';
 import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/imagen_api.dart';
-import '../../equipos/datos/equipos_repositorio.dart';
-import '../../equipos/datos/modelos_equipo.dart';
-import '../../jugadores/datos/jugadores_repositorio.dart';
-import '../../jugadores/datos/modelos_jugador.dart';
-import '../../jugadores/presentacion/perfil_bateador_pantalla.dart';
+import '../../../core/widgets/vista_async.dart';
+import '../../../liga/datos/estadisticas_repositorio.dart';
+import '../../../liga/datos/modelos_liga.dart';
+import '../../../liga/presentacion/graficas_jugador.dart';
 
-/// Cara a cara entre dos bateadores, dos lanzadores o dos equipos de la misma temporada.
+/// Cara a cara entre dos jugadores de la misma temporada, con las estadísticas
+/// calculadas de los partidos anotados en vivo. [pitcheo] compara como lanzadores.
 class ComparadorPantalla extends ConsumerWidget {
   const ComparadorPantalla({
     super.key,
     required this.idTemporada,
-    required this.tipo,
+    required this.pitcheo,
     required this.a,
     required this.b,
   });
 
-  final String idTemporada;
-
-  /// "bateadores", "lanzadores" o "equipos".
-  final String tipo;
-  final String a;
-  final String b;
+  final int idTemporada;
+  final bool pitcheo;
+  final int a;
+  final int b;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colores =
-        ref.watch(coloresEquiposProvider(idTemporada)).value ?? const {};
-    final Widget cuerpo = switch (tipo) {
-      'bateadores' => _cargar2(
-        ref,
-        ref.watch(perfilBateadorProvider((idTemporada, a))),
-        ref.watch(perfilBateadorProvider((idTemporada, b))),
-        () {
-          ref.invalidate(perfilBateadorProvider((idTemporada, a)));
-          ref.invalidate(perfilBateadorProvider((idTemporada, b)));
-        },
-        (pa, pb) => _Bateadores(a: pa, b: pb, colores: colores),
-      ),
-      'lanzadores' => _cargar2(
-        ref,
-        ref.watch(perfilLanzadorProvider((idTemporada, a))),
-        ref.watch(perfilLanzadorProvider((idTemporada, b))),
-        () {
-          ref.invalidate(perfilLanzadorProvider((idTemporada, a)));
-          ref.invalidate(perfilLanzadorProvider((idTemporada, b)));
-        },
-        (pa, pb) => _Lanzadores(a: pa.jugador, b: pb.jugador, colores: colores),
-      ),
-      _ => _cargar2(
-        ref,
-        ref.watch(equipoEstadisticasProvider((idTemporada, a))),
-        ref.watch(equipoEstadisticasProvider((idTemporada, b))),
-        () {
-          ref.invalidate(equipoEstadisticasProvider((idTemporada, a)));
-          ref.invalidate(equipoEstadisticasProvider((idTemporada, b)));
-        },
-        (ea, eb) => _Equipos(a: ea, b: eb),
-      ),
-    };
     return Scaffold(
-      appBar: AppBar(title: const Text('Cara a cara')),
-      body: cuerpo,
+      appBar: AppBar(title: Text(pitcheo ? 'Cara a cara · Pitcheo' : 'Cara a cara · Bateo')),
+      body: pitcheo
+          ? VistaAsync<List<FilaPitcheo>>(
+              valor: ref.watch(pitcheoTemporadaProvider(idTemporada)),
+              cargando: const EsqueletoDetalle(),
+              onReintentar: () => ref.invalidate(pitcheoTemporadaProvider(idTemporada)),
+              datos: (filas) {
+                final liga = ligaPitcheo(filas);
+                final fa = liga.where((f) => f.jugador.id == a).firstOrNull;
+                final fb = liga.where((f) => f.jugador.id == b).firstOrNull;
+                if (fa == null || fb == null) return const _SinDatos();
+                return _Lista(child: _Lanzadores(idTemporada: idTemporada, a: fa, b: fb));
+              },
+            )
+          : VistaAsync<List<FilaBateo>>(
+              valor: ref.watch(bateoTemporadaProvider(idTemporada)),
+              cargando: const EsqueletoDetalle(),
+              onReintentar: () => ref.invalidate(bateoTemporadaProvider(idTemporada)),
+              datos: (filas) {
+                final liga = ligaBateo(filas);
+                final fa = liga.where((f) => f.jugador.id == a).firstOrNull;
+                final fb = liga.where((f) => f.jugador.id == b).firstOrNull;
+                if (fa == null || fb == null) return const _SinDatos();
+                return _Lista(child: _Bateadores(idTemporada: idTemporada, a: fa, b: fb, liga: liga));
+              },
+            ),
     );
   }
+}
 
-  Widget _cargar2<A, B>(
-    WidgetRef ref,
-    AsyncValue<A> va,
-    AsyncValue<B> vb,
-    VoidCallback reintentar,
-    Widget Function(A, B) datos,
-  ) {
-    if (va.hasError || vb.hasError) {
-      return EstadoError(
-        error: (va.error ?? vb.error)!,
-        onReintentar: reintentar,
+class _Lista extends StatelessWidget {
+  const _Lista({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [AnchoMaximo(ancho: 760, child: child)],
       );
-    }
-    if (!va.hasValue || !vb.hasValue) return const EsqueletoDetalle();
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        AnchoMaximo(ancho: 760, child: datos(va.value as A, vb.value as B)),
-      ],
-    );
-  }
+}
+
+class _SinDatos extends StatelessWidget {
+  const _SinDatos();
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.all(24),
+        child: EstadoVacio(
+          icono: Icons.compare_arrows_rounded,
+          mensaje: 'Uno de los dos todavía no tiene estadísticas esta temporada.',
+        ),
+      );
 }
 
 /// Dos colores distinguibles: el de cada equipo o, si coinciden, el gris del eje para el segundo.
-(Color, Color) _colores(BuildContext context, String? claveA, String? claveB) {
-  final ca = ColoresEquipo.de(context, claveA);
-  final cb = claveA == claveB
-      ? EstiloGrafica(context).eje
-      : ColoresEquipo.de(context, claveB);
+(Color, Color) _colores(BuildContext context, EquipoRefLiga? ea, EquipoRefLiga? eb) {
+  final ca = colorDe(context, ea);
+  final cb = ea?.color == eb?.color ? EstiloGrafica(context).eje : colorDe(context, eb);
   return (ca, cb);
 }
 
+String _nombre(JugadorResumenLiga j) => '${j.nombres} ${j.apellidos}';
+
 class _Encabezado extends StatelessWidget {
   const _Encabezado({
-    required this.nombreA,
-    required this.nombreB,
-    required this.fotoA,
-    required this.fotoB,
+    required this.idTemporada,
+    required this.a,
+    required this.b,
+    required this.equipoA,
+    required this.equipoB,
     required this.colorA,
     required this.colorB,
-    this.subA,
-    this.subB,
   });
 
-  final String nombreA;
-  final String nombreB;
-  final String? fotoA;
-  final String? fotoB;
+  final int idTemporada;
+  final JugadorResumenLiga a;
+  final JugadorResumenLiga b;
+  final EquipoRefLiga? equipoA;
+  final EquipoRefLiga? equipoB;
   final Color colorA;
   final Color colorB;
-  final String? subA;
-  final String? subB;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final tinta = tema.colorScheme.onSurface;
     final suave = tema.colorScheme.onSurfaceVariant;
-    Widget lado(String n, String? f, Color c, String? s) => Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: tema.colorScheme.surfaceContainer,
-              border: Border.all(color: c.withValues(alpha: 0.45), width: 1.5),
+    Widget lado(JugadorResumenLiga j, EquipoRefLiga? e, Color c) => Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => context.push(rutaJugador(idTemporada, j, e)),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: tema.colorScheme.surfaceContainer,
+                    border: Border.all(color: c.withValues(alpha: 0.45), width: 1.5),
+                  ),
+                  child: ImagenApi(urlFoto: j.fotoUrl, nombre: _nombre(j), tamano: 64, color: c),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _nombre(j),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900, color: tinta),
+                ),
+                Text(
+                  e?.nombre ?? 'Agente libre',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tema.textTheme.labelSmall?.copyWith(color: suave),
+                ),
+                const SizedBox(height: 7),
+                Container(
+                  height: 4,
+                  width: 48,
+                  decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(2)),
+                ),
+              ],
             ),
-            child: ImagenApi(urlFoto: f, nombre: n, tamano: 64, color: c),
           ),
-          const SizedBox(height: 8),
-          Text(
-            n,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: tema.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: tinta,
-            ),
-          ),
-          if (s != null)
-            Text(
-              s,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: tema.textTheme.labelSmall?.copyWith(color: suave),
-            ),
-          const SizedBox(height: 7),
-          Container(
-            height: 4,
-            width: 48,
-            decoration: BoxDecoration(
-              color: c,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ],
-      ),
-    );
+        );
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: tema.brightness == Brightness.dark
-              ? tema.colorScheme.surfaceContainer
-              : ColoresMarca.blanco,
+          color: tema.brightness == Brightness.dark ? tema.colorScheme.surfaceContainer : ColoresMarca.blanco,
           border: Border.all(color: tema.colorScheme.outlineVariant),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                alpha: tema.brightness == Brightness.dark ? 0.28 : 0.04,
-              ),
+              color: Colors.black.withValues(alpha: tema.brightness == Brightness.dark ? 0.28 : 0.04),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -198,39 +179,28 @@ class _Encabezado extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 4,
-              decoration: const BoxDecoration(
-                gradient: ColoresMarca.franjaInstitucional,
-              ),
-            ),
+            Container(height: 4, decoration: const BoxDecoration(gradient: ColoresMarca.franjaInstitucional)),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  lado(nombreA, fotoA, colorA, subA),
+                  lado(a, equipoA, colorA),
                   Padding(
                     padding: const EdgeInsets.only(top: 22, left: 4, right: 4),
                     child: Container(
                       width: 44,
                       height: 44,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        gradient: ColoresMarca.tablero,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: const BoxDecoration(gradient: ColoresMarca.tablero, shape: BoxShape.circle),
                       child: Text(
                         'VS',
-                        style: estiloMarcador(tema.textTheme.titleLarge)?.copyWith(
-                          fontSize: 19,
-                          color: ColoresMarca.amarillo,
-                          letterSpacing: 0.5,
-                        ),
+                        style: estiloMarcador(tema.textTheme.titleLarge)
+                            ?.copyWith(fontSize: 19, color: ColoresMarca.amarillo, letterSpacing: 0.5),
                       ),
                     ),
                   ),
-                  lado(nombreB, fotoB, colorB, subB),
+                  lado(b, equipoB, colorB),
                 ],
               ),
             ),
@@ -242,279 +212,158 @@ class _Encabezado extends StatelessWidget {
 }
 
 class _Bateadores extends StatelessWidget {
-  const _Bateadores({required this.a, required this.b, required this.colores});
+  const _Bateadores({required this.idTemporada, required this.a, required this.b, required this.liga});
 
-  final BateadorPerfil a;
-  final BateadorPerfil b;
-  final Map<String, String?> colores;
+  final int idTemporada;
+  final FilaBateo a;
+  final FilaBateo b;
+  final List<FilaBateo> liga;
 
   @override
   Widget build(BuildContext context) {
-    final ja = a.jugador;
-    final jb = b.jugador;
-    final (ca, cb) = _colores(
-      context,
-      colores[ja.idEquipo],
-      colores[jb.idEquipo],
-    );
-    final r = a.referenciaLiga;
+    final (ca, cb) = _colores(context, a.equipo, b.equipo);
+    final x = a.bateo;
+    final y = b.bateo;
+    Duelo cuenta(String etiqueta, int Function(CifrasBateo) leer, {bool menorEsMejor = false}) =>
+        Duelo(etiqueta: etiqueta, a: leer(x).toDouble(), b: leer(y).toDouble(), menorEsMejor: menorEsMejor);
+    Duelo tasa(String etiqueta, double Function(CifrasBateo) leer) =>
+        Duelo(etiqueta: etiqueta, a: leer(x), b: leer(y), formato: promedio);
+    double maximo(double Function(CifrasBateo) leer) =>
+        liga.map((f) => leer(f.bateo)).fold(0, (m, v) => v > m ? v : m);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Encabezado(
-          nombreA: ja.nombre,
-          nombreB: jb.nombre,
-          fotoA: ja.urlFoto,
-          fotoB: jb.urlFoto,
+          idTemporada: idTemporada,
+          a: a.jugador,
+          b: b.jugador,
+          equipoA: a.equipo,
+          equipoB: b.equipo,
           colorA: ca,
           colorB: cb,
-          subA: ja.nombreEquipo,
-          subB: jb.nombreEquipo,
         ),
         TarjetaGrafica(
           titulo: '¿Qué perfil tiene cada uno?',
+          subtitulo: 'Cada eje va de cero al mejor de la liga',
+          icono: Icons.radar_rounded,
           child: RadarComparativo(
-            clave: '${ja.id}-${jb.id}',
-            ejes: [for (final x in ejesRadarBateo) x.$2],
-            maximos: [for (final x in ejesRadarBateo) r[x.$1]?.maximo ?? 0],
+            clave: 'bateo-${a.jugador.id}-${b.jugador.id}',
+            ejes: [for (final e in ejesRadarBateo) e.$1],
+            maximos: [for (final e in ejesRadarBateo) maximo(e.$2)],
             series: [
-              SerieRadar(
-                nombre: ja.nombre.split(' ').first,
-                color: ca,
-                valores: [
-                  for (final x in ejesRadarBateo) valorBateador(ja, x.$1),
-                ],
-              ),
-              SerieRadar(
-                nombre: jb.nombre.split(' ').first,
-                color: cb,
-                valores: [
-                  for (final x in ejesRadarBateo) valorBateador(jb, x.$1),
-                ],
-              ),
+              SerieRadar(nombre: a.jugador.nombres.split(' ').first, color: ca, valores: [for (final e in ejesRadarBateo) e.$2(x)]),
+              SerieRadar(nombre: b.jugador.nombres.split(' ').first, color: cb, valores: [for (final e in ejesRadarBateo) e.$2(y)]),
             ],
           ),
         ),
         TarjetaGrafica(
           titulo: '¿Quién gana cada duelo?',
+          subtitulo: 'La cifra resaltada es la del que gana',
+          icono: Icons.compare_arrows_rounded,
           child: BarrasEnfrentadas(
-            clave: '${ja.id}-${jb.id}',
+            clave: 'duelos-${a.jugador.id}-${b.jugador.id}',
             colorA: ca,
             colorB: cb,
             duelos: [
-              Duelo(
-                etiqueta: 'Jonrones',
-                a: ja.homeRuns.toDouble(),
-                b: jb.homeRuns.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Impulsadas',
-                a: ja.carrerasImpulsadas.toDouble(),
-                b: jb.carrerasImpulsadas.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Hits',
-                a: ja.hits.toDouble(),
-                b: jb.hits.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Total de bases',
-                a: ja.totalBases.toDouble(),
-                b: jb.totalBases.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Robos',
-                a: ja.roboDeBase.toDouble(),
-                b: jb.roboDeBase.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Bases por bola',
-                a: ja.basePorBola.toDouble(),
-                b: jb.basePorBola.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Ponches',
-                a: ja.ponches.toDouble(),
-                b: jb.ponches.toDouble(),
-                menorEsMejor: true,
-              ),
-              Duelo(
-                etiqueta: 'Errores',
-                a: ja.errores.toDouble(),
-                b: jb.errores.toDouble(),
-                menorEsMejor: true,
-              ),
+              tasa('Promedio (AVG)', (c) => c.avg),
+              tasa('En base (OBP)', (c) => c.obp),
+              tasa('Slugging (SLG)', (c) => c.slg),
+              tasa('OPS', (c) => c.ops),
+              cuenta('Hits', (c) => c.h),
+              cuenta('Jonrones', (c) => c.hr),
+              cuenta('Impulsadas', (c) => c.rbi),
+              cuenta('Anotadas', (c) => c.carreras),
+              cuenta('Bases robadas', (c) => c.sb),
+              cuenta('Bases por bolas', (c) => c.bb),
+              cuenta('Ponches', (c) => c.so, menorEsMejor: true),
             ],
           ),
         ),
+        _Volumen(texto: '${_nombre(a.jugador)}: ${x.pa} PA en ${x.juegos} J · ${_nombre(b.jugador)}: ${y.pa} PA en ${y.juegos} J'),
       ],
     );
   }
 }
 
 class _Lanzadores extends StatelessWidget {
-  const _Lanzadores({required this.a, required this.b, required this.colores});
+  const _Lanzadores({required this.idTemporada, required this.a, required this.b});
 
-  final Lanzador a;
-  final Lanzador b;
-  final Map<String, String?> colores;
+  final int idTemporada;
+  final FilaPitcheo a;
+  final FilaPitcheo b;
 
   @override
   Widget build(BuildContext context) {
-    final (ca, cb) = _colores(
-      context,
-      colores[a.idEquipo],
-      colores[b.idEquipo],
-    );
+    final (ca, cb) = _colores(context, a.equipo, b.equipo);
+    final x = a.pitcheo;
+    final y = b.pitcheo;
+    Duelo cuenta(String etiqueta, int Function(CifrasPitcheo) leer, {bool menorEsMejor = false}) =>
+        Duelo(etiqueta: etiqueta, a: leer(x).toDouble(), b: leer(y).toDouble(), menorEsMejor: menorEsMejor);
+    Duelo decimal(String etiqueta, double Function(CifrasPitcheo) leer, {bool menorEsMejor = false}) =>
+        Duelo(etiqueta: etiqueta, a: leer(x), b: leer(y), menorEsMejor: menorEsMejor, formato: dosDecimales);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Encabezado(
-          nombreA: a.nombre,
-          nombreB: b.nombre,
-          fotoA: a.urlFoto,
-          fotoB: b.urlFoto,
+          idTemporada: idTemporada,
+          a: a.jugador,
+          b: b.jugador,
+          equipoA: a.equipo,
+          equipoB: b.equipo,
           colorA: ca,
           colorB: cb,
-          subA: a.nombreEquipo,
-          subB: b.nombreEquipo,
         ),
         TarjetaGrafica(
           titulo: '¿Quién gana cada duelo?',
+          subtitulo: 'La cifra resaltada es la del que gana',
+          icono: Icons.compare_arrows_rounded,
           child: BarrasEnfrentadas(
-            clave: '${a.id}-${b.id}',
+            clave: 'duelos-${a.jugador.id}-${b.jugador.id}',
             colorA: ca,
             colorB: cb,
             duelos: [
-              Duelo(etiqueta: 'ERA', a: a.era, b: b.era, menorEsMejor: true),
-              Duelo(etiqueta: 'WHIP', a: a.whip, b: b.whip, menorEsMejor: true),
-              Duelo(etiqueta: 'K/9', a: a.k9, b: b.k9),
-              Duelo(etiqueta: 'BB/9', a: a.bb9, b: b.bb9, menorEsMejor: true),
-              Duelo(etiqueta: 'K/BB', a: a.kbb, b: b.kbb),
+              decimal('Efectividad (ERA)', (c) => c.era, menorEsMejor: true),
+              decimal('WHIP', (c) => c.whip, menorEsMejor: true),
+              decimal('Ponches por 9', (c) => c.k9),
+              decimal('Bases por bolas por 9', (c) => c.bb9, menorEsMejor: true),
               Duelo(
-                etiqueta: 'Innings',
-                a: a.inningsLanzados.toDouble(),
-                b: b.inningsLanzados.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Ponches',
-                a: a.ponchados.toDouble(),
-                b: b.ponchados.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Hits permitidos',
-                a: a.hitsPermitidos.toDouble(),
-                b: b.hitsPermitidos.toDouble(),
+                etiqueta: 'Promedio rival',
+                a: x.promedioContra,
+                b: y.promedioContra,
                 menorEsMejor: true,
+                formato: promedio,
               ),
+              Duelo(
+                etiqueta: 'Entradas',
+                a: x.outs.toDouble(),
+                b: y.outs.toDouble(),
+                formato: (v) => '${v ~/ 3}.${v.toInt() % 3}',
+              ),
+              cuenta('Ponches', (c) => c.so),
+              cuenta('Ganados', (c) => c.ganados),
+              cuenta('Hits permitidos', (c) => c.hits, menorEsMejor: true),
             ],
           ),
         ),
+        _Volumen(texto: '${_nombre(a.jugador)}: ${x.ip} IP en ${x.juegos} J · ${_nombre(b.jugador)}: ${y.ip} IP en ${y.juegos} J'),
       ],
     );
   }
 }
 
-class _Equipos extends StatelessWidget {
-  const _Equipos({required this.a, required this.b});
+/// Cuánto ha jugado cada uno: para leer las tasas con cuidado.
+class _Volumen extends StatelessWidget {
+  const _Volumen({required this.texto});
 
-  final EquipoEstadisticas a;
-  final EquipoEstadisticas b;
+  final String texto;
 
   @override
   Widget build(BuildContext context) {
-    final ea = a.equipo;
-    final eb = b.equipo;
-    final (ca, cb) = _colores(context, ea.color, eb.color);
-    final ra = ea.registro;
-    final rb = eb.registro;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Encabezado(
-          nombreA: ea.nombre,
-          nombreB: eb.nombre,
-          fotoA: ea.urlFoto,
-          fotoB: eb.urlFoto,
-          colorA: ca,
-          colorB: cb,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            AnilloRegistro(
-              ganados: ra.ganados,
-              perdidos: ra.perdidos,
-              empates: ra.empates,
-              centro: '${ra.ganados}-${ra.perdidos}',
-              subcentro: Formato.promedio(ra.porcentajeVictorias),
-              tamano: 104,
-            ),
-            AnilloRegistro(
-              ganados: rb.ganados,
-              perdidos: rb.perdidos,
-              empates: rb.empates,
-              centro: '${rb.ganados}-${rb.perdidos}',
-              subcentro: Formato.promedio(rb.porcentajeVictorias),
-              tamano: 104,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        TarjetaGrafica(
-          titulo: '¿Quién gana cada duelo?',
-          child: BarrasEnfrentadas(
-            clave: '${ea.id}-${eb.id}',
-            colorA: ca,
-            colorB: cb,
-            duelos: [
-              Duelo(
-                etiqueta: 'Carreras a favor',
-                a: ra.carrerasFavor.toDouble(),
-                b: rb.carrerasFavor.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Carreras en contra',
-                a: ra.carrerasContra.toDouble(),
-                b: rb.carrerasContra.toDouble(),
-                menorEsMejor: true,
-              ),
-              Duelo(
-                etiqueta: 'Jonrones',
-                a: a.bateo.homeRuns.toDouble(),
-                b: b.bateo.homeRuns.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Hits',
-                a: a.bateo.hits.toDouble(),
-                b: b.bateo.hits.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'Robos',
-                a: a.bateo.roboDeBase.toDouble(),
-                b: b.bateo.roboDeBase.toDouble(),
-              ),
-              Duelo(
-                etiqueta: 'ERA',
-                a: a.pitcheo.era,
-                b: b.pitcheo.era,
-                menorEsMejor: true,
-              ),
-              Duelo(
-                etiqueta: 'WHIP',
-                a: a.pitcheo.whip,
-                b: b.pitcheo.whip,
-                menorEsMejor: true,
-              ),
-              Duelo(
-                etiqueta: 'Ponches',
-                a: a.pitcheo.ponchados.toDouble(),
-                b: b.pitcheo.ponchados.toDouble(),
-              ),
-            ],
-          ),
-        ),
-      ],
+    final tema = Theme.of(context);
+    return Text(
+      texto,
+      textAlign: TextAlign.center,
+      style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.onSurfaceVariant),
     );
   }
 }

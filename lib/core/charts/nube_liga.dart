@@ -47,15 +47,15 @@ class NubeLiga extends StatelessWidget {
     if (puntos.isEmpty) return const SizedBox.shrink();
     final promX = puntos.map((p) => p.x).reduce((a, b) => a + b) / puntos.length;
     final promY = puntos.map((p) => p.y).reduce((a, b) => a + b) / puntos.length;
-    final maxX = (puntos.map((p) => p.x).reduce(math.max) * 1.15 + 0.5).ceilToDouble();
-    final maxY = (puntos.map((p) => p.y).reduce(math.max) * 1.15 + 0.5).ceilToDouble();
+    final (maxX, pasoX) = _escala(puntos.map((p) => p.x));
+    final (maxY, pasoY) = _escala(puntos.map((p) => p.y));
     // El resaltado al final para que quede encima
     final orden = [...puntos.where((p) => p.id != idResaltado), ...puntos.where((p) => p.id == idResaltado)];
 
     Widget esquina(String texto, Alignment a) => Align(
           alignment: a,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(48, 4, 8, 42),
+            padding: const EdgeInsets.fromLTRB(54, 4, 8, 42),
             child: Text(texto, style: e.ejeTexto.copyWith(fontStyle: FontStyle.italic)),
           ),
         );
@@ -69,14 +69,14 @@ class NubeLiga extends StatelessWidget {
           esquina(cuadrantes[1], Alignment.topRight),
           esquina(cuadrantes[2], Alignment.bottomLeft),
           esquina(cuadrantes[3], Alignment.bottomRight),
-          // Promedios de la liga (el área del gráfico empieza tras los ejes: 40 px a la izquierda, 34 abajo)
+          // Promedios de la liga (el área del gráfico empieza tras los ejes: 46 px a la izquierda, 34 abajo)
           Positioned.fill(
             child: CustomPaint(
               painter: _LineasPromedio(
                 x: promX / maxX,
                 y: promY / maxY,
                 color: e.eje,
-                izquierda: 40,
+                izquierda: 46,
                 abajo: 34,
               ),
             ),
@@ -110,7 +110,8 @@ class NubeLiga extends StatelessWidget {
                   axisNameSize: 16,
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 24,
+                    reservedSize: 30,
+                    interval: pasoY,
                     maxIncluded: false,
                     getTitlesWidget: (v, meta) => SideTitleWidget(meta: meta, child: Text(_n(v), style: e.ejeTexto)),
                   ),
@@ -121,6 +122,7 @@ class NubeLiga extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 18,
+                    interval: pasoX,
                     maxIncluded: false,
                     getTitlesWidget: (v, meta) => SideTitleWidget(meta: meta, child: Text(_n(v), style: e.ejeTexto)),
                   ),
@@ -150,6 +152,17 @@ class NubeLiga extends StatelessWidget {
         ]),
       ),
     );
+  }
+
+  /// Tope y paso del eje. Si todos son enteros (ponches, bases por bolas), las marcas
+  /// también: nada de "0,5 ponches". Con pocos datos el tope es al menos 2.
+  static (double, double?) _escala(Iterable<double> valores) {
+    final maximo = valores.reduce(math.max);
+    final tope = (maximo * 1.15 + 0.5).ceilToDouble();
+    final enteros = valores.every((v) => v == v.roundToDouble());
+    if (!enteros) return (tope, null);
+    final paso = math.max(1, (tope / 5).ceil()).toDouble();
+    return (math.max(tope, 2 * paso), paso);
   }
 
   static String _n(double v) => v == v.roundToDouble() ? '${v.toInt()}' : v.toStringAsFixed(1).replaceAll('.', ',');

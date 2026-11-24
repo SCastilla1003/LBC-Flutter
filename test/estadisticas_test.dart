@@ -6,10 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:lbc_app/core/charts/barras_enfrentadas.dart';
+import 'package:lbc_app/core/charts/diamante_bases.dart';
 import 'package:lbc_app/core/charts/medidor.dart';
+import 'package:lbc_app/core/charts/nube_liga.dart';
+import 'package:lbc_app/core/charts/radar_comparativo.dart';
 import 'package:lbc_app/core/red/cliente_api.dart';
 import 'package:lbc_app/core/tema/tema_lbc.dart';
+import 'package:lbc_app/features/comparador/presentacion/comparador_pantalla.dart';
 import 'package:lbc_app/features/prediccion/presentacion/enfrentamiento_pantalla.dart';
 import 'package:lbc_app/liga/datos/estadisticas_repositorio.dart';
 import 'package:lbc_app/liga/presentacion/jugador_liga_pantalla.dart';
@@ -37,15 +43,22 @@ class _Api implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-Future<_Api> _pintar(WidgetTester t, Widget pantalla, Map<String, Object> rutas, {ThemeData? tema}) async {
-  t.view.physicalSize = const Size(375, 1600);
+Future<_Api> _pintar(
+  WidgetTester t,
+  Widget pantalla,
+  Map<String, Object> rutas, {
+  ThemeData? tema,
+  GoRouter? enrutador,
+  double alto = 1600,
+}) async {
+  t.view.physicalSize = Size(375, alto);
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.reset);
   final api = _Api(rutas);
   final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))..httpClientAdapter = api;
   await t.pumpWidget(ProviderScope(
     overrides: [clienteApiProvider.overrideWithValue(ClienteApi(dio))],
-    child: MaterialApp(
+    child: MaterialApp.router(
       theme: tema ?? TemaLbc.claro(),
       locale: const Locale('es'),
       supportedLocales: const [Locale('es')],
@@ -54,7 +67,7 @@ Future<_Api> _pintar(WidgetTester t, Widget pantalla, Map<String, Object> rutas,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: pantalla,
+      routerConfig: enrutador ?? GoRouter(routes: [GoRoute(path: '/', builder: (_, _) => pantalla)]),
     ),
   ));
   await t.pumpAndSettle();
@@ -157,5 +170,105 @@ void main() {
     expect(find.text('Estimado con 4 apariciones.'), findsOneWidget);
     final pedida = api.pedidas.lastWhere((u) => u.path.endsWith('/enfrentamientos'));
     expect(pedida.queryParameters, {'bateadorId': '27', 'lanzadorId': '30', 'temporadaId': '1'});
+  });
+
+  Map<String, dynamic> filaBateo(Map<String, dynamic> j, Map<String, dynamic>? e, Map<String, Object> b) =>
+      {'jugador': j, 'equipo': e, 'bateo': b};
+  const yankees = {'id': 1, 'nombre': 'New York Yankees', 'abreviatura': 'NYY', 'color': 'azul'};
+  const reds = {'id': 4, 'nombre': 'Cincinnati Reds', 'abreviatura': 'CIN', 'color': 'rojo'};
+  final judge = {'id': 28, 'nombres': 'Aaron', 'apellidos': 'Judge', 'batea': 'D'};
+  final votto = {'id': 29, 'nombres': 'Joey', 'apellidos': 'Votto', 'batea': 'Z'};
+  final ligaBateo = [
+    filaBateo(_stanton, yankees, _bateo),
+    filaBateo(judge, yankees, {
+      'juegos': 1, 'pa': 4, 'ab': 4, 'h': 2, 'dobles': 1, 'rbi': 1, 'so': 2, 'avg': 0.5, 'obp': 0.5, 'slg': 0.75,
+      'ops': 1.25,
+    }),
+    filaBateo(votto, reds, {
+      'juegos': 1, 'pa': 3, 'ab': 2, 'h': 0, 'bb': 1, 'so': 0, 'avg': 0.0, 'obp': 0.333, 'slg': 0.0, 'ops': 0.333,
+    }),
+  ];
+
+  testWidgets('perfil de un bateador: radar, diamante, nube y comparar con otro', (t) async {
+    final enrutador = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const JugadorLigaPantalla(idTemporada: 1, idJugador: 27, idEquipo: 1)),
+      GoRoute(
+        path: '/temporadas/:t/comparar/:tipo',
+        builder: (_, s) =>
+            Text('Comparar ${s.pathParameters['tipo']} ${s.uri.queryParameters['a']} vs ${s.uri.queryParameters['b']}'),
+      ),
+    ]);
+    await _pintar(t, const SizedBox(), {
+      '/jugadores/27': _stanton,
+      '/temporadas': [
+        {'id': 1, 'nombre': 'Temporada', 'anio': 2026, 'estado': 'ACTIVE'},
+      ],
+      '/temporadas/1/equipos/1/plantilla': [
+        {'id': 3, 'jugador': _stanton, 'equipo': yankees, 'numero': 27, 'posicion': 'DH'},
+      ],
+      '/temporadas/1/jugadores/27/estadisticas': {
+        'temporada': {'bateo': _bateo},
+        'carrera': {'bateo': _bateo},
+      },
+      '/temporadas/1/estadisticas/bateo': ligaBateo,
+    }, enrutador: enrutador, alto: 2600);
+    expect(t.takeException(), isNull);
+    expect(find.text('¿Dónde destaca?'), findsOneWidget);
+    final radar = t.widget<RadarComparativo>(find.byType(RadarComparativo));
+    expect(radar.ejes, ['AVG', 'OBP', 'SLG', 'HR', 'RBI', 'BB']);
+    expect(radar.series.map((s) => s.nombre), ['Liga', 'Giancarlo']);
+    expect(radar.series.last.valores[3], 1); // su jonrón
+    final diamante = t.widget<DiamanteBases>(find.byType(DiamanteBases));
+    expect((diamante.jonrones, diamante.totalBases), (1, 4));
+    expect(t.widget<NubeLiga>(find.byType(NubeLiga)).puntos, hasLength(3));
+
+    await t.tap(find.text('Comparar'));
+    await t.pumpAndSettle();
+    expect(find.text('Aaron Judge'), findsOneWidget);
+    expect(find.text('Joey Votto'), findsOneWidget);
+    await t.tap(find.text('Joey Votto'));
+    await t.pumpAndSettle();
+    expect(find.text('Comparar bateo 27 vs 29'), findsOneWidget);
+  });
+
+  for (final (nombre, tema) in [('claro', TemaLbc.claro()), ('oscuro', TemaLbc.oscuro())]) {
+    testWidgets('cara a cara de dos bateadores con las estadísticas de la temporada · $nombre', (t) async {
+      await _pintar(t, const ComparadorPantalla(idTemporada: 1, pitcheo: false, a: 27, b: 28), {
+        '/temporadas/1/estadisticas/bateo': ligaBateo,
+      }, tema: tema);
+      expect(t.takeException(), isNull);
+      expect(find.text('Giancarlo Stanton'), findsOneWidget);
+      expect(find.text('Aaron Judge'), findsOneWidget);
+      expect(t.widget<RadarComparativo>(find.byType(RadarComparativo)).series, hasLength(2));
+      final duelos = t.widget<BarrasEnfrentadas>(find.byType(BarrasEnfrentadas)).duelos;
+      expect(duelos.firstWhere((d) => d.etiqueta == 'Jonrones').ganador, -1);
+      expect(duelos.firstWhere((d) => d.etiqueta == 'Promedio (AVG)').ganador, 1);
+      expect(find.text(',333'), findsOneWidget);
+    });
+  }
+
+  testWidgets('cara a cara de dos lanzadores', (t) async {
+    await _pintar(t, const ComparadorPantalla(idTemporada: 1, pitcheo: true, a: 30, b: 31), {
+      '/temporadas/1/estadisticas/pitcheo': [
+        {'jugador': _gray, 'equipo': reds, 'pitcheo': _pitcheo},
+        {
+          'jugador': {'id': 31, 'nombres': 'Max', 'apellidos': 'Fried'},
+          'equipo': yankees,
+          'pitcheo': {..._pitcheo, 'outs': 3, 'ip': '1.0', 'era': 9.0, 'so': 2, 'ganados': 0},
+        },
+      ],
+    });
+    expect(t.takeException(), isNull);
+    final duelos = t.widget<BarrasEnfrentadas>(find.byType(BarrasEnfrentadas)).duelos;
+    expect(duelos.firstWhere((d) => d.etiqueta == 'Efectividad (ERA)').ganador, -1);
+    expect(find.text('5.2'), findsOneWidget);
+    expect(find.text('1.0'), findsOneWidget);
+  });
+
+  testWidgets('cara a cara sin estadísticas de uno de los dos: lo explica', (t) async {
+    await _pintar(t, const ComparadorPantalla(idTemporada: 1, pitcheo: false, a: 27, b: 99), {
+      '/temporadas/1/estadisticas/bateo': ligaBateo,
+    });
+    expect(find.textContaining('todavía no tiene estadísticas'), findsOneWidget);
   });
 }

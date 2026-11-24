@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lbc_app/core/red/cliente_api.dart';
 import 'package:lbc_app/core/tema/tema_lbc.dart';
@@ -112,7 +113,7 @@ class _Api implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-Future<_Api> _pintar(WidgetTester t, Map<String, dynamic> estado, {ThemeData? tema, double alto = 812}) async {
+Future<_Api> _pintar(WidgetTester t, Map<String, dynamic> estado, {ThemeData? tema, double alto = 812, GoRouter? rutas}) async {
   t.view.physicalSize = Size(375, alto);
   t.view.devicePixelRatio = 1;
   addTearDown(t.view.reset);
@@ -125,7 +126,7 @@ Future<_Api> _pintar(WidgetTester t, Map<String, dynamic> estado, {ThemeData? te
       ligaRepositorioProvider.overrideWithValue(LigaRepositorio(cliente)),
       juegoRepositorioProvider.overrideWithValue(JuegoRepositorio(cliente)),
     ],
-    child: MaterialApp(
+    child: MaterialApp.router(
       theme: tema ?? TemaLbc.claro(),
       locale: const Locale('es'),
       supportedLocales: const [Locale('es')],
@@ -134,7 +135,8 @@ Future<_Api> _pintar(WidgetTester t, Map<String, dynamic> estado, {ThemeData? te
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const PartidoLigaPantalla(idTemporada: 1, idPartido: 9),
+      routerConfig: rutas ??
+          GoRouter(routes: [GoRoute(path: '/', builder: (_, _) => const PartidoLigaPantalla(idTemporada: 1, idPartido: 9))]),
     ),
   ));
   await t.pumpAndSettle();
@@ -178,6 +180,27 @@ void main() {
     await t.tap(find.text('Lanzamientos'));
     await t.pumpAndSettle();
     expect(find.text('Bola a Jugador 102 (1-0)'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('tocar el escudo o el nombre de un equipo abre su página', (t) async {
+    final rutas = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const PartidoLigaPantalla(idTemporada: 1, idPartido: 9)),
+      GoRoute(
+        path: '/temporadas/:t/equipos/:e',
+        builder: (_, s) => Text('Equipo ${s.pathParameters['e']} de la temporada ${s.pathParameters['t']}'),
+      ),
+    ]);
+    await _pintar(t, _estado(), alto: 1800, rutas: rutas);
+    await t.tap(find.text('Corsarios de Turbaco').first);
+    await t.pumpAndSettle();
+    expect(find.text('Equipo 5 de la temporada 1'), findsOneWidget);
+
+    rutas.pop();
+    await t.pumpAndSettle();
+    await t.tap(find.bySemanticsLabel('Ver Pelícanos de Bocagrande'));
+    await t.pumpAndSettle();
+    expect(find.text('Equipo 4 de la temporada 1'), findsOneWidget);
     await t.pumpWidget(const SizedBox());
   });
 
