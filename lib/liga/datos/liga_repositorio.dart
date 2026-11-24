@@ -319,6 +319,7 @@ class DatosJugador {
     this.batea,
     this.lanza,
     this.fotoUrl,
+    this.esLanzador = false,
   });
 
   final String nombres;
@@ -327,8 +328,10 @@ class DatosJugador {
   final LadoBateo? batea;
   final LadoLanzamiento? lanza;
   final String? fotoUrl;
+  final bool esLanzador;
 
   Map<String, dynamic> json() => {
+        'esLanzador': esLanzador,
         'nombres': nombres,
         'apellidos': apellidos,
         'fechaNacimiento': fechaApi(fechaNacimiento),

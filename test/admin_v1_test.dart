@@ -204,6 +204,7 @@ void main() {
           fechaNacimiento: DateTime(2001, 5, 14),
           batea: LadoBateo.zurdo,
           lanza: LadoLanzamiento.derecho,
+          esLanzador: true,
         ),
       );
       expect(s.peticiones[0].$2, '/equipos');
@@ -215,6 +216,7 @@ void main() {
         'fechaNacimiento': '2001-05-14',
         'batea': 'Z',
         'lanza': 'D',
+        'esLanzador': true,
         'fotoUrl': null,
       });
     });

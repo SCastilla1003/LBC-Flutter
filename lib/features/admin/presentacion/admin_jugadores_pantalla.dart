@@ -16,7 +16,7 @@ String etiquetaBateo(LadoBateo? l) => switch (l) {
 String etiquetaLanzamiento(LadoLanzamiento? l) => switch (l) {
       LadoLanzamiento.derecho => 'Derecho',
       LadoLanzamiento.zurdo => 'Zurdo',
-      null => 'No lanza',
+      null => 'Sin indicar',
     };
 
 /// Jugadores de la liga (catálogo global). Su equipo en cada temporada se
@@ -61,6 +61,7 @@ class _AdminJugadoresPantallaState extends ConsumerState<AdminJugadoresPantalla>
         titulo: '${j.nombres} ${j.apellidos}',
         detalle: [
           if (j.edad != null) '${j.edad} años',
+          if (j.esLanzador) 'Pitcher',
           'Batea: ${etiquetaBateo(j.batea)}',
           'Lanza: ${etiquetaLanzamiento(j.lanza)}',
         ].join(' · '),
@@ -99,6 +100,7 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
   late DateTime? _nacimiento = widget.jugador?.fechaNacimiento;
   late LadoBateo? _batea = widget.jugador?.batea;
   late LadoLanzamiento? _lanza = widget.jugador?.lanza;
+  late bool _esLanzador = widget.jugador?.esLanzador ?? false;
 
   @override
   void dispose() {
@@ -122,6 +124,7 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
           fechaNacimiento: _nacimiento,
           batea: _batea,
           lanza: _lanza,
+          esLanzador: _esLanzador,
           // La foto se gestiona aparte (bucket); se conserva la que ya tenía.
           fotoUrl: j?.fotoUrl,
         );
@@ -163,8 +166,9 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
         DropdownButtonFormField<LadoLanzamiento?>(
           initialValue: _lanza,
           decoration: const InputDecoration(
-            labelText: 'Lanza',
-            helperText: 'Solo los jugadores que lanzan pueden ser lanzadores en la alineación.',
+            labelText: 'Lanza (mano dominante)',
+            helperText: 'Con qué mano tira la pelota. La tienen todos los jugadores.',
+            helperMaxLines: 2,
           ),
           items: [
             DropdownMenuItem(value: null, child: Text(etiquetaLanzamiento(null))),
@@ -173,6 +177,24 @@ class _DialogoJugadorState extends ConsumerState<_DialogoJugador> {
           ],
           onChanged: (v) => setState(() => _lanza = v),
         ),
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Rol', style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 6),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: false, label: Text('De posición')),
+              ButtonSegment(value: true, label: Text('Pitcher')),
+            ],
+            selected: {_esLanzador},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() => _esLanzador = v.first),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solo los pitchers pueden ser lanzador inicial o relevista en la alineación.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ]),
       ],
     );
   }

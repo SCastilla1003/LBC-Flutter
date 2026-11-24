@@ -96,6 +96,7 @@ _JugadorResumenLiga _$JugadorResumenLigaFromJson(Map<String, dynamic> json) =>
       batea: $enumDecodeNullable(_$LadoBateoEnumMap, json['batea']),
       lanza: $enumDecodeNullable(_$LadoLanzamientoEnumMap, json['lanza']),
       fotoUrl: json['fotoUrl'] as String?,
+      esLanzador: json['esLanzador'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$JugadorResumenLigaToJson(_JugadorResumenLiga instance) =>
@@ -106,6 +107,7 @@ Map<String, dynamic> _$JugadorResumenLigaToJson(_JugadorResumenLiga instance) =>
       'batea': _$LadoBateoEnumMap[instance.batea],
       'lanza': _$LadoLanzamientoEnumMap[instance.lanza],
       'fotoUrl': instance.fotoUrl,
+      'esLanzador': instance.esLanzador,
     };
 
 const _$LadoBateoEnumMap = {
@@ -130,6 +132,7 @@ _JugadorLiga _$JugadorLigaFromJson(Map<String, dynamic> json) => _JugadorLiga(
   batea: $enumDecodeNullable(_$LadoBateoEnumMap, json['batea']),
   lanza: $enumDecodeNullable(_$LadoLanzamientoEnumMap, json['lanza']),
   fotoUrl: json['fotoUrl'] as String?,
+  esLanzador: json['esLanzador'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$JugadorLigaToJson(_JugadorLiga instance) =>
@@ -142,6 +145,7 @@ Map<String, dynamic> _$JugadorLigaToJson(_JugadorLiga instance) =>
       'batea': _$LadoBateoEnumMap[instance.batea],
       'lanza': _$LadoLanzamientoEnumMap[instance.lanza],
       'fotoUrl': instance.fotoUrl,
+      'esLanzador': instance.esLanzador,
     };
 
 _PlantillaLiga _$PlantillaLigaFromJson(Map<String, dynamic> json) =>

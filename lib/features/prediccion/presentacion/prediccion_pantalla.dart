@@ -11,20 +11,41 @@ import '../../../core/widgets/hero_lbc.dart';
 import '../../../core/widgets/vista_async.dart';
 import '../datos/modelos_prediccion.dart';
 import '../datos/prediccion_repositorio.dart';
+import 'enfrentamiento_pantalla.dart';
 
+/// Predicción: ¿ganará el equipo? (modelo de la liga) y bateador vs lanzador.
+/// Con [bateador] y [lanzador] (p. ej. desde el partido en vivo) abre el duelo ya elegido.
 class PrediccionPantalla extends ConsumerWidget {
-  const PrediccionPantalla({super.key});
+  const PrediccionPantalla({super.key, this.bateador, this.lanzador});
+
+  final int? bateador;
+  final int? lanzador;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final opciones = ref.watch(opcionesPrediccionProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('¿Ganará?')),
-      body: VistaAsync(
-        valor: opciones,
-        cargando: const EsqueletoDetalle(),
-        onReintentar: () => ref.invalidate(opcionesPrediccionProvider),
-        datos: (o) => _Formulario(opciones: o),
+    final duelo = bateador != null || lanzador != null;
+    return DefaultTabController(
+      key: ValueKey('prediccion-$bateador-$lanzador'),
+      length: 2,
+      initialIndex: duelo ? 1 : 0,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Predicción'),
+          bottom: const TabBar(tabs: [
+            Tab(text: '¿Ganará?'),
+            Tab(text: 'Bateador vs lanzador'),
+          ]),
+        ),
+        body: TabBarView(children: [
+          VistaAsync(
+            valor: opciones,
+            cargando: const EsqueletoDetalle(),
+            onReintentar: () => ref.invalidate(opcionesPrediccionProvider),
+            datos: (o) => _Formulario(opciones: o),
+          ),
+          PrediccionEnfrentamiento(bateador: bateador, lanzador: lanzador),
+        ]),
       ),
     );
   }

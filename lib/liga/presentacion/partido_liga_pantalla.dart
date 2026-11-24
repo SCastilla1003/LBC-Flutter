@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../core/tema/tema_lbc.dart';
 import '../../core/widgets/imagen_api.dart';
 import '../../core/widgets/vista_async.dart';
+import '../datos/estadisticas_repositorio.dart';
 import '../datos/juego_repositorio.dart';
 import '../datos/liga_repositorio.dart';
 import '../datos/modelos_liga.dart';
@@ -309,14 +310,14 @@ String _lado(Object? l) => switch (l) {
     };
 
 /// Duelo del momento: el bateador contra el lanzador, con sus fotos.
-class _Duelo extends StatelessWidget {
+class _Duelo extends ConsumerWidget {
   const _Duelo({required this.juego, required this.idTemporada});
 
   final EstadoJuego juego;
   final int idTemporada;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tema = Theme.of(context);
     final esquema = tema.colorScheme;
     final s = juego.partido.situacion;
@@ -420,6 +421,8 @@ class _Duelo extends StatelessWidget {
               ],
             ),
           ]),
+          if (bateador != null && lanzador != null)
+            _HistorialDuelo(bateador: bateador.id, lanzador: lanzador.id, idTemporada: idTemporada),
           if (enBase.isNotEmpty || siguiente != null) ...[
             const Divider(height: 20),
             if (enBase.isNotEmpty)
@@ -428,6 +431,50 @@ class _Duelo extends StatelessWidget {
               _Dato(icono: Icons.skip_next_rounded, texto: 'Próximo: ${siguiente.nombres} ${siguiente.apellidos}'),
           ],
         ]),
+      ),
+    );
+  }
+}
+
+/// "Historial: 1-3, 1 HR · Hit 27%" del duelo actual; abre el detalle en Predicción.
+class _HistorialDuelo extends ConsumerWidget {
+  const _HistorialDuelo({required this.bateador, required this.lanzador, required this.idTemporada});
+
+  final int bateador;
+  final int lanzador;
+  final int idTemporada;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tema = Theme.of(context);
+    final e = ref.watch(enfrentamientoProvider((bateador, lanzador, idTemporada))).value;
+    if (e == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Material(
+        color: tema.colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => context.go('/prediccion?b=$bateador&l=$lanzador'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(children: [
+              Icon(Icons.history_rounded, size: 20, color: tema.colorScheme.onSecondaryContainer),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Cara a cara: ${e.lineaHistorial} · Hit ${(e.pronostico.hit * 100).round()}%',
+                  style: tema.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: tema.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: tema.colorScheme.onSecondaryContainer),
+            ]),
+          ),
+        ),
       ),
     );
   }

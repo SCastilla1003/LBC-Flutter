@@ -63,7 +63,7 @@ Future<List<Candidato>> candidatosDeTemporada(LigaRepositorio repo, int t, int? 
   final porId = {for (final j in jugadores) j.id: j};
   JugadorLiga completo(JugadorResumenLiga r) =>
       porId[r.id] ??
-      JugadorLiga(id: r.id, nombres: r.nombres, apellidos: r.apellidos, batea: r.batea, lanza: r.lanza, fotoUrl: r.fotoUrl);
+      JugadorLiga(id: r.id, nombres: r.nombres, apellidos: r.apellidos, batea: r.batea, lanza: r.lanza, fotoUrl: r.fotoUrl, esLanzador: r.esLanzador);
 
   final libres = await repo.agentesLibres(t);
   final equipos = await repo.equiposDeTemporada(t);

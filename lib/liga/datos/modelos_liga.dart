@@ -111,6 +111,7 @@ abstract class JugadorResumenLiga with _$JugadorResumenLiga {
     LadoBateo? batea,
     LadoLanzamiento? lanza,
     String? fotoUrl,
+    @Default(false) bool esLanzador,
   }) = _JugadorResumenLiga;
 
   factory JugadorResumenLiga.fromJson(Map<String, dynamic> json) => _$JugadorResumenLigaFromJson(json);
@@ -125,8 +126,12 @@ abstract class JugadorLiga with _$JugadorLiga {
     DateTime? fechaNacimiento,
     int? edad,
     LadoBateo? batea,
+    /// Mano con la que lanza (la tienen todos los jugadores).
     LadoLanzamiento? lanza,
     String? fotoUrl,
+
+    /// Es pitcher.
+    @Default(false) bool esLanzador,
   }) = _JugadorLiga;
 
   factory JugadorLiga.fromJson(Map<String, dynamic> json) => _$JugadorLigaFromJson(json);

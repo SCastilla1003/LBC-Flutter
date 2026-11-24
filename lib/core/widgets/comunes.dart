@@ -207,7 +207,8 @@ class FranjaColor extends StatelessWidget {
   );
 }
 
-/// Contenedor centrado con ancho máximo para que en web/tablet no se estire.
+/// Contenedor centrado (a lo ancho) con ancho máximo para que en web/tablet no se
+/// estire. Pegado arriba: en pantallas cortas no deja un hueco encima del contenido.
 class AnchoMaximo extends StatelessWidget {
   const AnchoMaximo({super.key, required this.child, this.ancho = 1000});
 
@@ -215,7 +216,8 @@ class AnchoMaximo extends StatelessWidget {
   final double ancho;
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
     child: ConstrainedBox(
       constraints: BoxConstraints(maxWidth: ancho),
       child: child,

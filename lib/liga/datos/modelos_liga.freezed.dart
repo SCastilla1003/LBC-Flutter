@@ -1144,7 +1144,7 @@ as String?,
 /// @nodoc
 mixin _$JugadorResumenLiga {
 
- int get id; String get nombres; String get apellidos; LadoBateo? get batea; LadoLanzamiento? get lanza; String? get fotoUrl;
+ int get id; String get nombres; String get apellidos; LadoBateo? get batea; LadoLanzamiento? get lanza; String? get fotoUrl; bool get esLanzador;
 /// Create a copy of JugadorResumenLiga
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1158,20 +1158,20 @@ $JugadorResumenLigaCopyWith<JugadorResumenLiga> get copyWith => _$JugadorResumen
 @override
 bool operator ==(Object other) {
   final _this = this as JugadorResumenLiga;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JugadorResumenLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombres, _this.nombres) || other.nombres == _this.nombres)&&(identical(other.apellidos, _this.apellidos) || other.apellidos == _this.apellidos)&&(identical(other.batea, _this.batea) || other.batea == _this.batea)&&(identical(other.lanza, _this.lanza) || other.lanza == _this.lanza)&&(identical(other.fotoUrl, _this.fotoUrl) || other.fotoUrl == _this.fotoUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JugadorResumenLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombres, _this.nombres) || other.nombres == _this.nombres)&&(identical(other.apellidos, _this.apellidos) || other.apellidos == _this.apellidos)&&(identical(other.batea, _this.batea) || other.batea == _this.batea)&&(identical(other.lanza, _this.lanza) || other.lanza == _this.lanza)&&(identical(other.fotoUrl, _this.fotoUrl) || other.fotoUrl == _this.fotoUrl)&&(identical(other.esLanzador, _this.esLanzador) || other.esLanzador == _this.esLanzador));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as JugadorResumenLiga;
-  return Object.hash(runtimeType,_this.id,_this.nombres,_this.apellidos,_this.batea,_this.lanza,_this.fotoUrl);
+  return Object.hash(runtimeType,_this.id,_this.nombres,_this.apellidos,_this.batea,_this.lanza,_this.fotoUrl,_this.esLanzador);
 }
 
 @override
 String toString() {
   final _this = this as JugadorResumenLiga;
-  return 'JugadorResumenLiga(id: ${_this.id}, nombres: ${_this.nombres}, apellidos: ${_this.apellidos}, batea: ${_this.batea}, lanza: ${_this.lanza}, fotoUrl: ${_this.fotoUrl})';
+  return 'JugadorResumenLiga(id: ${_this.id}, nombres: ${_this.nombres}, apellidos: ${_this.apellidos}, batea: ${_this.batea}, lanza: ${_this.lanza}, fotoUrl: ${_this.fotoUrl}, esLanzador: ${_this.esLanzador})';
 }
 
 
@@ -1182,7 +1182,7 @@ abstract mixin class $JugadorResumenLigaCopyWith<$Res>  {
   factory $JugadorResumenLigaCopyWith(JugadorResumenLiga value, $Res Function(JugadorResumenLiga) _then) = _$JugadorResumenLigaCopyWithImpl;
 @useResult
 $Res call({
- int id, String nombres, String apellidos, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl
+ int id, String nombres, String apellidos, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl, bool esLanzador
 });
 
 
@@ -1199,7 +1199,7 @@ class _$JugadorResumenLigaCopyWithImpl<$Res>
 
 /// Create a copy of JugadorResumenLiga
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,Object? esLanzador = null,}) {
   return _then(JugadorResumenLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombres: null == nombres ? _self.nombres : nombres // ignore: cast_nullable_to_non_nullable
@@ -1207,7 +1207,8 @@ as String,apellidos: null == apellidos ? _self.apellidos : apellidos // ignore: 
 as String,batea: freezed == batea ? _self.batea : batea // ignore: cast_nullable_to_non_nullable
 as LadoBateo?,lanza: freezed == lanza ? _self.lanza : lanza // ignore: cast_nullable_to_non_nullable
 as LadoLanzamiento?,fotoUrl: freezed == fotoUrl ? _self.fotoUrl : fotoUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,esLanzador: null == esLanzador ? _self.esLanzador : esLanzador // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1292,10 +1293,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JugadorResumenLiga() when $default != null:
-return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   return orElse();
 
 }
@@ -1313,10 +1314,10 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)  $default,) {final _that = this;
 switch (_that) {
 case _JugadorResumenLiga():
-return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1333,10 +1334,10 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombres,  String apellidos,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)?  $default,) {final _that = this;
 switch (_that) {
 case _JugadorResumenLiga() when $default != null:
-return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   return null;
 
 }
@@ -1348,7 +1349,7 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.batea,_that.lanza,_
 @JsonSerializable()
 
 class _JugadorResumenLiga implements JugadorResumenLiga {
-  const _JugadorResumenLiga({required this.id, required this.nombres, required this.apellidos, this.batea, this.lanza, this.fotoUrl});
+  const _JugadorResumenLiga({required this.id, required this.nombres, required this.apellidos, this.batea, this.lanza, this.fotoUrl, this.esLanzador = false});
   factory _JugadorResumenLiga.fromJson(Map<String, dynamic> json) => _$JugadorResumenLigaFromJson(json);
 
 @override final  int id;
@@ -1357,6 +1358,7 @@ class _JugadorResumenLiga implements JugadorResumenLiga {
 @override final  LadoBateo? batea;
 @override final  LadoLanzamiento? lanza;
 @override final  String? fotoUrl;
+@override@JsonKey() final  bool esLanzador;
 
 /// Create a copy of JugadorResumenLiga
 /// with the given fields replaced by the non-null parameter values.
@@ -1371,18 +1373,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _JugadorResumenLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombres, nombres) || other.nombres == nombres)&&(identical(other.apellidos, apellidos) || other.apellidos == apellidos)&&(identical(other.batea, batea) || other.batea == batea)&&(identical(other.lanza, lanza) || other.lanza == lanza)&&(identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _JugadorResumenLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombres, nombres) || other.nombres == nombres)&&(identical(other.apellidos, apellidos) || other.apellidos == apellidos)&&(identical(other.batea, batea) || other.batea == batea)&&(identical(other.lanza, lanza) || other.lanza == lanza)&&(identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl)&&(identical(other.esLanzador, esLanzador) || other.esLanzador == esLanzador));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,nombres,apellidos,batea,lanza,fotoUrl);
+    return Object.hash(runtimeType,id,nombres,apellidos,batea,lanza,fotoUrl,esLanzador);
 }
 
 @override
 String toString() {
-    return 'JugadorResumenLiga(id: $id, nombres: $nombres, apellidos: $apellidos, batea: $batea, lanza: $lanza, fotoUrl: $fotoUrl)';
+    return 'JugadorResumenLiga(id: $id, nombres: $nombres, apellidos: $apellidos, batea: $batea, lanza: $lanza, fotoUrl: $fotoUrl, esLanzador: $esLanzador)';
 }
 
 
@@ -1393,7 +1395,7 @@ abstract mixin class _$JugadorResumenLigaCopyWith<$Res> implements $JugadorResum
   factory _$JugadorResumenLigaCopyWith(_JugadorResumenLiga value, $Res Function(_JugadorResumenLiga) _then) = __$JugadorResumenLigaCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nombres, String apellidos, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl
+ int id, String nombres, String apellidos, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl, bool esLanzador
 });
 
 
@@ -1410,7 +1412,7 @@ class __$JugadorResumenLigaCopyWithImpl<$Res>
 
 /// Create a copy of JugadorResumenLiga
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,Object? esLanzador = null,}) {
   return _then(_JugadorResumenLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombres: null == nombres ? _self.nombres : nombres // ignore: cast_nullable_to_non_nullable
@@ -1418,7 +1420,8 @@ as String,apellidos: null == apellidos ? _self.apellidos : apellidos // ignore: 
 as String,batea: freezed == batea ? _self.batea : batea // ignore: cast_nullable_to_non_nullable
 as LadoBateo?,lanza: freezed == lanza ? _self.lanza : lanza // ignore: cast_nullable_to_non_nullable
 as LadoLanzamiento?,fotoUrl: freezed == fotoUrl ? _self.fotoUrl : fotoUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,esLanzador: null == esLanzador ? _self.esLanzador : esLanzador // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1429,7 +1432,9 @@ as String?,
 /// @nodoc
 mixin _$JugadorLiga {
 
- int get id; String get nombres; String get apellidos; DateTime? get fechaNacimiento; int? get edad; LadoBateo? get batea; LadoLanzamiento? get lanza; String? get fotoUrl;
+ int get id; String get nombres; String get apellidos; DateTime? get fechaNacimiento; int? get edad; LadoBateo? get batea;/// Mano con la que lanza (la tienen todos los jugadores).
+ LadoLanzamiento? get lanza; String? get fotoUrl;/// Es pitcher.
+ bool get esLanzador;
 /// Create a copy of JugadorLiga
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1443,20 +1448,20 @@ $JugadorLigaCopyWith<JugadorLiga> get copyWith => _$JugadorLigaCopyWithImpl<Juga
 @override
 bool operator ==(Object other) {
   final _this = this as JugadorLiga;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JugadorLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombres, _this.nombres) || other.nombres == _this.nombres)&&(identical(other.apellidos, _this.apellidos) || other.apellidos == _this.apellidos)&&(identical(other.fechaNacimiento, _this.fechaNacimiento) || other.fechaNacimiento == _this.fechaNacimiento)&&(identical(other.edad, _this.edad) || other.edad == _this.edad)&&(identical(other.batea, _this.batea) || other.batea == _this.batea)&&(identical(other.lanza, _this.lanza) || other.lanza == _this.lanza)&&(identical(other.fotoUrl, _this.fotoUrl) || other.fotoUrl == _this.fotoUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JugadorLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombres, _this.nombres) || other.nombres == _this.nombres)&&(identical(other.apellidos, _this.apellidos) || other.apellidos == _this.apellidos)&&(identical(other.fechaNacimiento, _this.fechaNacimiento) || other.fechaNacimiento == _this.fechaNacimiento)&&(identical(other.edad, _this.edad) || other.edad == _this.edad)&&(identical(other.batea, _this.batea) || other.batea == _this.batea)&&(identical(other.lanza, _this.lanza) || other.lanza == _this.lanza)&&(identical(other.fotoUrl, _this.fotoUrl) || other.fotoUrl == _this.fotoUrl)&&(identical(other.esLanzador, _this.esLanzador) || other.esLanzador == _this.esLanzador));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as JugadorLiga;
-  return Object.hash(runtimeType,_this.id,_this.nombres,_this.apellidos,_this.fechaNacimiento,_this.edad,_this.batea,_this.lanza,_this.fotoUrl);
+  return Object.hash(runtimeType,_this.id,_this.nombres,_this.apellidos,_this.fechaNacimiento,_this.edad,_this.batea,_this.lanza,_this.fotoUrl,_this.esLanzador);
 }
 
 @override
 String toString() {
   final _this = this as JugadorLiga;
-  return 'JugadorLiga(id: ${_this.id}, nombres: ${_this.nombres}, apellidos: ${_this.apellidos}, fechaNacimiento: ${_this.fechaNacimiento}, edad: ${_this.edad}, batea: ${_this.batea}, lanza: ${_this.lanza}, fotoUrl: ${_this.fotoUrl})';
+  return 'JugadorLiga(id: ${_this.id}, nombres: ${_this.nombres}, apellidos: ${_this.apellidos}, fechaNacimiento: ${_this.fechaNacimiento}, edad: ${_this.edad}, batea: ${_this.batea}, lanza: ${_this.lanza}, fotoUrl: ${_this.fotoUrl}, esLanzador: ${_this.esLanzador})';
 }
 
 
@@ -1467,7 +1472,7 @@ abstract mixin class $JugadorLigaCopyWith<$Res>  {
   factory $JugadorLigaCopyWith(JugadorLiga value, $Res Function(JugadorLiga) _then) = _$JugadorLigaCopyWithImpl;
 @useResult
 $Res call({
- int id, String nombres, String apellidos, DateTime? fechaNacimiento, int? edad, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl
+ int id, String nombres, String apellidos, DateTime? fechaNacimiento, int? edad, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl, bool esLanzador
 });
 
 
@@ -1484,7 +1489,7 @@ class _$JugadorLigaCopyWithImpl<$Res>
 
 /// Create a copy of JugadorLiga
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? fechaNacimiento = freezed,Object? edad = freezed,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? fechaNacimiento = freezed,Object? edad = freezed,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,Object? esLanzador = null,}) {
   return _then(JugadorLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombres: null == nombres ? _self.nombres : nombres // ignore: cast_nullable_to_non_nullable
@@ -1494,7 +1499,8 @@ as DateTime?,edad: freezed == edad ? _self.edad : edad // ignore: cast_nullable_
 as int?,batea: freezed == batea ? _self.batea : batea // ignore: cast_nullable_to_non_nullable
 as LadoBateo?,lanza: freezed == lanza ? _self.lanza : lanza // ignore: cast_nullable_to_non_nullable
 as LadoLanzamiento?,fotoUrl: freezed == fotoUrl ? _self.fotoUrl : fotoUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,esLanzador: null == esLanzador ? _self.esLanzador : esLanzador // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1579,10 +1585,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _JugadorLiga() when $default != null:
-return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   return orElse();
 
 }
@@ -1600,10 +1606,10 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)  $default,) {final _that = this;
 switch (_that) {
 case _JugadorLiga():
-return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1620,10 +1626,10 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombres,  String apellidos,  DateTime? fechaNacimiento,  int? edad,  LadoBateo? batea,  LadoLanzamiento? lanza,  String? fotoUrl,  bool esLanzador)?  $default,) {final _that = this;
 switch (_that) {
 case _JugadorLiga() when $default != null:
-return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl);case _:
+return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_that.edad,_that.batea,_that.lanza,_that.fotoUrl,_that.esLanzador);case _:
   return null;
 
 }
@@ -1635,7 +1641,7 @@ return $default(_that.id,_that.nombres,_that.apellidos,_that.fechaNacimiento,_th
 @JsonSerializable()
 
 class _JugadorLiga implements JugadorLiga {
-  const _JugadorLiga({required this.id, required this.nombres, required this.apellidos, this.fechaNacimiento, this.edad, this.batea, this.lanza, this.fotoUrl});
+  const _JugadorLiga({required this.id, required this.nombres, required this.apellidos, this.fechaNacimiento, this.edad, this.batea, this.lanza, this.fotoUrl, this.esLanzador = false});
   factory _JugadorLiga.fromJson(Map<String, dynamic> json) => _$JugadorLigaFromJson(json);
 
 @override final  int id;
@@ -1644,8 +1650,11 @@ class _JugadorLiga implements JugadorLiga {
 @override final  DateTime? fechaNacimiento;
 @override final  int? edad;
 @override final  LadoBateo? batea;
+/// Mano con la que lanza (la tienen todos los jugadores).
 @override final  LadoLanzamiento? lanza;
 @override final  String? fotoUrl;
+/// Es pitcher.
+@override@JsonKey() final  bool esLanzador;
 
 /// Create a copy of JugadorLiga
 /// with the given fields replaced by the non-null parameter values.
@@ -1660,18 +1669,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _JugadorLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombres, nombres) || other.nombres == nombres)&&(identical(other.apellidos, apellidos) || other.apellidos == apellidos)&&(identical(other.fechaNacimiento, fechaNacimiento) || other.fechaNacimiento == fechaNacimiento)&&(identical(other.edad, edad) || other.edad == edad)&&(identical(other.batea, batea) || other.batea == batea)&&(identical(other.lanza, lanza) || other.lanza == lanza)&&(identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _JugadorLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombres, nombres) || other.nombres == nombres)&&(identical(other.apellidos, apellidos) || other.apellidos == apellidos)&&(identical(other.fechaNacimiento, fechaNacimiento) || other.fechaNacimiento == fechaNacimiento)&&(identical(other.edad, edad) || other.edad == edad)&&(identical(other.batea, batea) || other.batea == batea)&&(identical(other.lanza, lanza) || other.lanza == lanza)&&(identical(other.fotoUrl, fotoUrl) || other.fotoUrl == fotoUrl)&&(identical(other.esLanzador, esLanzador) || other.esLanzador == esLanzador));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,nombres,apellidos,fechaNacimiento,edad,batea,lanza,fotoUrl);
+    return Object.hash(runtimeType,id,nombres,apellidos,fechaNacimiento,edad,batea,lanza,fotoUrl,esLanzador);
 }
 
 @override
 String toString() {
-    return 'JugadorLiga(id: $id, nombres: $nombres, apellidos: $apellidos, fechaNacimiento: $fechaNacimiento, edad: $edad, batea: $batea, lanza: $lanza, fotoUrl: $fotoUrl)';
+    return 'JugadorLiga(id: $id, nombres: $nombres, apellidos: $apellidos, fechaNacimiento: $fechaNacimiento, edad: $edad, batea: $batea, lanza: $lanza, fotoUrl: $fotoUrl, esLanzador: $esLanzador)';
 }
 
 
@@ -1682,7 +1691,7 @@ abstract mixin class _$JugadorLigaCopyWith<$Res> implements $JugadorLigaCopyWith
   factory _$JugadorLigaCopyWith(_JugadorLiga value, $Res Function(_JugadorLiga) _then) = __$JugadorLigaCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nombres, String apellidos, DateTime? fechaNacimiento, int? edad, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl
+ int id, String nombres, String apellidos, DateTime? fechaNacimiento, int? edad, LadoBateo? batea, LadoLanzamiento? lanza, String? fotoUrl, bool esLanzador
 });
 
 
@@ -1699,7 +1708,7 @@ class __$JugadorLigaCopyWithImpl<$Res>
 
 /// Create a copy of JugadorLiga
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? fechaNacimiento = freezed,Object? edad = freezed,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombres = null,Object? apellidos = null,Object? fechaNacimiento = freezed,Object? edad = freezed,Object? batea = freezed,Object? lanza = freezed,Object? fotoUrl = freezed,Object? esLanzador = null,}) {
   return _then(_JugadorLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombres: null == nombres ? _self.nombres : nombres // ignore: cast_nullable_to_non_nullable
@@ -1709,7 +1718,8 @@ as DateTime?,edad: freezed == edad ? _self.edad : edad // ignore: cast_nullable_
 as int?,batea: freezed == batea ? _self.batea : batea // ignore: cast_nullable_to_non_nullable
 as LadoBateo?,lanza: freezed == lanza ? _self.lanza : lanza // ignore: cast_nullable_to_non_nullable
 as LadoLanzamiento?,fotoUrl: freezed == fotoUrl ? _self.fotoUrl : fotoUrl // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,esLanzador: null == esLanzador ? _self.esLanzador : esLanzador // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

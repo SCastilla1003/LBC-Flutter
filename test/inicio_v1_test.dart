@@ -84,7 +84,10 @@ final _conDatos = <String, Object>{
 Widget _app(Widget pantalla, Map<String, Object> rutas, ThemeData tema) {
   final dio = Dio(BaseOptions(baseUrl: 'http://api.test/api/v1'))..httpClientAdapter = _Api(rutas);
   return ProviderScope(
-    overrides: [ligaRepositorioProvider.overrideWithValue(LigaRepositorio(ClienteApi(dio)))],
+    overrides: [
+      clienteApiProvider.overrideWithValue(ClienteApi(dio)),
+      ligaRepositorioProvider.overrideWithValue(LigaRepositorio(ClienteApi(dio))),
+    ],
     child: MaterialApp(
       theme: tema,
       locale: const Locale('es'),
@@ -146,9 +149,30 @@ void main() {
     });
   }
 
-  testWidgets('Líderes explica que faltan las estadísticas en vez de fallar', (t) async {
-    await _pintar(t, const LideresPantalla(), _conDatos, TemaLbc.claro());
+  testWidgets('Líderes: el líder de jonrones y el mínimo de turnos para el promedio', (t) async {
+    Map<String, dynamic> bateo(int pa, int ab, int h, int hr, double avg) => {
+          'juegos': 1, 'pa': pa, 'ab': ab, 'h': h, 'hr': hr, 'avg': avg, 'obp': avg, 'slg': avg, 'ops': avg * 2,
+        };
+    await _pintar(t, const LideresPantalla(), {
+      ..._conDatos,
+      '/temporadas/1/estadisticas/bateo': [
+        {'jugador': {'id': 17, 'nombres': 'Luis', 'apellidos': 'Calvo'}, 'equipo': _eq(4, 'Pelícanos de Bocagrande', 'PEL', 'azul'), 'bateo': bateo(8, 7, 3, 2, 0.429)},
+        {'jugador': {'id': 18, 'nombres': 'Ana', 'apellidos': 'Ruiz'}, 'bateo': bateo(1, 1, 1, 0, 1.0)},
+      ],
+      '/temporadas/1/estadisticas/pitcheo': <Object>[],
+    }, TemaLbc.claro());
     expect(t.takeException(), isNull);
-    expect(find.textContaining('anotador en vivo'), findsOneWidget);
+    // AVG: Ana (1 de 1) no llega al mínimo de turnos (la mitad de 8).
+    expect(find.text('Promedio · Mínimo 4 apariciones al plato'), findsOneWidget);
+    expect(find.text('Luis Calvo'), findsOneWidget);
+    expect(find.text('Ana Ruiz'), findsNothing);
+    expect(find.text(',429'), findsOneWidget);
+    await t.tap(find.text('HR'));
+    await t.pumpAndSettle();
+    expect(find.text('Ana Ruiz'), findsOneWidget);
+    expect(find.text('Agente libre'), findsOneWidget);
+    await t.tap(find.text('Pitcheo'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('Todavía no hay estadísticas'), findsOneWidget);
   });
 }

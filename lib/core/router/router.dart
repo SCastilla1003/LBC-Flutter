@@ -140,7 +140,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/lideres', builder: (_, _) => const LideresPantalla()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/prediccion', builder: (_, _) => const PrediccionPantalla()),
+            GoRoute(
+                path: '/prediccion',
+                // ?b=<bateador>&l=<lanzador> abre el duelo ya elegido (desde el partido en vivo).
+                builder: (_, s) => PrediccionPantalla(
+                    bateador: int.tryParse(s.uri.queryParameters['b'] ?? ''),
+                    lanzador: int.tryParse(s.uri.queryParameters['l'] ?? ''))),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/cuenta', builder: (_, _) => const CuentaPantalla()),

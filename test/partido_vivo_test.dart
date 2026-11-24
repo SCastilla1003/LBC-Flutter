@@ -92,7 +92,17 @@ class _Api implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(RequestOptions o, Stream<Uint8List>? cuerpo, Future<void>? cancelar) async {
     if (o.path.endsWith('/juego')) pedidosJuego++;
-    final r = o.path.endsWith('/juego') ? estado : estado['partido'];
+    final r = o.path == '/enfrentamientos'
+        ? {
+            'bateador': _jugador(102, 'Jugador', '102'),
+            'lanzador': _jugador(200, 'Lanzador', '200'),
+            'historial': {'pa': 3, 'ab': 3, 'h': 1, 'hr': 1, 'avg': 0.333},
+            'turnos': <Object>[],
+            'pronostico': {'hit': 0.27, 'embasarse': 0.33, 'ponche': 0.2, 'turnosDirectos': 3, 'resumen': ''},
+          }
+        : o.path.endsWith('/juego')
+            ? estado
+            : estado['partido'];
     return ResponseBody.fromString(jsonEncode(r), 200, headers: {
       Headers.contentTypeHeader: [Headers.jsonContentType],
     });
@@ -111,6 +121,7 @@ Future<_Api> _pintar(WidgetTester t, Map<String, dynamic> estado, {ThemeData? te
   final cliente = ClienteApi(dio);
   await t.pumpWidget(ProviderScope(
     overrides: [
+      clienteApiProvider.overrideWithValue(cliente),
       ligaRepositorioProvider.overrideWithValue(LigaRepositorio(cliente)),
       juegoRepositorioProvider.overrideWithValue(JuegoRepositorio(cliente)),
     ],
@@ -147,6 +158,7 @@ void main() {
       expect(find.text('PEL · 12 lanz.'), findsOneWidget);
       expect(find.text('En base: 1ª Jugador 101'), findsOneWidget);
       expect(find.text('Jugada a jugada'), findsOneWidget);
+      expect(find.text('Cara a cara: 1-3, 1 HR · Hit 27%'), findsOneWidget);
       expect(find.text('Jugador 101: sencillo.'), findsOneWidget);
       expect(api.pedidosJuego, 1);
 

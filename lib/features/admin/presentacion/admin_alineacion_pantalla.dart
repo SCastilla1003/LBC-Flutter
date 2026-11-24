@@ -298,7 +298,7 @@ class _PestanaEquipo extends StatelessWidget {
     }
     final ordenados = [...plantilla]
       ..sort((a, b) => a.jugador.apellidos.toLowerCase().compareTo(b.jugador.apellidos.toLowerCase()));
-    final lanzadores = ordenados.where((p) => p.jugador.lanza != null).toList();
+    final lanzadores = ordenados.where((p) => p.jugador.esLanzador).toList();
     final titulares = estado.titulares;
     final bancaPosible = ordenados.where((p) => !titulares.contains(p.jugador.id)).toList();
     final cambio = editable ? alCambiar : null;
@@ -398,7 +398,7 @@ class _PestanaEquipo extends StatelessWidget {
                     for (final p in bancaPosible)
                       FilterChip(
                         label: Text('${p.jugador.nombres} ${p.jugador.apellidos}'),
-                        avatar: p.jugador.lanza != null ? const Icon(Icons.sports_baseball_outlined, size: 16) : null,
+                        avatar: p.jugador.esLanzador ? const Icon(Icons.sports_baseball_outlined, size: 16) : null,
                         selected: estado.banca.contains(p.jugador.id),
                         onSelected: cambio == null
                             ? null

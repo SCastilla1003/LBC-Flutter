@@ -234,7 +234,7 @@ class AdminPlantillaEquipoPantalla extends ConsumerWidget {
           detalle: [
             p.posicion ?? 'Sin posición',
             'Batea: ${etiquetaBateo(p.jugador.batea)}',
-            if (p.jugador.lanza != null) 'Lanza: ${etiquetaLanzamiento(p.jugador.lanza)}',
+            if (p.jugador.esLanzador) 'Pitcher',
           ].join(' · '),
           onEditar: () => showDialog<void>(
             context: context,
