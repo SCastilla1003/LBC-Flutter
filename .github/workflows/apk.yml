@@ -19,9 +19,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # Versión fija: con "stable" a secas, cada versión nueva de Flutter puede
+      # subir el mínimo de AGP/Gradle y romper la compilación sin aviso.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.50.1
           cache: true
 
       # Firma fija para que las actualizaciones se instalen sobre la versión anterior.
