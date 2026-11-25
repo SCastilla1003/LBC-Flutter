@@ -156,6 +156,12 @@ class _Contenido extends ConsumerWidget {
                 'Cuentas registradas y su rol: aficionado, anotador o admin',
                 '/admin/usuarios',
               ),
+              opcion(
+                Icons.history_edu_rounded,
+                'Registro de auditoría',
+                'Quién creó, movió, editó o eliminó cada cosa y cuándo',
+                '/admin/auditoria',
+              ),
               EncabezadoSeccion(
                 actual == null ? 'Temporada' : 'Temporada ${actual.anio}',
               ),
@@ -206,6 +212,17 @@ class _Contenido extends ConsumerWidget {
                   '/admin/t/${actual.id}/partidos',
                 ),
               ],
+              const EncabezadoSeccion('Zona de peligro'),
+              Card(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: ListTile(
+                  leading: Icon(Icons.delete_forever_rounded, color: Theme.of(context).colorScheme.error),
+                  title: Text('Eliminar por completo', style: _estiloMenu),
+                  subtitle: const Text('Jugadores o partidos con todo lo que depende de ellos'),
+                  trailing: Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.error),
+                  onTap: () => context.push('/admin/eliminar${actual == null ? '' : '?t=${actual.id}'}'),
+                ),
+              ),
             ],
           ),
         ),

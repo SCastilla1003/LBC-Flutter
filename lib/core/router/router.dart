@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentacion/admin_alineacion_pantalla.dart';
+import '../../features/admin/presentacion/admin_auditoria_pantalla.dart';
+import '../../features/admin/presentacion/admin_eliminar_pantalla.dart';
 import '../../features/admin/presentacion/admin_equipos_pantalla.dart';
 import '../../features/admin/presentacion/admin_estadios_pantalla.dart';
 import '../../features/admin/presentacion/admin_inscripcion_pantalla.dart';
@@ -175,6 +177,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: 'jugadores', builder: (_, _) => const AdminJugadoresPantalla()),
           GoRoute(path: 'estadios', builder: (_, _) => const AdminEstadiosPantalla()),
           GoRoute(path: 'usuarios', builder: (_, _) => const AdminUsuariosPantalla()),
+          GoRoute(path: 'auditoria', builder: (_, _) => const AdminAuditoriaPantalla()),
+          GoRoute(
+              path: 'eliminar',
+              builder: (_, s) => AdminEliminarPantalla(idTemporada: int.tryParse(s.uri.queryParameters['t'] ?? ''))),
           GoRoute(
               path: 't/:t/plantilla',
               builder: (_, s) => AdminPlantillasPantalla(idTemporada: int.parse(s.pathParameters['t']!))),
