@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../core/tema/tema_lbc.dart';
+import '../../core/widgets/animaciones.dart';
 import '../datos/modelos_liga.dart';
 
 /// Flecha de alta (arriba) o baja (abajo) seguida de un texto.
@@ -41,7 +42,8 @@ class DiamanteBases extends StatelessWidget {
       final ocupada = bases[n] != null;
       return Transform.rotate(
         angle: pi / 4,
-        child: Container(
+        child: AnimatedContainer(
+          duration: duracionLbc(context, const Duration(milliseconds: 350)),
           width: tamano,
           height: tamano,
           decoration: BoxDecoration(
@@ -100,7 +102,9 @@ class PuntosConteo extends StatelessWidget {
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
         ),
         for (var i = 0; i < total; i++)
-          Container(
+          AnimatedContainer(
+            duration: duracionLbc(context, const Duration(milliseconds: 250)),
+            curve: Curves.easeOut,
             width: 11,
             height: 11,
             margin: const EdgeInsets.symmetric(horizontal: 2),

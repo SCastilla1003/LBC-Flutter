@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/tema/colores_equipo.dart';
 import '../../core/tema/tema_lbc.dart';
+import '../../core/widgets/animaciones.dart';
 import '../../core/widgets/imagen_api.dart';
 import '../datos/juego_repositorio.dart';
 import '../datos/modelos_liga.dart';
+import 'anuncios_juego.dart';
 
 /// Lado del plato donde se para el bateador, visto desde detrás del home: el derecho
 /// sale a la izquierda (lado de tercera) y el zurdo a la derecha. El ambidiestro batea
@@ -22,7 +24,10 @@ bool bateadorALaIzquierda(LadoBateo? batea, LadoLanzamiento? lanza) => switch (b
 /// bateador en su caja (derecho o zurdo), las caras de los corredores en sus bases y el
 /// próximo bateador en su círculo (a la derecha si batea el visitante, a la izquierda si
 /// batea el local).
-class CampoEnVivo extends StatelessWidget {
+///
+/// Cuando llega una jugada nueva las caras corren a su base nueva, las que anotan van hasta
+/// home, la pelota vuela y sale un cartel ("¡STRIKE!", "OUT", "¡JONRÓN!"...).
+class CampoEnVivo extends StatefulWidget {
   const CampoEnVivo({super.key, required this.juego, this.alTocar});
 
   final EstadoJuego juego;
@@ -31,7 +36,112 @@ class CampoEnVivo extends StatelessWidget {
   final void Function(JugadorResumenLiga jugador, EquipoRefLiga equipo)? alTocar;
 
   @override
+  State<CampoEnVivo> createState() => _CampoEnVivoState();
+}
+
+/// Un jugador que ya no está en el campo y se va: a home si anotó, o se desvanece si fue out.
+class _Fantasma {
+  _Fantasma({
+    required this.clave,
+    required this.desde,
+    required this.anota,
+    required this.nombre,
+    required this.jugador,
+    required this.color,
+  });
+
+  final String clave;
+
+  /// 0 = bateador, 1..3 = base.
+  final int desde;
+
+  /// Si anotó corre por las bases que le faltan hasta home; si fue out se desvanece.
+  final bool anota;
+  final String nombre;
+  final JugadorResumenLiga? jugador;
+  final Color color;
+}
+
+const _corre = Duration(milliseconds: 750);
+
+class _CampoEnVivoState extends State<CampoEnVivo> {
+  int? _ultimaAccion;
+  AccionJuego? _nueva;
+  int _serie = 0;
+  final _fantasmas = <_Fantasma>[];
+
+  /// Bases por las que pasa cada corredor que avanzó más de una (de primera a tercera pasa por
+  /// segunda), para que corra por las líneas y no cruce el cuadro.
+  final _via = <int, List<int>>{};
+
+  @override
+  void initState() {
+    super.initState();
+    // Lo que ya pasó no se anuncia: solo lo que llegue mientras se mira.
+    _ultimaAccion = widget.juego.jugadas.firstOrNull?.id;
+  }
+
+  /// Dónde está cada jugador de la ofensiva: 0 = al bate, 1..3 = base.
+  static Map<int, int> _lugares(EstadoJuego j) {
+    final s = j.partido.situacion;
+    final c = s?.corredores;
+    return {
+      if (s?.bateador != null) s!.bateador!.id: 0,
+      if (c?.primera != null) c!.primera!.id: 1,
+      if (c?.segunda != null) c!.segunda!.id: 2,
+      if (c?.tercera != null) c!.tercera!.id: 3,
+    };
+  }
+
+  static int _carrerasDe(EstadoJuego j, int idEquipo) =>
+      j.partido.equipoLocal.id == idEquipo ? j.partido.marcador.local : j.partido.marcador.visita;
+
+  @override
+  void didUpdateWidget(CampoEnVivo old) {
+    super.didUpdateWidget(old);
+    final nueva = widget.juego.jugadas.firstOrNull;
+    if (nueva == null || nueva.id == _ultimaAccion) return;
+    _ultimaAccion = nueva.id;
+    _nueva = nueva;
+    _serie++;
+    _via.clear();
+
+    // Quien estaba en base (o al bate) y ya no está: los primeros en anotar son los más adelantados.
+    final antes = _lugares(old.juego);
+    final ahora = _lugares(widget.juego);
+    final equipo = old.juego.ofensiva.equipo;
+    var anotaron = _carrerasDe(widget.juego, equipo.id) - _carrerasDe(old.juego, equipo.id);
+    final mismaOfensiva = widget.juego.ofensiva.equipo.id == equipo.id;
+    final idos = [
+      for (final MapEntry(key: id, value: lugar) in antes.entries)
+        if (!(mismaOfensiva && ahora.containsKey(id))) (id, lugar),
+    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    if (mismaOfensiva) {
+      for (final MapEntry(key: id, value: base) in ahora.entries) {
+        final previa = antes[id];
+        if (previa != null && base > previa + 1) _via[id] = [for (var b = previa + 1; b < base; b++) b];
+      }
+    }
+    final orden = old.juego.ofensiva.orden.map((t) => t.jugador).whereType<JugadorResumenLiga>();
+    for (final (id, lugar) in idos) {
+      // Al cambiar de mitad el bateador de la mitad anterior simplemente se va.
+      if (lugar == 0 && anotaron <= 0) continue;
+      final anota = anotaron > 0;
+      if (anota) anotaron--;
+      _fantasmas.add(_Fantasma(
+        clave: '$_serie-$id',
+        desde: lugar,
+        anota: anota,
+        nombre: old.juego.nombre(id),
+        jugador: orden.where((j) => j.id == id).firstOrNull,
+        color: ColoresEquipo.de(context, equipo.color),
+      ));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final juego = widget.juego;
     final p = juego.partido;
     final s = p.situacion;
     final of = juego.ofensiva;
@@ -49,8 +159,10 @@ class CampoEnVivo extends StatelessWidget {
     final colorDef = ColoresEquipo.de(context, def.equipo.color);
     final izquierda = bateadorALaIzquierda(bateador?.batea, lanzador?.lanza);
     final proximoDerecha = !juego.bateaLocal;
+    final alTocar = widget.alTocar;
     VoidCallback? abrir(JugadorResumenLiga? j, EquipoRefLiga e) =>
-        j == null || alTocar == null ? null : () => alTocar!(j, e);
+        j == null || alTocar == null ? null : () => alTocar(j, e);
+    final corre = duracionLbc(context, _corre);
 
     return LayoutBuilder(builder: (context, cons) {
       final w = math.min(cons.maxWidth, 460.0);
@@ -70,15 +182,29 @@ class CampoEnVivo extends StatelessWidget {
       final circuloDer = Offset(w * 0.885, h - w * 0.17);
       final circuloProximo = proximoDerecha ? circuloDer : circuloIzq;
       const alturaEtiqueta = 16.0;
+      // Cara + separación + nombre en una línea.
+      final altoCorredor = caraCorredor + 4 + 19;
+      double arribaDeBase(int i) => bases[i].dy - w * 0.035 - altoCorredor;
+      final anchoCorredor = w * 0.3;
 
-      // Coloca una ficha centrada en x, sin salirse del campo.
-      Widget colocar(double cx, double ancho, Widget hijo, {double? top, double? bottom}) => Positioned(
-            left: (cx - ancho / 2).clamp(4.0, w - ancho - 4),
-            width: ancho,
-            top: top,
-            bottom: bottom,
-            child: hijo,
+      Offset sobreBase(int base) => base == 4
+          ? Offset(home.dx, home.dy - altoCorredor + w * 0.02)
+          : Offset(bases[base - 1].dx, arribaDeBase(base - 1));
+
+      // Cada jugador conserva su clave: si cambia de lugar (del bate a primera, de primera a
+      // tercera pasando por segunda, del círculo de espera al bate) corre hasta allí.
+      Widget colocar(int id, double cx, double ancho, double top, Widget hijo) => _FichaEnRuta(
+            key: ValueKey('j$id'),
+            destino: Offset(cx, top),
+            via: [for (final b in _via[id] ?? const <int>[]) sobreBase(b)],
+            ancho: ancho,
+            limite: w,
+            tramo: corre,
+            child: _Aparece(child: hijo),
           );
+
+      final anuncio = _nueva == null ? null : anuncioDe(_nueva!);
+      final enJuego = p.estado == EstadoPartidoLiga.enJuego;
 
       return Center(
         child: ClipRRect(
@@ -113,17 +239,49 @@ class CampoEnVivo extends StatelessWidget {
               Positioned(
                 top: 12,
                 right: 12,
-                child: Text(
-                  'Batea ${of.equipo.abreviatura}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w700),
+                child: AnimatedSwitcher(
+                  duration: duracionLbc(context, const Duration(milliseconds: 400)),
+                  child: Text(
+                    'Batea ${of.equipo.abreviatura}',
+                    key: ValueKey(of.equipo.id),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
+              // Los que se van: a home si anotaron; si fueron out, se desvanecen.
+              for (final f in _fantasmas)
+                _FichaQueSeVa(
+                  key: ValueKey('fantasma-${f.clave}'),
+                  ruta: [
+                    if (f.desde == 0)
+                      Offset(cajaBateo.dx, cajaBateo.dy - caraGrande / 2 - alturaEtiqueta)
+                    else
+                      sobreBase(f.desde),
+                    if (f.anota)
+                      for (var b = f.desde + 1; b <= 4; b++) sobreBase(b),
+                  ],
+                  ancho: anchoCorredor,
+                  limite: w,
+                  duracion: duracionLbc(
+                    context,
+                    f.anota ? corre * (4 - f.desde) + const Duration(milliseconds: 350) : _corre,
+                  ),
+                  alTerminar: () => setState(() => _fantasmas.remove(f)),
+                  child: _Ficha(
+                    jugador: f.jugador,
+                    nombre: f.nombre,
+                    cara: caraCorredor,
+                    color: f.color,
+                    lineas: 1,
+                  ),
+                ),
               // El lanzador, en el montículo.
               if (lanzador != null || s?.lanzador != null)
                 colocar(
+                  lanzador?.id ?? s!.lanzador!.id,
                   monticulo.dx,
                   w * 0.38,
-                  top: monticulo.dy - h * 0.03 - caraGrande / 2 - alturaEtiqueta,
+                  monticulo.dy - h * 0.03 - caraGrande / 2 - alturaEtiqueta,
                   _Ficha(
                     etiqueta: 'LANZA',
                     jugador: lanzador,
@@ -138,24 +296,27 @@ class CampoEnVivo extends StatelessWidget {
               for (final (i, r) in corredores.indexed)
                 if (r != null)
                   colocar(
+                    r.id,
                     bases[i].dx,
-                    w * 0.3,
-                    bottom: h - bases[i].dy + w * 0.035,
+                    anchoCorredor,
+                    arribaDeBase(i),
                     _Ficha(
                       jugador: deOfensiva(r.id),
                       nombre: r.nombre,
                       descripcion: 'En ${['primera', 'segunda', 'tercera'][i]}: ${r.nombre}',
                       cara: caraCorredor,
                       color: colorOf,
+                      lineas: 1,
                       onTap: abrir(deOfensiva(r.id), of.equipo),
                     ),
                   ),
               // El bateador, en la caja de su lado.
               if (bateador != null || s?.bateador != null)
                 colocar(
+                  bateador?.id ?? s!.bateador!.id,
                   cajaBateo.dx,
                   w * 0.28,
-                  top: cajaBateo.dy - caraGrande / 2 - alturaEtiqueta,
+                  cajaBateo.dy - caraGrande / 2 - alturaEtiqueta,
                   _Ficha(
                     etiqueta: 'AL BATE',
                     jugador: bateador,
@@ -173,9 +334,10 @@ class CampoEnVivo extends StatelessWidget {
               // El próximo, en su círculo de espera.
               if (siguiente != null)
                 colocar(
+                  siguiente.id,
                   circuloProximo.dx,
                   w * 0.23,
-                  top: circuloProximo.dy - caraProximo / 2 - alturaEtiqueta,
+                  circuloProximo.dy - caraProximo / 2 - alturaEtiqueta,
                   _Ficha(
                     etiqueta: 'PRÓXIMO',
                     jugador: siguiente,
@@ -186,11 +348,213 @@ class CampoEnVivo extends StatelessWidget {
                     onTap: abrir(siguiente, of.equipo),
                   ),
                 ),
+              // La pelota y el cartel de lo que acaba de pasar.
+              if (anuncio != null && (enJuego || p.estado == EstadoPartidoLiga.finalizado) &&
+                  !MediaQuery.disableAnimationsOf(context)) ...[
+                if (anuncio.vuelo != null)
+                  Positioned.fill(
+                    child: _pelota(anuncio.vuelo!, w: w, h: h, home: home, monticulo: monticulo, bases: bases),
+                  ),
+                Positioned(
+                  left: 8,
+                  right: 8,
+                  top: h * 0.31,
+                  child: Center(
+                    child: CartelAnuncio(
+                      key: ValueKey('anuncio$_serie'),
+                      anuncio: anuncio,
+                      retraso: Duration(milliseconds: anuncio.vuelo == null ? 0 : 450),
+                    ),
+                  ),
+                ),
+              ],
             ]),
           ),
         ),
       );
     });
+  }
+
+  /// Recorrido de la pelota: lanzamiento al home o batazo hacia una de tres zonas, que cambia
+  /// de jugada en jugada.
+  Widget _pelota(
+    Vuelo vuelo, {
+    required double w,
+    required double h,
+    required Offset home,
+    required Offset monticulo,
+    required List<Offset> bases,
+  }) {
+    final k = _serie % 3;
+    final (desde, hasta, altura, ms) = switch (vuelo) {
+      Vuelo.lanzamiento => (monticulo, home, 8.0, 420),
+      Vuelo.rodado => (home, Offset.lerp(home, [bases[2], bases[1], bases[0]][k], 0.92)!, 0.0, 650),
+      Vuelo.linea => (home, [Offset(w * 0.2, h * 0.2), Offset(w * 0.5, h * 0.09), Offset(w * 0.8, h * 0.2)][k], 22.0, 650),
+      Vuelo.elevado => (home, [Offset(w * 0.24, h * 0.16), Offset(w * 0.5, h * 0.1), Offset(w * 0.76, h * 0.16)][k], 150.0, 1100),
+      Vuelo.largo => (home, [Offset(w * 0.08, h * 0.12), Offset(w * 0.32, h * 0.04), Offset(w * 0.92, h * 0.12)][k], 70.0, 900),
+      Vuelo.jonron => (home, [Offset(w * 0.1, -h * 0.12), Offset(w * 0.5, -h * 0.18), Offset(w * 0.9, -h * 0.12)][k], 170.0, 1300),
+    };
+    return PelotaEnVuelo(
+      key: ValueKey('pelota$_serie'),
+      desde: desde,
+      hasta: hasta,
+      altura: altura,
+      duracion: Duration(milliseconds: ms),
+    );
+  }
+}
+
+/// Una cara nueva aparece creciendo un poco y con un fundido.
+class _Aparece extends StatelessWidget {
+  const _Aparece({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: duracionLbc(context, const Duration(milliseconds: 450)),
+      curve: Curves.easeOutBack,
+      builder: (_, v, hijo) => Opacity(
+        opacity: v.clamp(0, 1),
+        child: Transform.scale(scale: 0.75 + 0.25 * v, child: hijo),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Punto a una fracción [t] (0..1) del recorrido por [ruta], repartido según la longitud.
+Offset _enRuta(List<Offset> ruta, double t) {
+  if (ruta.length == 1) return ruta.first;
+  final tramos = [for (var i = 1; i < ruta.length; i++) (ruta[i] - ruta[i - 1]).distance];
+  final total = tramos.fold<double>(0, (a, b) => a + b);
+  if (total == 0) return ruta.last;
+  var falta = t.clamp(0.0, 1.0) * total;
+  for (var i = 0; i < tramos.length; i++) {
+    if (falta <= tramos[i] || i == tramos.length - 1) {
+      return Offset.lerp(ruta[i], ruta[i + 1], tramos[i] == 0 ? 1 : (falta / tramos[i]).clamp(0.0, 1.0))!;
+    }
+    falta -= tramos[i];
+  }
+  return ruta.last;
+}
+
+/// Ficha que se queda en el campo. Cuando cambia su [destino] corre hasta allí pasando por
+/// [via] (las bases intermedias).
+class _FichaEnRuta extends StatefulWidget {
+  const _FichaEnRuta({
+    super.key,
+    required this.destino,
+    required this.via,
+    required this.ancho,
+    required this.limite,
+    required this.tramo,
+    required this.child,
+  });
+
+  /// Centro horizontal y borde de arriba.
+  final Offset destino;
+  final List<Offset> via;
+  final double ancho;
+  final double limite;
+
+  /// Lo que tarda cada tramo (de una base a la siguiente).
+  final Duration tramo;
+  final Widget child;
+
+  @override
+  State<_FichaEnRuta> createState() => _FichaEnRutaState();
+}
+
+class _FichaEnRutaState extends State<_FichaEnRuta> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, value: 1);
+  late List<Offset> _ruta = [widget.destino];
+
+  Offset get _actual => _enRuta(_ruta, Curves.easeInOut.transform(_c.value));
+
+  @override
+  void didUpdateWidget(_FichaEnRuta old) {
+    super.didUpdateWidget(old);
+    if (old.destino == widget.destino) return;
+    _ruta = [_actual, ...widget.via, widget.destino];
+    if (widget.tramo == Duration.zero) {
+      _c.value = 1;
+      return;
+    }
+    _c.duration = widget.tramo * (_ruta.length - 1);
+    _c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, hijo) {
+        final p = _actual;
+        return Positioned(
+          left: (p.dx - widget.ancho / 2).clamp(4.0, widget.limite - widget.ancho - 4),
+          top: p.dy,
+          width: widget.ancho,
+          child: hijo!,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Cara que deja el campo: si anotó corre por [ruta] hasta home y se apaga al llegar; si fue
+/// out ([ruta] de un solo punto) se apaga encogiéndose en su sitio.
+class _FichaQueSeVa extends StatelessWidget {
+  const _FichaQueSeVa({
+    super.key,
+    required this.ruta,
+    required this.ancho,
+    required this.limite,
+    required this.duracion,
+    required this.alTerminar,
+    required this.child,
+  });
+
+  final List<Offset> ruta;
+  final double ancho;
+  final double limite;
+  final Duration duracion;
+  final VoidCallback alTerminar;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final out = ruta.length == 1;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: duracion,
+      onEnd: alTerminar,
+      builder: (_, t, hijo) {
+        final p = _enRuta(ruta, Curves.easeInOut.transform((t / 0.85).clamp(0, 1)));
+        final opacidad = out ? 1 - t : (t < 0.85 ? 1.0 : 1 - (t - 0.85) / 0.15);
+        return Positioned(
+          left: (p.dx - ancho / 2).clamp(4.0, limite - ancho - 4),
+          top: p.dy,
+          width: ancho,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: opacidad.clamp(0, 1),
+              child: Transform.scale(scale: out ? 1 - 0.3 * t : 1, child: hijo),
+            ),
+          ),
+        );
+      },
+      child: ExcludeSemantics(child: child),
+    );
   }
 }
 
@@ -208,11 +572,13 @@ class _EnVivo extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        ),
+        suspendido
+            ? Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              )
+            : const PuntoEnVivo(),
         const SizedBox(width: 5),
         Text(
           suspendido ? 'SUSPENDIDO' : 'EN VIVO',
@@ -234,6 +600,7 @@ class _Ficha extends StatelessWidget {
     this.detalle,
     this.descripcion,
     this.tamanoNombre = 14,
+    this.lineas = 2,
     this.onTap,
   });
 
@@ -245,6 +612,9 @@ class _Ficha extends StatelessWidget {
   final double cara;
   final Color color;
   final double tamanoNombre;
+
+  /// Líneas del nombre (los corredores van en una para que su alto sea fijo).
+  final int lineas;
   final VoidCallback? onTap;
 
   @override
@@ -263,7 +633,10 @@ class _Ficha extends StatelessWidget {
             ),
           ),
         ),
-      Container(
+      // La cara cambia de tamaño con suavidad (por ejemplo, del bate a primera).
+      AnimatedContainer(
+        duration: duracionLbc(context, _corre),
+        curve: Curves.easeInOutCubic,
         width: cara,
         height: cara,
         decoration: BoxDecoration(
@@ -272,7 +645,12 @@ class _Ficha extends StatelessWidget {
           border: Border.all(color: color, width: 3),
           boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 3))],
         ),
-        child: ImagenApi(urlFoto: jugador?.fotoUrl, nombre: nombre, tamano: cara - 6, color: color),
+        child: ClipOval(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: ImagenApi(urlFoto: jugador?.fotoUrl, nombre: nombre, tamano: cara - 6, color: color),
+          ),
+        ),
       ),
       const SizedBox(height: 4),
       Container(
@@ -281,7 +659,7 @@ class _Ficha extends StatelessWidget {
         child: Text(
           nombre,
           textAlign: TextAlign.center,
-          maxLines: 2,
+          maxLines: lineas,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: Colors.white,

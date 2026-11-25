@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../tema/tema_lbc.dart';
+import '../widgets/animaciones.dart';
 import '../widgets/logo_lbc.dart';
 
 /// Barra inferior en móvil y riel lateral en tablet/web. La base es blanca;
@@ -69,13 +70,13 @@ class MarcoNavegacion extends StatelessWidget {
               color: Theme.of(context).colorScheme.outlineVariant
                   .withValues(alpha: 0.7),
             ),
-            Expanded(child: shell),
+            Expanded(child: TransicionPestanas(indice: shell.currentIndex, child: shell)),
           ],
         ),
       );
     }
     return Scaffold(
-      body: shell,
+      body: TransicionPestanas(indice: shell.currentIndex, child: shell),
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLowest,

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/tema/tema_lbc.dart';
+import '../../core/widgets/animaciones.dart';
 import '../../core/widgets/vista_async.dart';
 import '../datos/estadisticas_repositorio.dart';
 import '../datos/juego_repositorio.dart';
@@ -136,9 +137,9 @@ class _Marcador extends StatelessWidget {
     final ganaLocal = p.ganadorId == p.equipoLocal.id;
     final ganaVisita = p.ganadorId == p.equipoVisita.id;
     final estiloCarreras = estiloMarcador(tema.textTheme.displayMedium)?.copyWith(fontSize: 64);
-    Widget carreras(int v, bool gana) => Text(
-          '$v',
-          style: estiloCarreras?.copyWith(
+    Widget carreras(int v, bool gana) => CifraAnimada(
+          v,
+          estilo: estiloCarreras?.copyWith(
             color: gana ? ColoresMarca.amarillo : tinta.withValues(alpha: p.ganadorId == null ? 1 : 0.7),
           ),
         );
@@ -460,7 +461,7 @@ class _JugadaAJugadaState extends State<_JugadaAJugada> {
               child: Text('Todavía no hay jugadas.', style: tema.textTheme.bodySmall),
             ),
           for (final a in lista)
-            Padding(
+            EntradaSuave(key: ValueKey(a.id), child: Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 SizedBox(
@@ -481,7 +482,7 @@ class _JugadaAJugadaState extends State<_JugadaAJugada> {
                   ),
                 ),
               ]),
-            ),
+            )),
         ]),
       ),
     );

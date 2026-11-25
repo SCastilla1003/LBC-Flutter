@@ -7,6 +7,7 @@ import 'core/config/entorno.dart';
 import 'core/router/router.dart';
 import 'core/sesion/sesion.dart';
 import 'core/tema/tema_lbc.dart';
+import 'core/widgets/animaciones.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,8 @@ class LbcApp extends ConsumerWidget {
       supportedLocales: const [Locale('es')],
       localizationsDelegates: _localizaciones,
       routerConfig: ref.watch(routerProvider),
+      // Al abrir la app, el escudo entra rebotando y se desvanece hacia el inicio.
+      builder: (context, child) => PresentacionLbc(child: child ?? const SizedBox.shrink()),
     );
   }
 }

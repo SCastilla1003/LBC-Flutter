@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/config/entorno.dart';
 import '../../core/tema/colores_equipo.dart';
 import '../../core/tema/tema_lbc.dart';
+import '../../core/widgets/animaciones.dart';
 import '../datos/modelos_liga.dart';
 
 String nombreJugador(JugadorResumenLiga j) => '${j.nombres} ${j.apellidos}';
@@ -133,14 +134,7 @@ class ChipEstadoPartido extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (enVivo) ...[
-            Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                color: ColoresMarca.blanco,
-                shape: BoxShape.circle,
-              ),
-            ),
+            const PuntoEnVivo(color: ColoresMarca.blanco),
             const SizedBox(width: 6),
           ],
           Text(

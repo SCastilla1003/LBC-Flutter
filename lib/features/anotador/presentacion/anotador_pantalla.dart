@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/red/fallo_api.dart';
 import '../../../core/sesion/sesion.dart';
 import '../../../core/tema/tema_lbc.dart';
+import '../../../core/widgets/animaciones.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
 import '../../../core/widgets/vista_async.dart';
@@ -433,7 +434,7 @@ class _Tablero extends StatelessWidget {
                 style: estiloMarcador(tema.textTheme.headlineSmall)?.copyWith(color: blanco),
               ),
             ),
-            Text('$carreras', style: estiloMarcador(tema.textTheme.headlineMedium)?.copyWith(color: blanco)),
+            CifraAnimada(carreras, estilo: estiloMarcador(tema.textTheme.headlineMedium)?.copyWith(color: blanco)),
           ]),
         );
 
