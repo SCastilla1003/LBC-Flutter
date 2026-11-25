@@ -161,7 +161,7 @@ class TarjetaPartidoLiga extends StatelessWidget {
         children: [
           Row(
             children: [
-              ChipEstadoPartido(estado: p.estado),
+              ChipEstadoPartido(estado: p.estado, motivo: p.motivo),
               const Spacer(),
               Icon(Icons.schedule_rounded, size: 14, color: esquema.onSurfaceVariant),
               const SizedBox(width: 4),

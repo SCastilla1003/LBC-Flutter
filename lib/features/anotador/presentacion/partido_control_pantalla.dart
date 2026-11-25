@@ -131,7 +131,7 @@ class _ContenidoState extends ConsumerState<_Contenido> {
                   equipo(p.equipoLocal, p.marcador.local, 'Local'),
                 ]),
                 const SizedBox(height: 12),
-                ChipEstadoPartido(estado: p.estado),
+                ChipEstadoPartido(estado: p.estado, motivo: p.motivo),
                 const SizedBox(height: 8),
                 Text(
                   [fecha, ?p.estadio?.nombre].join(' · '),

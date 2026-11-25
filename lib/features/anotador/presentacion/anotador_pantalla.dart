@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/red/fallo_api.dart';
+import '../../../core/sesion/sesion.dart';
 import '../../../core/tema/tema_lbc.dart';
 import '../../../core/widgets/comunes.dart';
 import '../../../core/widgets/estados.dart';
@@ -124,8 +125,42 @@ class _AnotadorPantallaState extends ConsumerState<AnotadorPantalla> {
         ));
   }
 
+  /// Detener el partido: retrasado, pospuesto o cancelado. Lo que pasa después lo decide el
+  /// administrador.
+  Future<void> _detener({bool porEmpate = false}) async {
+    final motivo = await showModalBottomSheet<MotivoDetencion>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _HojaMotivo(porEmpate: porEmpate),
+    );
+    if (motivo == null || !mounted) return;
+    await _hacer(() => _repo.suspender(widget.idPartido, motivo: motivo));
+  }
+
+  /// El administrador continúa el partido detenido o lo deja así.
+  Future<void> _decidir(EstadoJuego e, {required bool continuar}) async {
+    final p = e.partido;
+    final empate = p.marcador.local == p.marcador.visita;
+    final ok = await confirmar(
+      context,
+      titulo: continuar ? 'Continuar el partido' : 'Dejar el partido así',
+      mensaje: continuar
+          ? 'El partido vuelve a estar en vivo desde donde quedó.'
+          : 'El partido se cierra como ${p.motivo?.etiqueta.toLowerCase() ?? 'cancelado'} con '
+              '${p.equipoVisita.abreviatura} ${p.marcador.visita} – ${p.marcador.local} ${p.equipoLocal.abreviatura}.'
+              '${empate ? ' Como va empatado, no cuenta en la tabla de posiciones.' : ''}',
+      accion: continuar ? 'Continuar' : 'Dejar así',
+    );
+    if (ok) await _hacer(() => _repo.decidir(widget.idPartido, continuar: continuar));
+  }
+
   Future<void> _finalizar(EstadoJuego e) async {
     final p = e.partido;
+    // En el béisbol no hay empates: si va igualado, se detiene con su motivo.
+    if (p.marcador.local == p.marcador.visita) {
+      await _detener(porEmpate: true);
+      return;
+    }
     final ok = await confirmar(
       context,
       titulo: 'Finalizar partido',
@@ -144,6 +179,8 @@ class _AnotadorPantallaState extends ConsumerState<AnotadorPantalla> {
     final e = valor.value;
     final enVivo = e?.partido.estado == EstadoPartidoLiga.enJuego;
     final suspendido = e?.partido.estado == EstadoPartidoLiga.suspendido;
+    final conMotivo = e?.partido.motivo != null;
+    final esAdmin = ref.watch(sesionProvider).esAdmin;
     return Scaffold(
       appBar: AppBar(
         title: Text(e == null ? 'Anotador' : '${e.partido.equipoVisita.abreviatura} @ ${e.partido.equipoLocal.abreviatura}'),
@@ -159,16 +196,22 @@ class _AnotadorPantallaState extends ConsumerState<AnotadorPantalla> {
               tooltip: 'Más acciones',
               onSelected: (v) => switch (v) {
                 'cambio' => _cambio(e),
-                'suspender' => _hacer(() => _repo.suspender(widget.idPartido)),
+                'suspender' => _detener(),
                 'reanudar' => _hacer(() => _repo.reanudar(widget.idPartido)),
+                'continuar' => _decidir(e, continuar: true),
+                'dejar' => _decidir(e, continuar: false),
                 'finalizar' => _finalizar(e),
                 _ => null,
               },
               itemBuilder: (_) => [
                 if (enVivo) const PopupMenuItem(value: 'cambio', child: Text('Cambios de jugadores')),
-                if (enVivo) const PopupMenuItem(value: 'suspender', child: Text('Suspender partido')),
-                if (suspendido) const PopupMenuItem(value: 'reanudar', child: Text('Reanudar partido')),
-                const PopupMenuItem(value: 'finalizar', child: Text('Finalizar partido')),
+                if (enVivo) const PopupMenuItem(value: 'suspender', child: Text('Detener partido')),
+                if (suspendido && !conMotivo) const PopupMenuItem(value: 'reanudar', child: Text('Reanudar partido')),
+                if (suspendido && conMotivo && esAdmin)
+                  const PopupMenuItem(value: 'continuar', child: Text('Continuar el partido')),
+                if (suspendido && conMotivo && esAdmin)
+                  const PopupMenuItem(value: 'dejar', child: Text('Dejar el partido así')),
+                if (!conMotivo) const PopupMenuItem(value: 'finalizar', child: Text('Finalizar partido')),
               ],
             ),
         ],
@@ -185,6 +228,8 @@ class _AnotadorPantallaState extends ConsumerState<AnotadorPantalla> {
             alJugada: (r, {ajustar = false}) => _jugada(e, r, ajustar: ajustar),
             alCambio: () => _cambio(e),
             alReanudar: () => _hacer(() => _repo.reanudar(widget.idPartido)),
+            esAdmin: esAdmin,
+            alDecidir: (continuar) => _decidir(e, continuar: continuar),
           ),
           if (_ocupado) const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator(minHeight: 3)),
         ]),
@@ -201,6 +246,8 @@ class _Cuerpo extends StatelessWidget {
     required this.alJugada,
     required this.alCambio,
     required this.alReanudar,
+    this.esAdmin = false,
+    this.alDecidir,
   });
 
   final EstadoJuego estado;
@@ -209,6 +256,8 @@ class _Cuerpo extends StatelessWidget {
   final void Function(ResultadoJugada r, {bool ajustar}) alJugada;
   final VoidCallback alCambio;
   final VoidCallback alReanudar;
+  final bool esAdmin;
+  final ValueChanged<bool>? alDecidir;
 
   @override
   Widget build(BuildContext context) {
@@ -246,11 +295,39 @@ class _Cuerpo extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             _Tablero(estado: e),
             const SizedBox(height: 12),
-            if (p.estado == EstadoPartidoLiga.finalizado)
+            if (p.estado == EstadoPartidoLiga.finalizado) ...[
+              if (p.finalEspecial != null) ...[
+                LetreroWalkOff(finalEspecial: p.finalEspecial!, equipo: p.equipoLocal.nombre),
+                const SizedBox(height: 10),
+              ],
               _Banda(
                 icono: Icons.flag_rounded,
-                texto: 'Partido finalizado. Si hubo un error en la última jugada, usa deshacer (arriba).',
-              )
+                texto: p.motivo != null
+                    ? 'Partido ${p.motivo!.etiqueta.toLowerCase()}: el administrador lo dejó así.'
+                    : 'Partido finalizado. Si hubo un error en la última jugada, usa deshacer (arriba).',
+              ),
+            ] else if (p.estado == EstadoPartidoLiga.suspendido && p.motivo != null)
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                _Banda(
+                  icono: Icons.pause_circle_rounded,
+                  texto: 'Partido ${p.motivo!.etiqueta.toLowerCase()}. '
+                      '${esAdmin ? '¿Continúa el partido o se deja así?' : 'El administrador decidirá si continúa o se deja así.'}',
+                ),
+                if (esAdmin) ...[
+                  const SizedBox(height: 8),
+                  FilledButton.icon(
+                    onPressed: ocupado ? null : () => alDecidir?.call(true),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Continuar el partido'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: ocupado ? null : () => alDecidir?.call(false),
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    label: const Text('Dejarlo así'),
+                  ),
+                ],
+              ])
             else if (p.estado == EstadoPartidoLiga.suspendido)
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const _Banda(icono: Icons.pause_circle_rounded, texto: 'Partido suspendido.'),
@@ -502,6 +579,50 @@ class _BotonJugada extends StatelessWidget {
           child: Text(texto, maxLines: 1, overflow: TextOverflow.ellipsis, style: tema.textTheme.labelLarge),
         ),
       ]),
+    );
+  }
+}
+
+/// Por qué se detiene el partido: retrasado, pospuesto o cancelado.
+class _HojaMotivo extends StatelessWidget {
+  const _HojaMotivo({required this.porEmpate});
+
+  /// Se abrió al intentar finalizar con el marcador empatado.
+  final bool porEmpate;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(porEmpate ? 'En el béisbol no hay empates' : 'Detener partido', style: tema.textTheme.titleLarge),
+          const SizedBox(height: 6),
+          Text(
+            porEmpate
+                ? 'El partido va empatado, así que no se puede finalizar. ¿Por qué se detiene? '
+                    'Luego el administrador decide si continúa o se deja así.'
+                : '¿Por qué se detiene? Luego el administrador decide si continúa o se deja así.',
+            style: tema.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          for (final (m, icono) in [
+            (MotivoDetencion.retrasado, Icons.schedule_rounded),
+            (MotivoDetencion.pospuesto, Icons.event_repeat_rounded),
+            (MotivoDetencion.cancelado, Icons.cancel_outlined),
+          ])
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(icono, color: tema.colorScheme.primary),
+                title: Text(m.etiqueta, style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: Text(m.descripcion),
+                onTap: () => Navigator.pop(context, m),
+              ),
+            ),
+        ]),
+      ),
     );
   }
 }

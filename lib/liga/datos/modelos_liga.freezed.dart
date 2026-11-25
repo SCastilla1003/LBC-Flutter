@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TemporadaLiga {
 
- int get id; String get nombre; int get anio; EstadoTemporadaLiga get estado; DateTime? get fechaInicio; DateTime? get fechaFin;
+ int get id; String get nombre; int get anio; EstadoTemporadaLiga get estado; DateTime? get fechaInicio; DateTime? get fechaFin;/// Bases (1..3) con corredor automático en cada entrada extra (muerte súbita).
+ List<int> get basesMuerteSubita;
 /// Create a copy of TemporadaLiga
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $TemporadaLigaCopyWith<TemporadaLiga> get copyWith => _$TemporadaLigaCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as TemporadaLiga;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TemporadaLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombre, _this.nombre) || other.nombre == _this.nombre)&&(identical(other.anio, _this.anio) || other.anio == _this.anio)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.fechaInicio, _this.fechaInicio) || other.fechaInicio == _this.fechaInicio)&&(identical(other.fechaFin, _this.fechaFin) || other.fechaFin == _this.fechaFin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TemporadaLiga&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nombre, _this.nombre) || other.nombre == _this.nombre)&&(identical(other.anio, _this.anio) || other.anio == _this.anio)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.fechaInicio, _this.fechaInicio) || other.fechaInicio == _this.fechaInicio)&&(identical(other.fechaFin, _this.fechaFin) || other.fechaFin == _this.fechaFin)&&const DeepCollectionEquality().equals(other.basesMuerteSubita, _this.basesMuerteSubita));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as TemporadaLiga;
-  return Object.hash(runtimeType,_this.id,_this.nombre,_this.anio,_this.estado,_this.fechaInicio,_this.fechaFin);
+  return Object.hash(runtimeType,_this.id,_this.nombre,_this.anio,_this.estado,_this.fechaInicio,_this.fechaFin,const DeepCollectionEquality().hash(_this.basesMuerteSubita));
 }
 
 @override
 String toString() {
   final _this = this as TemporadaLiga;
-  return 'TemporadaLiga(id: ${_this.id}, nombre: ${_this.nombre}, anio: ${_this.anio}, estado: ${_this.estado}, fechaInicio: ${_this.fechaInicio}, fechaFin: ${_this.fechaFin})';
+  return 'TemporadaLiga(id: ${_this.id}, nombre: ${_this.nombre}, anio: ${_this.anio}, estado: ${_this.estado}, fechaInicio: ${_this.fechaInicio}, fechaFin: ${_this.fechaFin}, basesMuerteSubita: ${_this.basesMuerteSubita})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $TemporadaLigaCopyWith<$Res>  {
   factory $TemporadaLigaCopyWith(TemporadaLiga value, $Res Function(TemporadaLiga) _then) = _$TemporadaLigaCopyWithImpl;
 @useResult
 $Res call({
- int id, String nombre, int anio, EstadoTemporadaLiga estado, DateTime? fechaInicio, DateTime? fechaFin
+ int id, String nombre, int anio, EstadoTemporadaLiga estado, DateTime? fechaInicio, DateTime? fechaFin, List<int> basesMuerteSubita
 });
 
 
@@ -71,7 +72,7 @@ class _$TemporadaLigaCopyWithImpl<$Res>
 
 /// Create a copy of TemporadaLiga
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombre = null,Object? anio = null,Object? estado = null,Object? fechaInicio = freezed,Object? fechaFin = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nombre = null,Object? anio = null,Object? estado = null,Object? fechaInicio = freezed,Object? fechaFin = freezed,Object? basesMuerteSubita = null,}) {
   return _then(TemporadaLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombre: null == nombre ? _self.nombre : nombre // ignore: cast_nullable_to_non_nullable
@@ -79,7 +80,8 @@ as String,anio: null == anio ? _self.anio : anio // ignore: cast_nullable_to_non
 as int,estado: null == estado ? _self.estado : estado // ignore: cast_nullable_to_non_nullable
 as EstadoTemporadaLiga,fechaInicio: freezed == fechaInicio ? _self.fechaInicio : fechaInicio // ignore: cast_nullable_to_non_nullable
 as DateTime?,fechaFin: freezed == fechaFin ? _self.fechaFin : fechaFin // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,basesMuerteSubita: null == basesMuerteSubita ? _self.basesMuerteSubita : basesMuerteSubita // ignore: cast_nullable_to_non_nullable
+as List<int>,
   ));
 }
 
@@ -164,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin,  List<int> basesMuerteSubita)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TemporadaLiga() when $default != null:
-return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin);case _:
+return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin,_that.basesMuerteSubita);case _:
   return orElse();
 
 }
@@ -185,10 +187,10 @@ return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin,  List<int> basesMuerteSubita)  $default,) {final _that = this;
 switch (_that) {
 case _TemporadaLiga():
-return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin);case _:
+return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin,_that.basesMuerteSubita);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +207,10 @@ return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nombre,  int anio,  EstadoTemporadaLiga estado,  DateTime? fechaInicio,  DateTime? fechaFin,  List<int> basesMuerteSubita)?  $default,) {final _that = this;
 switch (_that) {
 case _TemporadaLiga() when $default != null:
-return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin);case _:
+return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,_that.fechaFin,_that.basesMuerteSubita);case _:
   return null;
 
 }
@@ -220,7 +222,7 @@ return $default(_that.id,_that.nombre,_that.anio,_that.estado,_that.fechaInicio,
 @JsonSerializable()
 
 class _TemporadaLiga implements TemporadaLiga {
-  const _TemporadaLiga({required this.id, required this.nombre, required this.anio, this.estado = EstadoTemporadaLiga.borrador, this.fechaInicio, this.fechaFin});
+  const _TemporadaLiga({required this.id, required this.nombre, required this.anio, this.estado = EstadoTemporadaLiga.borrador, this.fechaInicio, this.fechaFin,  List<int> basesMuerteSubita = const <int>[2]}): _basesMuerteSubita = basesMuerteSubita;
   factory _TemporadaLiga.fromJson(Map<String, dynamic> json) => _$TemporadaLigaFromJson(json);
 
 @override final  int id;
@@ -229,6 +231,15 @@ class _TemporadaLiga implements TemporadaLiga {
 @override@JsonKey() final  EstadoTemporadaLiga estado;
 @override final  DateTime? fechaInicio;
 @override final  DateTime? fechaFin;
+/// Bases (1..3) con corredor automático en cada entrada extra (muerte súbita).
+ final  List<int> _basesMuerteSubita;
+/// Bases (1..3) con corredor automático en cada entrada extra (muerte súbita).
+@override@JsonKey() List<int> get basesMuerteSubita {
+  if (_basesMuerteSubita is EqualUnmodifiableListView) return _basesMuerteSubita;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_basesMuerteSubita);
+}
+
 
 /// Create a copy of TemporadaLiga
 /// with the given fields replaced by the non-null parameter values.
@@ -243,18 +254,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TemporadaLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombre, nombre) || other.nombre == nombre)&&(identical(other.anio, anio) || other.anio == anio)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.fechaInicio, fechaInicio) || other.fechaInicio == fechaInicio)&&(identical(other.fechaFin, fechaFin) || other.fechaFin == fechaFin));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TemporadaLiga&&(identical(other.id, id) || other.id == id)&&(identical(other.nombre, nombre) || other.nombre == nombre)&&(identical(other.anio, anio) || other.anio == anio)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.fechaInicio, fechaInicio) || other.fechaInicio == fechaInicio)&&(identical(other.fechaFin, fechaFin) || other.fechaFin == fechaFin)&&const DeepCollectionEquality().equals(other.basesMuerteSubita, _basesMuerteSubita));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,nombre,anio,estado,fechaInicio,fechaFin);
+    return Object.hash(runtimeType,id,nombre,anio,estado,fechaInicio,fechaFin,const DeepCollectionEquality().hash(_basesMuerteSubita));
 }
 
 @override
 String toString() {
-    return 'TemporadaLiga(id: $id, nombre: $nombre, anio: $anio, estado: $estado, fechaInicio: $fechaInicio, fechaFin: $fechaFin)';
+    return 'TemporadaLiga(id: $id, nombre: $nombre, anio: $anio, estado: $estado, fechaInicio: $fechaInicio, fechaFin: $fechaFin, basesMuerteSubita: $basesMuerteSubita)';
 }
 
 
@@ -265,7 +276,7 @@ abstract mixin class _$TemporadaLigaCopyWith<$Res> implements $TemporadaLigaCopy
   factory _$TemporadaLigaCopyWith(_TemporadaLiga value, $Res Function(_TemporadaLiga) _then) = __$TemporadaLigaCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nombre, int anio, EstadoTemporadaLiga estado, DateTime? fechaInicio, DateTime? fechaFin
+ int id, String nombre, int anio, EstadoTemporadaLiga estado, DateTime? fechaInicio, DateTime? fechaFin, List<int> basesMuerteSubita
 });
 
 
@@ -282,7 +293,7 @@ class __$TemporadaLigaCopyWithImpl<$Res>
 
 /// Create a copy of TemporadaLiga
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombre = null,Object? anio = null,Object? estado = null,Object? fechaInicio = freezed,Object? fechaFin = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nombre = null,Object? anio = null,Object? estado = null,Object? fechaInicio = freezed,Object? fechaFin = freezed,Object? basesMuerteSubita = null,}) {
   return _then(_TemporadaLiga(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nombre: null == nombre ? _self.nombre : nombre // ignore: cast_nullable_to_non_nullable
@@ -290,7 +301,8 @@ as String,anio: null == anio ? _self.anio : anio // ignore: cast_nullable_to_non
 as int,estado: null == estado ? _self.estado : estado // ignore: cast_nullable_to_non_nullable
 as EstadoTemporadaLiga,fechaInicio: freezed == fechaInicio ? _self.fechaInicio : fechaInicio // ignore: cast_nullable_to_non_nullable
 as DateTime?,fechaFin: freezed == fechaFin ? _self.fechaFin : fechaFin // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,basesMuerteSubita: null == basesMuerteSubita ? _self._basesMuerteSubita : basesMuerteSubita // ignore: cast_nullable_to_non_nullable
+as List<int>,
   ));
 }
 
@@ -3434,7 +3446,7 @@ as String?,
 /// @nodoc
 mixin _$PartidoResumen {
 
- int get id; int get temporadaId; DateTime get fechaHora; EstadoPartidoLiga get estado; EstadioRefLiga? get estadio; EquipoRefLiga get equipoLocal; EquipoRefLiga get equipoVisita; ParLocalVisita get marcador; int? get ganadorId;
+ int get id; int get temporadaId; DateTime get fechaHora; EstadoPartidoLiga get estado; EstadioRefLiga? get estadio; EquipoRefLiga get equipoLocal; EquipoRefLiga get equipoVisita; ParLocalVisita get marcador; int? get ganadorId;@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? get motivo;@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? get finalEspecial;
 /// Create a copy of PartidoResumen
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3448,20 +3460,20 @@ $PartidoResumenCopyWith<PartidoResumen> get copyWith => _$PartidoResumenCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as PartidoResumen;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartidoResumen&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.temporadaId, _this.temporadaId) || other.temporadaId == _this.temporadaId)&&(identical(other.fechaHora, _this.fechaHora) || other.fechaHora == _this.fechaHora)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.estadio, _this.estadio) || other.estadio == _this.estadio)&&(identical(other.equipoLocal, _this.equipoLocal) || other.equipoLocal == _this.equipoLocal)&&(identical(other.equipoVisita, _this.equipoVisita) || other.equipoVisita == _this.equipoVisita)&&(identical(other.marcador, _this.marcador) || other.marcador == _this.marcador)&&(identical(other.ganadorId, _this.ganadorId) || other.ganadorId == _this.ganadorId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartidoResumen&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.temporadaId, _this.temporadaId) || other.temporadaId == _this.temporadaId)&&(identical(other.fechaHora, _this.fechaHora) || other.fechaHora == _this.fechaHora)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.estadio, _this.estadio) || other.estadio == _this.estadio)&&(identical(other.equipoLocal, _this.equipoLocal) || other.equipoLocal == _this.equipoLocal)&&(identical(other.equipoVisita, _this.equipoVisita) || other.equipoVisita == _this.equipoVisita)&&(identical(other.marcador, _this.marcador) || other.marcador == _this.marcador)&&(identical(other.ganadorId, _this.ganadorId) || other.ganadorId == _this.ganadorId)&&(identical(other.motivo, _this.motivo) || other.motivo == _this.motivo)&&(identical(other.finalEspecial, _this.finalEspecial) || other.finalEspecial == _this.finalEspecial));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PartidoResumen;
-  return Object.hash(runtimeType,_this.id,_this.temporadaId,_this.fechaHora,_this.estado,_this.estadio,_this.equipoLocal,_this.equipoVisita,_this.marcador,_this.ganadorId);
+  return Object.hash(runtimeType,_this.id,_this.temporadaId,_this.fechaHora,_this.estado,_this.estadio,_this.equipoLocal,_this.equipoVisita,_this.marcador,_this.ganadorId,_this.motivo,_this.finalEspecial);
 }
 
 @override
 String toString() {
   final _this = this as PartidoResumen;
-  return 'PartidoResumen(id: ${_this.id}, temporadaId: ${_this.temporadaId}, fechaHora: ${_this.fechaHora}, estado: ${_this.estado}, estadio: ${_this.estadio}, equipoLocal: ${_this.equipoLocal}, equipoVisita: ${_this.equipoVisita}, marcador: ${_this.marcador}, ganadorId: ${_this.ganadorId})';
+  return 'PartidoResumen(id: ${_this.id}, temporadaId: ${_this.temporadaId}, fechaHora: ${_this.fechaHora}, estado: ${_this.estado}, estadio: ${_this.estadio}, equipoLocal: ${_this.equipoLocal}, equipoVisita: ${_this.equipoVisita}, marcador: ${_this.marcador}, ganadorId: ${_this.ganadorId}, motivo: ${_this.motivo}, finalEspecial: ${_this.finalEspecial})';
 }
 
 
@@ -3472,7 +3484,7 @@ abstract mixin class $PartidoResumenCopyWith<$Res>  {
   factory $PartidoResumenCopyWith(PartidoResumen value, $Res Function(PartidoResumen) _then) = _$PartidoResumenCopyWithImpl;
 @useResult
 $Res call({
- int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId
+ int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial
 });
 
 
@@ -3489,7 +3501,7 @@ class _$PartidoResumenCopyWithImpl<$Res>
 
 /// Create a copy of PartidoResumen
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? motivo = freezed,Object? finalEspecial = freezed,}) {
   return _then(PartidoResumen(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,temporadaId: null == temporadaId ? _self.temporadaId : temporadaId // ignore: cast_nullable_to_non_nullable
@@ -3500,7 +3512,9 @@ as EstadioRefLiga?,equipoLocal: null == equipoLocal ? _self.equipoLocal : equipo
 as EquipoRefLiga,equipoVisita: null == equipoVisita ? _self.equipoVisita : equipoVisita // ignore: cast_nullable_to_non_nullable
 as EquipoRefLiga,marcador: null == marcador ? _self.marcador : marcador // ignore: cast_nullable_to_non_nullable
 as ParLocalVisita,ganadorId: freezed == ganadorId ? _self.ganadorId : ganadorId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,motivo: freezed == motivo ? _self.motivo : motivo // ignore: cast_nullable_to_non_nullable
+as MotivoDetencion?,finalEspecial: freezed == finalEspecial ? _self.finalEspecial : finalEspecial // ignore: cast_nullable_to_non_nullable
+as FinalEspecial?,
   ));
 }
 /// Create a copy of PartidoResumen
@@ -3624,10 +3638,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartidoResumen() when $default != null:
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.motivo,_that.finalEspecial);case _:
   return orElse();
 
 }
@@ -3645,10 +3659,10 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)  $default,) {final _that = this;
 switch (_that) {
 case _PartidoResumen():
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.motivo,_that.finalEspecial);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3665,10 +3679,10 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)?  $default,) {final _that = this;
 switch (_that) {
 case _PartidoResumen() when $default != null:
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.motivo,_that.finalEspecial);case _:
   return null;
 
 }
@@ -3680,7 +3694,7 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 @JsonSerializable()
 
 class _PartidoResumen implements PartidoResumen {
-  const _PartidoResumen({required this.id, required this.temporadaId, required this.fechaHora, required this.estado, this.estadio, required this.equipoLocal, required this.equipoVisita, required this.marcador, this.ganadorId});
+  const _PartidoResumen({required this.id, required this.temporadaId, required this.fechaHora, required this.estado, this.estadio, required this.equipoLocal, required this.equipoVisita, required this.marcador, this.ganadorId, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) this.motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) this.finalEspecial});
   factory _PartidoResumen.fromJson(Map<String, dynamic> json) => _$PartidoResumenFromJson(json);
 
 @override final  int id;
@@ -3692,6 +3706,8 @@ class _PartidoResumen implements PartidoResumen {
 @override final  EquipoRefLiga equipoVisita;
 @override final  ParLocalVisita marcador;
 @override final  int? ganadorId;
+@override@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) final  MotivoDetencion? motivo;
+@override@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) final  FinalEspecial? finalEspecial;
 
 /// Create a copy of PartidoResumen
 /// with the given fields replaced by the non-null parameter values.
@@ -3706,18 +3722,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartidoResumen&&(identical(other.id, id) || other.id == id)&&(identical(other.temporadaId, temporadaId) || other.temporadaId == temporadaId)&&(identical(other.fechaHora, fechaHora) || other.fechaHora == fechaHora)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.estadio, estadio) || other.estadio == estadio)&&(identical(other.equipoLocal, equipoLocal) || other.equipoLocal == equipoLocal)&&(identical(other.equipoVisita, equipoVisita) || other.equipoVisita == equipoVisita)&&(identical(other.marcador, marcador) || other.marcador == marcador)&&(identical(other.ganadorId, ganadorId) || other.ganadorId == ganadorId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartidoResumen&&(identical(other.id, id) || other.id == id)&&(identical(other.temporadaId, temporadaId) || other.temporadaId == temporadaId)&&(identical(other.fechaHora, fechaHora) || other.fechaHora == fechaHora)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.estadio, estadio) || other.estadio == estadio)&&(identical(other.equipoLocal, equipoLocal) || other.equipoLocal == equipoLocal)&&(identical(other.equipoVisita, equipoVisita) || other.equipoVisita == equipoVisita)&&(identical(other.marcador, marcador) || other.marcador == marcador)&&(identical(other.ganadorId, ganadorId) || other.ganadorId == ganadorId)&&(identical(other.motivo, motivo) || other.motivo == motivo)&&(identical(other.finalEspecial, finalEspecial) || other.finalEspecial == finalEspecial));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,temporadaId,fechaHora,estado,estadio,equipoLocal,equipoVisita,marcador,ganadorId);
+    return Object.hash(runtimeType,id,temporadaId,fechaHora,estado,estadio,equipoLocal,equipoVisita,marcador,ganadorId,motivo,finalEspecial);
 }
 
 @override
 String toString() {
-    return 'PartidoResumen(id: $id, temporadaId: $temporadaId, fechaHora: $fechaHora, estado: $estado, estadio: $estadio, equipoLocal: $equipoLocal, equipoVisita: $equipoVisita, marcador: $marcador, ganadorId: $ganadorId)';
+    return 'PartidoResumen(id: $id, temporadaId: $temporadaId, fechaHora: $fechaHora, estado: $estado, estadio: $estadio, equipoLocal: $equipoLocal, equipoVisita: $equipoVisita, marcador: $marcador, ganadorId: $ganadorId, motivo: $motivo, finalEspecial: $finalEspecial)';
 }
 
 
@@ -3728,7 +3744,7 @@ abstract mixin class _$PartidoResumenCopyWith<$Res> implements $PartidoResumenCo
   factory _$PartidoResumenCopyWith(_PartidoResumen value, $Res Function(_PartidoResumen) _then) = __$PartidoResumenCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId
+ int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial
 });
 
 
@@ -3745,7 +3761,7 @@ class __$PartidoResumenCopyWithImpl<$Res>
 
 /// Create a copy of PartidoResumen
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? motivo = freezed,Object? finalEspecial = freezed,}) {
   return _then(_PartidoResumen(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,temporadaId: null == temporadaId ? _self.temporadaId : temporadaId // ignore: cast_nullable_to_non_nullable
@@ -3756,7 +3772,9 @@ as EstadioRefLiga?,equipoLocal: null == equipoLocal ? _self.equipoLocal : equipo
 as EquipoRefLiga,equipoVisita: null == equipoVisita ? _self.equipoVisita : equipoVisita // ignore: cast_nullable_to_non_nullable
 as EquipoRefLiga,marcador: null == marcador ? _self.marcador : marcador // ignore: cast_nullable_to_non_nullable
 as ParLocalVisita,ganadorId: freezed == ganadorId ? _self.ganadorId : ganadorId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,motivo: freezed == motivo ? _self.motivo : motivo // ignore: cast_nullable_to_non_nullable
+as MotivoDetencion?,finalEspecial: freezed == finalEspecial ? _self.finalEspecial : finalEspecial // ignore: cast_nullable_to_non_nullable
+as FinalEspecial?,
   ));
 }
 
@@ -4511,7 +4529,7 @@ $CorredoresLigaCopyWith<$Res>? get corredores {
 /// @nodoc
 mixin _$PartidoDetalle {
 
- int get id; int get temporadaId; DateTime get fechaHora; EstadoPartidoLiga get estado; EstadioRefLiga? get estadio; EquipoRefLiga get equipoLocal; EquipoRefLiga get equipoVisita; ParLocalVisita get marcador; int? get ganadorId; int get entradasProgramadas; int get entradaActual; MitadEntrada get mitad; SituacionLiga? get situacion; ParLocalVisita get hits; ParLocalVisita get errores; LineScore get lineScore; int? get version;
+ int get id; int get temporadaId; DateTime get fechaHora; EstadoPartidoLiga get estado; EstadioRefLiga? get estadio; EquipoRefLiga get equipoLocal; EquipoRefLiga get equipoVisita; ParLocalVisita get marcador; int? get ganadorId; int get entradasProgramadas; int get entradaActual; MitadEntrada get mitad; SituacionLiga? get situacion; ParLocalVisita get hits; ParLocalVisita get errores; LineScore get lineScore; int? get version;@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? get motivo;@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? get finalEspecial;
 /// Create a copy of PartidoDetalle
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4525,20 +4543,20 @@ $PartidoDetalleCopyWith<PartidoDetalle> get copyWith => _$PartidoDetalleCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as PartidoDetalle;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartidoDetalle&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.temporadaId, _this.temporadaId) || other.temporadaId == _this.temporadaId)&&(identical(other.fechaHora, _this.fechaHora) || other.fechaHora == _this.fechaHora)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.estadio, _this.estadio) || other.estadio == _this.estadio)&&(identical(other.equipoLocal, _this.equipoLocal) || other.equipoLocal == _this.equipoLocal)&&(identical(other.equipoVisita, _this.equipoVisita) || other.equipoVisita == _this.equipoVisita)&&(identical(other.marcador, _this.marcador) || other.marcador == _this.marcador)&&(identical(other.ganadorId, _this.ganadorId) || other.ganadorId == _this.ganadorId)&&(identical(other.entradasProgramadas, _this.entradasProgramadas) || other.entradasProgramadas == _this.entradasProgramadas)&&(identical(other.entradaActual, _this.entradaActual) || other.entradaActual == _this.entradaActual)&&(identical(other.mitad, _this.mitad) || other.mitad == _this.mitad)&&(identical(other.situacion, _this.situacion) || other.situacion == _this.situacion)&&(identical(other.hits, _this.hits) || other.hits == _this.hits)&&(identical(other.errores, _this.errores) || other.errores == _this.errores)&&(identical(other.lineScore, _this.lineScore) || other.lineScore == _this.lineScore)&&(identical(other.version, _this.version) || other.version == _this.version));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartidoDetalle&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.temporadaId, _this.temporadaId) || other.temporadaId == _this.temporadaId)&&(identical(other.fechaHora, _this.fechaHora) || other.fechaHora == _this.fechaHora)&&(identical(other.estado, _this.estado) || other.estado == _this.estado)&&(identical(other.estadio, _this.estadio) || other.estadio == _this.estadio)&&(identical(other.equipoLocal, _this.equipoLocal) || other.equipoLocal == _this.equipoLocal)&&(identical(other.equipoVisita, _this.equipoVisita) || other.equipoVisita == _this.equipoVisita)&&(identical(other.marcador, _this.marcador) || other.marcador == _this.marcador)&&(identical(other.ganadorId, _this.ganadorId) || other.ganadorId == _this.ganadorId)&&(identical(other.entradasProgramadas, _this.entradasProgramadas) || other.entradasProgramadas == _this.entradasProgramadas)&&(identical(other.entradaActual, _this.entradaActual) || other.entradaActual == _this.entradaActual)&&(identical(other.mitad, _this.mitad) || other.mitad == _this.mitad)&&(identical(other.situacion, _this.situacion) || other.situacion == _this.situacion)&&(identical(other.hits, _this.hits) || other.hits == _this.hits)&&(identical(other.errores, _this.errores) || other.errores == _this.errores)&&(identical(other.lineScore, _this.lineScore) || other.lineScore == _this.lineScore)&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.motivo, _this.motivo) || other.motivo == _this.motivo)&&(identical(other.finalEspecial, _this.finalEspecial) || other.finalEspecial == _this.finalEspecial));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PartidoDetalle;
-  return Object.hash(runtimeType,_this.id,_this.temporadaId,_this.fechaHora,_this.estado,_this.estadio,_this.equipoLocal,_this.equipoVisita,_this.marcador,_this.ganadorId,_this.entradasProgramadas,_this.entradaActual,_this.mitad,_this.situacion,_this.hits,_this.errores,_this.lineScore,_this.version);
+  return Object.hashAll([runtimeType,_this.id,_this.temporadaId,_this.fechaHora,_this.estado,_this.estadio,_this.equipoLocal,_this.equipoVisita,_this.marcador,_this.ganadorId,_this.entradasProgramadas,_this.entradaActual,_this.mitad,_this.situacion,_this.hits,_this.errores,_this.lineScore,_this.version,_this.motivo,_this.finalEspecial]);
 }
 
 @override
 String toString() {
   final _this = this as PartidoDetalle;
-  return 'PartidoDetalle(id: ${_this.id}, temporadaId: ${_this.temporadaId}, fechaHora: ${_this.fechaHora}, estado: ${_this.estado}, estadio: ${_this.estadio}, equipoLocal: ${_this.equipoLocal}, equipoVisita: ${_this.equipoVisita}, marcador: ${_this.marcador}, ganadorId: ${_this.ganadorId}, entradasProgramadas: ${_this.entradasProgramadas}, entradaActual: ${_this.entradaActual}, mitad: ${_this.mitad}, situacion: ${_this.situacion}, hits: ${_this.hits}, errores: ${_this.errores}, lineScore: ${_this.lineScore}, version: ${_this.version})';
+  return 'PartidoDetalle(id: ${_this.id}, temporadaId: ${_this.temporadaId}, fechaHora: ${_this.fechaHora}, estado: ${_this.estado}, estadio: ${_this.estadio}, equipoLocal: ${_this.equipoLocal}, equipoVisita: ${_this.equipoVisita}, marcador: ${_this.marcador}, ganadorId: ${_this.ganadorId}, entradasProgramadas: ${_this.entradasProgramadas}, entradaActual: ${_this.entradaActual}, mitad: ${_this.mitad}, situacion: ${_this.situacion}, hits: ${_this.hits}, errores: ${_this.errores}, lineScore: ${_this.lineScore}, version: ${_this.version}, motivo: ${_this.motivo}, finalEspecial: ${_this.finalEspecial})';
 }
 
 
@@ -4549,7 +4567,7 @@ abstract mixin class $PartidoDetalleCopyWith<$Res>  {
   factory $PartidoDetalleCopyWith(PartidoDetalle value, $Res Function(PartidoDetalle) _then) = _$PartidoDetalleCopyWithImpl;
 @useResult
 $Res call({
- int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId, int entradasProgramadas, int entradaActual, MitadEntrada mitad, SituacionLiga? situacion, ParLocalVisita hits, ParLocalVisita errores, LineScore lineScore, int? version
+ int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId, int entradasProgramadas, int entradaActual, MitadEntrada mitad, SituacionLiga? situacion, ParLocalVisita hits, ParLocalVisita errores, LineScore lineScore, int? version,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial
 });
 
 
@@ -4566,7 +4584,7 @@ class _$PartidoDetalleCopyWithImpl<$Res>
 
 /// Create a copy of PartidoDetalle
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? entradasProgramadas = null,Object? entradaActual = null,Object? mitad = null,Object? situacion = freezed,Object? hits = null,Object? errores = null,Object? lineScore = null,Object? version = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? entradasProgramadas = null,Object? entradaActual = null,Object? mitad = null,Object? situacion = freezed,Object? hits = null,Object? errores = null,Object? lineScore = null,Object? version = freezed,Object? motivo = freezed,Object? finalEspecial = freezed,}) {
   return _then(PartidoDetalle(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,temporadaId: null == temporadaId ? _self.temporadaId : temporadaId // ignore: cast_nullable_to_non_nullable
@@ -4585,7 +4603,9 @@ as SituacionLiga?,hits: null == hits ? _self.hits : hits // ignore: cast_nullabl
 as ParLocalVisita,errores: null == errores ? _self.errores : errores // ignore: cast_nullable_to_non_nullable
 as ParLocalVisita,lineScore: null == lineScore ? _self.lineScore : lineScore // ignore: cast_nullable_to_non_nullable
 as LineScore,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,motivo: freezed == motivo ? _self.motivo : motivo // ignore: cast_nullable_to_non_nullable
+as MotivoDetencion?,finalEspecial: freezed == finalEspecial ? _self.finalEspecial : finalEspecial // ignore: cast_nullable_to_non_nullable
+as FinalEspecial?,
   ));
 }
 /// Create a copy of PartidoDetalle
@@ -4748,10 +4768,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartidoDetalle() when $default != null:
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version,_that.motivo,_that.finalEspecial);case _:
   return orElse();
 
 }
@@ -4769,10 +4789,10 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)  $default,) {final _that = this;
 switch (_that) {
 case _PartidoDetalle():
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version,_that.motivo,_that.finalEspecial);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -4789,10 +4809,10 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int temporadaId,  DateTime fechaHora,  EstadoPartidoLiga estado,  EstadioRefLiga? estadio,  EquipoRefLiga equipoLocal,  EquipoRefLiga equipoVisita,  ParLocalVisita marcador,  int? ganadorId,  int entradasProgramadas,  int entradaActual,  MitadEntrada mitad,  SituacionLiga? situacion,  ParLocalVisita hits,  ParLocalVisita errores,  LineScore lineScore,  int? version, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  MotivoDetencion? motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)  FinalEspecial? finalEspecial)?  $default,) {final _that = this;
 switch (_that) {
 case _PartidoDetalle() when $default != null:
-return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version);case _:
+return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.estadio,_that.equipoLocal,_that.equipoVisita,_that.marcador,_that.ganadorId,_that.entradasProgramadas,_that.entradaActual,_that.mitad,_that.situacion,_that.hits,_that.errores,_that.lineScore,_that.version,_that.motivo,_that.finalEspecial);case _:
   return null;
 
 }
@@ -4804,7 +4824,7 @@ return $default(_that.id,_that.temporadaId,_that.fechaHora,_that.estado,_that.es
 @JsonSerializable()
 
 class _PartidoDetalle implements PartidoDetalle {
-  const _PartidoDetalle({required this.id, required this.temporadaId, required this.fechaHora, required this.estado, this.estadio, required this.equipoLocal, required this.equipoVisita, required this.marcador, this.ganadorId, required this.entradasProgramadas, required this.entradaActual, this.mitad = MitadEntrada.alta, this.situacion, this.hits = const ParLocalVisita(), this.errores = const ParLocalVisita(), required this.lineScore, this.version});
+  const _PartidoDetalle({required this.id, required this.temporadaId, required this.fechaHora, required this.estado, this.estadio, required this.equipoLocal, required this.equipoVisita, required this.marcador, this.ganadorId, required this.entradasProgramadas, required this.entradaActual, this.mitad = MitadEntrada.alta, this.situacion, this.hits = const ParLocalVisita(), this.errores = const ParLocalVisita(), required this.lineScore, this.version, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) this.motivo, @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) this.finalEspecial});
   factory _PartidoDetalle.fromJson(Map<String, dynamic> json) => _$PartidoDetalleFromJson(json);
 
 @override final  int id;
@@ -4824,6 +4844,8 @@ class _PartidoDetalle implements PartidoDetalle {
 @override@JsonKey() final  ParLocalVisita errores;
 @override final  LineScore lineScore;
 @override final  int? version;
+@override@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) final  MotivoDetencion? motivo;
+@override@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) final  FinalEspecial? finalEspecial;
 
 /// Create a copy of PartidoDetalle
 /// with the given fields replaced by the non-null parameter values.
@@ -4838,18 +4860,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartidoDetalle&&(identical(other.id, id) || other.id == id)&&(identical(other.temporadaId, temporadaId) || other.temporadaId == temporadaId)&&(identical(other.fechaHora, fechaHora) || other.fechaHora == fechaHora)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.estadio, estadio) || other.estadio == estadio)&&(identical(other.equipoLocal, equipoLocal) || other.equipoLocal == equipoLocal)&&(identical(other.equipoVisita, equipoVisita) || other.equipoVisita == equipoVisita)&&(identical(other.marcador, marcador) || other.marcador == marcador)&&(identical(other.ganadorId, ganadorId) || other.ganadorId == ganadorId)&&(identical(other.entradasProgramadas, entradasProgramadas) || other.entradasProgramadas == entradasProgramadas)&&(identical(other.entradaActual, entradaActual) || other.entradaActual == entradaActual)&&(identical(other.mitad, mitad) || other.mitad == mitad)&&(identical(other.situacion, situacion) || other.situacion == situacion)&&(identical(other.hits, hits) || other.hits == hits)&&(identical(other.errores, errores) || other.errores == errores)&&(identical(other.lineScore, lineScore) || other.lineScore == lineScore)&&(identical(other.version, version) || other.version == version));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartidoDetalle&&(identical(other.id, id) || other.id == id)&&(identical(other.temporadaId, temporadaId) || other.temporadaId == temporadaId)&&(identical(other.fechaHora, fechaHora) || other.fechaHora == fechaHora)&&(identical(other.estado, estado) || other.estado == estado)&&(identical(other.estadio, estadio) || other.estadio == estadio)&&(identical(other.equipoLocal, equipoLocal) || other.equipoLocal == equipoLocal)&&(identical(other.equipoVisita, equipoVisita) || other.equipoVisita == equipoVisita)&&(identical(other.marcador, marcador) || other.marcador == marcador)&&(identical(other.ganadorId, ganadorId) || other.ganadorId == ganadorId)&&(identical(other.entradasProgramadas, entradasProgramadas) || other.entradasProgramadas == entradasProgramadas)&&(identical(other.entradaActual, entradaActual) || other.entradaActual == entradaActual)&&(identical(other.mitad, mitad) || other.mitad == mitad)&&(identical(other.situacion, situacion) || other.situacion == situacion)&&(identical(other.hits, hits) || other.hits == hits)&&(identical(other.errores, errores) || other.errores == errores)&&(identical(other.lineScore, lineScore) || other.lineScore == lineScore)&&(identical(other.version, version) || other.version == version)&&(identical(other.motivo, motivo) || other.motivo == motivo)&&(identical(other.finalEspecial, finalEspecial) || other.finalEspecial == finalEspecial));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,temporadaId,fechaHora,estado,estadio,equipoLocal,equipoVisita,marcador,ganadorId,entradasProgramadas,entradaActual,mitad,situacion,hits,errores,lineScore,version);
+    return Object.hashAll([runtimeType,id,temporadaId,fechaHora,estado,estadio,equipoLocal,equipoVisita,marcador,ganadorId,entradasProgramadas,entradaActual,mitad,situacion,hits,errores,lineScore,version,motivo,finalEspecial]);
 }
 
 @override
 String toString() {
-    return 'PartidoDetalle(id: $id, temporadaId: $temporadaId, fechaHora: $fechaHora, estado: $estado, estadio: $estadio, equipoLocal: $equipoLocal, equipoVisita: $equipoVisita, marcador: $marcador, ganadorId: $ganadorId, entradasProgramadas: $entradasProgramadas, entradaActual: $entradaActual, mitad: $mitad, situacion: $situacion, hits: $hits, errores: $errores, lineScore: $lineScore, version: $version)';
+    return 'PartidoDetalle(id: $id, temporadaId: $temporadaId, fechaHora: $fechaHora, estado: $estado, estadio: $estadio, equipoLocal: $equipoLocal, equipoVisita: $equipoVisita, marcador: $marcador, ganadorId: $ganadorId, entradasProgramadas: $entradasProgramadas, entradaActual: $entradaActual, mitad: $mitad, situacion: $situacion, hits: $hits, errores: $errores, lineScore: $lineScore, version: $version, motivo: $motivo, finalEspecial: $finalEspecial)';
 }
 
 
@@ -4860,7 +4882,7 @@ abstract mixin class _$PartidoDetalleCopyWith<$Res> implements $PartidoDetalleCo
   factory _$PartidoDetalleCopyWith(_PartidoDetalle value, $Res Function(_PartidoDetalle) _then) = __$PartidoDetalleCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId, int entradasProgramadas, int entradaActual, MitadEntrada mitad, SituacionLiga? situacion, ParLocalVisita hits, ParLocalVisita errores, LineScore lineScore, int? version
+ int id, int temporadaId, DateTime fechaHora, EstadoPartidoLiga estado, EstadioRefLiga? estadio, EquipoRefLiga equipoLocal, EquipoRefLiga equipoVisita, ParLocalVisita marcador, int? ganadorId, int entradasProgramadas, int entradaActual, MitadEntrada mitad, SituacionLiga? situacion, ParLocalVisita hits, ParLocalVisita errores, LineScore lineScore, int? version,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,@JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial
 });
 
 
@@ -4877,7 +4899,7 @@ class __$PartidoDetalleCopyWithImpl<$Res>
 
 /// Create a copy of PartidoDetalle
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? entradasProgramadas = null,Object? entradaActual = null,Object? mitad = null,Object? situacion = freezed,Object? hits = null,Object? errores = null,Object? lineScore = null,Object? version = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? temporadaId = null,Object? fechaHora = null,Object? estado = null,Object? estadio = freezed,Object? equipoLocal = null,Object? equipoVisita = null,Object? marcador = null,Object? ganadorId = freezed,Object? entradasProgramadas = null,Object? entradaActual = null,Object? mitad = null,Object? situacion = freezed,Object? hits = null,Object? errores = null,Object? lineScore = null,Object? version = freezed,Object? motivo = freezed,Object? finalEspecial = freezed,}) {
   return _then(_PartidoDetalle(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,temporadaId: null == temporadaId ? _self.temporadaId : temporadaId // ignore: cast_nullable_to_non_nullable
@@ -4896,7 +4918,9 @@ as SituacionLiga?,hits: null == hits ? _self.hits : hits // ignore: cast_nullabl
 as ParLocalVisita,errores: null == errores ? _self.errores : errores // ignore: cast_nullable_to_non_nullable
 as ParLocalVisita,lineScore: null == lineScore ? _self.lineScore : lineScore // ignore: cast_nullable_to_non_nullable
 as LineScore,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,motivo: freezed == motivo ? _self.motivo : motivo // ignore: cast_nullable_to_non_nullable
+as MotivoDetencion?,finalEspecial: freezed == finalEspecial ? _self.finalEspecial : finalEspecial // ignore: cast_nullable_to_non_nullable
+as FinalEspecial?,
   ));
 }
 

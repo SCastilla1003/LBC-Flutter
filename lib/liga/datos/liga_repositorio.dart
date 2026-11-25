@@ -270,6 +270,7 @@ class DatosTemporada {
     this.estado = EstadoTemporadaLiga.borrador,
     this.fechaInicio,
     this.fechaFin,
+    this.basesMuerteSubita = const [2],
   });
 
   final String nombre;
@@ -277,6 +278,7 @@ class DatosTemporada {
   final EstadoTemporadaLiga estado;
   final DateTime? fechaInicio;
   final DateTime? fechaFin;
+  final List<int> basesMuerteSubita;
 
   Map<String, dynamic> json() => {
         'nombre': nombre,
@@ -288,6 +290,7 @@ class DatosTemporada {
         },
         'fechaInicio': fechaApi(fechaInicio),
         'fechaFin': fechaApi(fechaFin),
+        'basesMuerteSubita': [...basesMuerteSubita]..sort(),
       };
 }
 

@@ -252,6 +252,25 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  testWidgets('walk off: el aficionado ve el letrero; detenido: ve el motivo', (t) async {
+    final fin = _estado(estado: 'FINISHED');
+    (fin['partido'] as Map)
+      ..['marcador'] = {'local': 5, 'visita': 1}
+      ..['finalEspecial'] = 'WALK_OFF_GRAND_SLAM';
+    await _pintar(t, fin, alto: 1800);
+    expect(find.text('WALK OFF GRAND SLAM'), findsOneWidget);
+    expect(find.text('¡Pelícanos de Bocagrande lo deja en el terreno!'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+
+    final detenido = _estado(estado: 'SUSPENDED');
+    (detenido['partido'] as Map)['motivo'] = 'POSPUESTO';
+    await _pintar(t, detenido, alto: 1800);
+    expect(find.text('POSPUESTO'), findsWidgets);
+    expect(find.text('Partido pospuesto'), findsOneWidget);
+    expect(find.textContaining('El administrador decidirá'), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('programado: no pide el estado del juego ni muestra el duelo', (t) async {
     final api = await _pintar(t, _estado(estado: 'SCHEDULED'));
     expect(api.pedidosJuego, 0);

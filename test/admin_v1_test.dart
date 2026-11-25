@@ -166,6 +166,7 @@ void main() {
         'estado': 'DRAFT',
         'fechaInicio': null,
         'fechaFin': null,
+        'basesMuerteSubita': [2],
       });
     });
 

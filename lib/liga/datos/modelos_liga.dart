@@ -27,6 +27,36 @@ enum EstadoPartidoLiga {
   suspendido,
 }
 
+/// Por qué se detuvo un partido. El administrador decide luego si continúa o se deja así.
+enum MotivoDetencion {
+  @JsonValue('RETRASADO')
+  retrasado('RETRASADO', 'Retrasado', 'Se reanuda más tarde el mismo día.'),
+  @JsonValue('POSPUESTO')
+  pospuesto('POSPUESTO', 'Pospuesto', 'Se terminará otro día.'),
+  @JsonValue('CANCELADO')
+  cancelado('CANCELADO', 'Cancelado', 'No se va a terminar.');
+
+  const MotivoDetencion(this.api, this.etiqueta, this.descripcion);
+
+  final String api;
+  final String etiqueta;
+  final String descripcion;
+}
+
+/// Cómo terminó un partido que el local ganó en su último turno.
+enum FinalEspecial {
+  @JsonValue('WALK_OFF')
+  walkOff('WALK OFF'),
+  @JsonValue('WALK_OFF_HOME_RUN')
+  walkOffHomeRun('WALK OFF HOME RUN'),
+  @JsonValue('WALK_OFF_GRAND_SLAM')
+  walkOffGrandSlam('WALK OFF GRAND SLAM');
+
+  const FinalEspecial(this.texto);
+
+  final String texto;
+}
+
 enum MitadEntrada {
   @JsonValue('TOP')
   alta,
@@ -59,6 +89,9 @@ abstract class TemporadaLiga with _$TemporadaLiga {
     @Default(EstadoTemporadaLiga.borrador) EstadoTemporadaLiga estado,
     DateTime? fechaInicio,
     DateTime? fechaFin,
+
+    /// Bases (1..3) con corredor automático en cada entrada extra (muerte súbita).
+    @Default(<int>[2]) List<int> basesMuerteSubita,
   }) = _TemporadaLiga;
 
   factory TemporadaLiga.fromJson(Map<String, dynamic> json) => _$TemporadaLigaFromJson(json);
@@ -205,6 +238,8 @@ abstract class PartidoResumen with _$PartidoResumen {
     required EquipoRefLiga equipoVisita,
     required ParLocalVisita marcador,
     int? ganadorId,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial,
   }) = _PartidoResumen;
 
   factory PartidoResumen.fromJson(Map<String, dynamic> json) => _$PartidoResumenFromJson(json);
@@ -253,6 +288,8 @@ abstract class PartidoDetalle with _$PartidoDetalle {
     @Default(ParLocalVisita()) ParLocalVisita errores,
     required LineScore lineScore,
     int? version,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) MotivoDetencion? motivo,
+    @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue) FinalEspecial? finalEspecial,
   }) = _PartidoDetalle;
 
   factory PartidoDetalle.fromJson(Map<String, dynamic> json) => _$PartidoDetalleFromJson(json);

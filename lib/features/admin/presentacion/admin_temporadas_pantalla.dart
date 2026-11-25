@@ -62,6 +62,7 @@ class _DialogoTemporadaState extends ConsumerState<_DialogoTemporada> {
   late var _estado = widget.temporada?.estado ?? EstadoTemporadaLiga.borrador;
   late DateTime? _inicio = widget.temporada?.fechaInicio;
   late DateTime? _fin = widget.temporada?.fechaFin;
+  late final Set<int> _muerteSubita = {...widget.temporada?.basesMuerteSubita ?? const [2]};
 
   @override
   void dispose() {
@@ -84,6 +85,7 @@ class _DialogoTemporadaState extends ConsumerState<_DialogoTemporada> {
           estado: _estado,
           fechaInicio: _inicio,
           fechaFin: _fin,
+          basesMuerteSubita: _muerteSubita.toList()..sort(),
         );
         return t == null ? repo.crearTemporada(datos) : repo.actualizarTemporada(t.id, datos);
       },
@@ -104,7 +106,50 @@ class _DialogoTemporadaState extends ConsumerState<_DialogoTemporada> {
         ),
         CampoFecha(etiqueta: 'Inicio', inicial: _inicio, alCambiar: (v) => _inicio = v),
         CampoFecha(etiqueta: 'Fin', inicial: _fin, alCambiar: (v) => _fin = v),
+        _CampoMuerteSubita(
+          bases: _muerteSubita,
+          alCambiar: (base, puesta) => setState(() => puesta ? _muerteSubita.add(base) : _muerteSubita.remove(base)),
+        ),
       ],
+    );
+  }
+}
+
+/// Muerte súbita: en qué bases salen corredores automáticos al empezar cada entrada extra.
+class _CampoMuerteSubita extends StatelessWidget {
+  const _CampoMuerteSubita({required this.bases, required this.alCambiar});
+
+  final Set<int> bases;
+  final void Function(int base, bool puesta) alCambiar;
+
+  static const _nombres = {1: '1ª base', 2: '2ª base', 3: '3ª base'};
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final n = bases.length;
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Muerte súbita (entradas extra)',
+        helperMaxLines: 4,
+        helperText: 'Si el partido sigue empatado, cada entrada extra empieza con corredores en estas bases. '
+            'En la más adelantada va el último que bateó en la entrada anterior, y detrás el que bateó antes que él.',
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Wrap(spacing: 8, children: [
+          for (final b in [1, 2, 3])
+            FilterChip(
+              label: Text(_nombres[b]!),
+              selected: bases.contains(b),
+              onSelected: (v) => alCambiar(b, v),
+            ),
+        ]),
+        const SizedBox(height: 6),
+        Text(
+          n == 0 ? 'Sin corredores automáticos.' : '$n ${n == 1 ? 'corredor' : 'corredores'} por entrada extra.',
+          style: tema.textTheme.bodySmall,
+        ),
+      ]),
     );
   }
 }

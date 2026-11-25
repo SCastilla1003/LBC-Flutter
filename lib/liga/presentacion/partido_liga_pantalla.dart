@@ -168,7 +168,7 @@ class _Marcador extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ChipEstadoPartido(estado: p.estado),
+                    ChipEstadoPartido(estado: p.estado, motivo: p.motivo),
                     Flexible(
                       child: Text(
                         DateFormat("EEE d MMM · h:mm a", 'es').format(p.fechaHora),
@@ -230,7 +230,7 @@ class _Marcador extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             p.estado == EstadoPartidoLiga.suspendido
-                                ? 'Partido suspendido'
+                                ? 'Partido ${p.motivo?.etiqueta.toLowerCase() ?? 'suspendido'}'
                                 : '${s?.outs ?? 0} ${(s?.outs ?? 0) == 1 ? 'out' : 'outs'}',
                             style: tema.textTheme.labelMedium?.copyWith(color: tinta.withValues(alpha: 0.75)),
                           ),
@@ -240,6 +240,18 @@ class _Marcador extends StatelessWidget {
                       const SizedBox(width: 12),
                       ConteoJuego(bolas: s?.bolas ?? 0, strikes: s?.strikes ?? 0, outs: s?.outs ?? 0),
                     ]),
+                  ),
+                ],
+                if (p.finalEspecial != null) ...[
+                  const SizedBox(height: 16),
+                  LetreroWalkOff(finalEspecial: p.finalEspecial!, equipo: p.equipoLocal.nombre),
+                ],
+                if (p.estado == EstadoPartidoLiga.suspendido && p.motivo != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'El administrador decidirá si el partido continúa o se deja así.',
+                    textAlign: TextAlign.center,
+                    style: tema.textTheme.bodySmall?.copyWith(color: tinta.withValues(alpha: 0.8)),
                   ),
                 ],
                 if (p.estadio != null) ...[

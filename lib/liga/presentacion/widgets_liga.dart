@@ -73,11 +73,13 @@ class EscudoLiga extends StatelessWidget {
   }
 }
 
-/// Píldora con el estado del partido. EN VIVO va en rojo sólido con un punto.
+/// Píldora con el estado del partido. EN VIVO va en rojo sólido con un punto. Si se detuvo,
+/// dice por qué (retrasado, pospuesto o cancelado).
 class ChipEstadoPartido extends StatelessWidget {
-  const ChipEstadoPartido({super.key, required this.estado});
+  const ChipEstadoPartido({super.key, required this.estado, this.motivo});
 
   final EstadoPartidoLiga estado;
+  final MotivoDetencion? motivo;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +94,7 @@ class ChipEstadoPartido extends StatelessWidget {
         true,
       ),
       EstadoPartidoLiga.finalizado => (
-        'FINAL',
+        motivo == null ? 'FINAL' : 'FINAL · ${motivo!.etiqueta.toUpperCase()}',
         ColoresMarca.verdeNoche,
         ColoresMarca.tintaBarra,
         null,
@@ -106,7 +108,7 @@ class ChipEstadoPartido extends StatelessWidget {
         false,
       ),
       EstadoPartidoLiga.suspendido => (
-        'SUSPENDIDO',
+        motivo?.etiqueta.toUpperCase() ?? 'SUSPENDIDO',
         esquema.surfaceContainerHigh,
         esquema.onSurfaceVariant,
         esquema.outlineVariant,

@@ -351,7 +351,13 @@ class JuegoRepositorio {
 
   Future<EstadoJuego> finalizar(int partido) => _accion(partido, 'finalizar');
 
-  Future<EstadoJuego> suspender(int partido) => _accion(partido, 'suspender');
+  /// Detiene el partido: retrasado, pospuesto o cancelado (null = suspensión sin motivo).
+  Future<EstadoJuego> suspender(int partido, {MotivoDetencion? motivo}) =>
+      _accion(partido, 'suspender', {'motivo': motivo?.api});
+
+  /// Solo administrador: continuar un partido detenido o dejarlo así.
+  Future<EstadoJuego> decidir(int partido, {required bool continuar}) =>
+      _accion(partido, 'decidir', {'continuar': continuar});
 
   Future<EstadoJuego> reanudar(int partido) => _accion(partido, 'reanudar');
 }

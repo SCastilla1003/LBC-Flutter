@@ -136,3 +136,59 @@ class ConteoJuego extends StatelessWidget {
     );
   }
 }
+
+/// Letrero del walk off con el que terminó el partido ("WALK OFF GRAND SLAM"...).
+class LetreroWalkOff extends StatelessWidget {
+  const LetreroWalkOff({super.key, required this.finalEspecial, this.equipo});
+
+  final FinalEspecial finalEspecial;
+
+  /// Quién lo ganó (el local).
+  final String? equipo;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.6, end: 1),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.elasticOut,
+      builder: (_, escala, hijo) => Transform.scale(scale: escala, child: hijo),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [ColoresMarca.amarillo, Color(0xFFFFA000)]),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: ColoresMarca.amarillo.withValues(alpha: 0.45), blurRadius: 16)],
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Icon(Icons.celebration_rounded, color: ColoresMarca.tintaSobreAmarillo, size: 22),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                finalEspecial.texto,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: ColoresMarca.tintaSobreAmarillo,
+                  fontFamily: FuentesLbc.titular,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  letterSpacing: 1.5,
+                  height: 1.05,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.celebration_rounded, color: ColoresMarca.tintaSobreAmarillo, size: 22),
+          ]),
+          if (equipo != null)
+            Text(
+              '¡$equipo lo deja en el terreno!',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: ColoresMarca.tintaSobreAmarillo, fontWeight: FontWeight.w700, fontSize: 12),
+            ),
+        ]),
+      ),
+    );
+  }
+}

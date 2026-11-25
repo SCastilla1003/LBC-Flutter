@@ -20,6 +20,11 @@ _TemporadaLiga _$TemporadaLigaFromJson(Map<String, dynamic> json) =>
       fechaFin: json['fechaFin'] == null
           ? null
           : DateTime.parse(json['fechaFin'] as String),
+      basesMuerteSubita:
+          (json['basesMuerteSubita'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[2],
     );
 
 Map<String, dynamic> _$TemporadaLigaToJson(_TemporadaLiga instance) =>
@@ -30,6 +35,7 @@ Map<String, dynamic> _$TemporadaLigaToJson(_TemporadaLiga instance) =>
       'estado': _$EstadoTemporadaLigaEnumMap[instance.estado]!,
       'fechaInicio': instance.fechaInicio?.toIso8601String(),
       'fechaFin': instance.fechaFin?.toIso8601String(),
+      'basesMuerteSubita': instance.basesMuerteSubita,
     };
 
 const _$EstadoTemporadaLigaEnumMap = {
@@ -252,6 +258,16 @@ _PartidoResumen _$PartidoResumenFromJson(Map<String, dynamic> json) =>
         json['marcador'] as Map<String, dynamic>,
       ),
       ganadorId: (json['ganadorId'] as num?)?.toInt(),
+      motivo: $enumDecodeNullable(
+        _$MotivoDetencionEnumMap,
+        json['motivo'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
+      finalEspecial: $enumDecodeNullable(
+        _$FinalEspecialEnumMap,
+        json['finalEspecial'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
     );
 
 Map<String, dynamic> _$PartidoResumenToJson(_PartidoResumen instance) =>
@@ -265,6 +281,8 @@ Map<String, dynamic> _$PartidoResumenToJson(_PartidoResumen instance) =>
       'equipoVisita': instance.equipoVisita.toJson(),
       'marcador': instance.marcador.toJson(),
       'ganadorId': instance.ganadorId,
+      'motivo': _$MotivoDetencionEnumMap[instance.motivo],
+      'finalEspecial': _$FinalEspecialEnumMap[instance.finalEspecial],
     };
 
 const _$EstadoPartidoLigaEnumMap = {
@@ -273,6 +291,18 @@ const _$EstadoPartidoLigaEnumMap = {
   EstadoPartidoLiga.enJuego: 'LIVE',
   EstadoPartidoLiga.finalizado: 'FINISHED',
   EstadoPartidoLiga.suspendido: 'SUSPENDED',
+};
+
+const _$MotivoDetencionEnumMap = {
+  MotivoDetencion.retrasado: 'RETRASADO',
+  MotivoDetencion.pospuesto: 'POSPUESTO',
+  MotivoDetencion.cancelado: 'CANCELADO',
+};
+
+const _$FinalEspecialEnumMap = {
+  FinalEspecial.walkOff: 'WALK_OFF',
+  FinalEspecial.walkOffHomeRun: 'WALK_OFF_HOME_RUN',
+  FinalEspecial.walkOffGrandSlam: 'WALK_OFF_GRAND_SLAM',
 };
 
 _CorredoresLiga _$CorredoresLigaFromJson(Map<String, dynamic> json) =>
@@ -356,6 +386,16 @@ _PartidoDetalle _$PartidoDetalleFromJson(Map<String, dynamic> json) =>
           : ParLocalVisita.fromJson(json['errores'] as Map<String, dynamic>),
       lineScore: LineScore.fromJson(json['lineScore'] as Map<String, dynamic>),
       version: (json['version'] as num?)?.toInt(),
+      motivo: $enumDecodeNullable(
+        _$MotivoDetencionEnumMap,
+        json['motivo'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
+      finalEspecial: $enumDecodeNullable(
+        _$FinalEspecialEnumMap,
+        json['finalEspecial'],
+        unknownValue: JsonKey.nullForUndefinedEnumValue,
+      ),
     );
 
 Map<String, dynamic> _$PartidoDetalleToJson(_PartidoDetalle instance) =>
@@ -377,6 +417,8 @@ Map<String, dynamic> _$PartidoDetalleToJson(_PartidoDetalle instance) =>
       'errores': instance.errores.toJson(),
       'lineScore': instance.lineScore.toJson(),
       'version': instance.version,
+      'motivo': _$MotivoDetencionEnumMap[instance.motivo],
+      'finalEspecial': _$FinalEspecialEnumMap[instance.finalEspecial],
     };
 
 const _$MitadEntradaEnumMap = {
