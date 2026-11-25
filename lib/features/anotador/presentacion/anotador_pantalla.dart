@@ -13,6 +13,7 @@ import '../../../liga/datos/juego_repositorio.dart';
 import '../../../liga/datos/liga_repositorio.dart';
 import '../../../liga/datos/modelos_liga.dart';
 import '../../../liga/presentacion/campo_en_vivo.dart';
+import 'diamante_jugada.dart';
 import '../../../liga/presentacion/widgets_juego.dart';
 import '../../admin/presentacion/admin_comun.dart';
 
@@ -662,6 +663,9 @@ class HojaCorredores extends StatefulWidget {
 }
 
 class _HojaCorredoresState extends State<HojaCorredores> {
+  /// Vista elegida (lista o diamante); se recuerda mientras la app esté abierta.
+  static bool _diamante = false;
+
   /// desde → hasta (null = out; igual a desde = se queda).
   late final Map<int, int?> _destino = _inicial();
   late int _errores = widget.resultado == ResultadoJugada.error ? 1 : 0;
@@ -686,11 +690,29 @@ class _HojaCorredoresState extends State<HojaCorredores> {
     return n.isEmpty ? (desde == 0 ? 'Bateador' : 'Corredor') : n;
   }
 
+  /// Las mismas reglas que los botones: nadie retrocede y el bateador llega por lo menos a la
+  /// base que exige la jugada (y no puede ser out si llega a salvo).
+  bool _permitido(int desde, int? hasta) {
+    final r = widget.resultado;
+    if (desde == 0) return hasta == null ? !r.bateadorASalvo : hasta >= r.baseMinima;
+    return hasta == null || hasta >= desde;
+  }
+
+  /// Bases donde quedarían dos corredores.
+  List<int> get _repetidas {
+    final cuenta = <int, int>{};
+    for (final h in _destino.values) {
+      if (h != null && h >= 1 && h <= 3) cuenta[h] = (cuenta[h] ?? 0) + 1;
+    }
+    return [for (final MapEntry(key: b, value: n) in cuenta.entries) if (n > 1) b]..sort();
+  }
+
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final r = widget.resultado;
     final filas = _destino.keys.toList()..sort((a, b) => b.compareTo(a));
+    final repetidas = _repetidas;
 
     Widget fila(int desde) {
       final opciones = <(String, int?)>[
@@ -711,10 +733,7 @@ class _HojaCorredoresState extends State<HojaCorredores> {
               ChoiceChip(
                 label: Text(texto),
                 selected: _destino[desde] == hasta,
-                onSelected: desde == 0 &&
-                        ((hasta == null && r.bateadorASalvo) || (hasta != null && hasta < r.baseMinima))
-                    ? null
-                    : (_) => setState(() => _destino[desde] = hasta),
+                onSelected: _permitido(desde, hasta) ? (_) => setState(() => _destino[desde] = hasta) : null,
               ),
           ]),
         ]),
@@ -725,10 +744,45 @@ class _HojaCorredoresState extends State<HojaCorredores> {
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(20, 4, 20, 16 + MediaQuery.viewInsetsOf(context).bottom),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(r.etiqueta, style: tema.textTheme.titleLarge),
-          Text('¿A dónde llega cada uno?', style: tema.textTheme.bodySmall),
+          Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(r.etiqueta, style: tema.textTheme.titleLarge),
+                Text(
+                  _diamante
+                      ? 'Arrastra cada cara a donde llegó, o tócala y luego toca la base.'
+                      : '¿A dónde llega cada uno?',
+                  style: tema.textTheme.bodySmall,
+                ),
+              ]),
+            ),
+            IconButton.filledTonal(
+              tooltip: _diamante ? 'Ver como lista' : 'Ver en el diamante',
+              onPressed: () => setState(() => _diamante = !_diamante),
+              icon: Icon(_diamante ? Icons.view_list_rounded : Icons.sports_baseball_rounded),
+            ),
+          ]),
           const SizedBox(height: 14),
-          for (final d in filas) fila(d),
+          if (_diamante)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: DiamanteJugada(
+                estado: widget.estado,
+                destino: _destino,
+                permitido: _permitido,
+                alMover: (desde, hasta) => setState(() => _destino[desde] = hasta),
+              ),
+            )
+          else
+            for (final d in filas) fila(d),
+          if (repetidas.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Dos corredores no pueden quedar en ${repetidas.map(MitadNombre.base).join(' ni en ')}.',
+                style: tema.textTheme.bodyMedium?.copyWith(color: tema.colorScheme.error, fontWeight: FontWeight.w600),
+              ),
+            ),
           if (!r.deCorredores)
             Row(children: [
               Expanded(child: Text('Errores de la defensa', style: tema.textTheme.titleSmall)),
@@ -752,7 +806,7 @@ class _HojaCorredoresState extends State<HojaCorredores> {
             const SizedBox(width: 10),
             Expanded(
               child: FilledButton(
-                onPressed: () => Navigator.pop(context, (
+                onPressed: repetidas.isNotEmpty ? null : () => Navigator.pop(context, (
                   movimientos: [
                     for (final MapEntry(key: desde, value: hasta) in _destino.entries)
                       if (hasta != desde) (desde: desde, hasta: hasta),

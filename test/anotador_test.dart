@@ -12,6 +12,7 @@ import 'package:lbc_app/core/router/router.dart';
 import 'package:lbc_app/core/sesion/sesion.dart';
 import 'package:lbc_app/core/tema/tema_lbc.dart';
 import 'package:lbc_app/features/anotador/presentacion/anotador_pantalla.dart';
+import 'package:lbc_app/features/anotador/presentacion/diamante_jugada.dart';
 import 'package:lbc_app/features/anotador/presentacion/partido_control_pantalla.dart';
 import 'package:lbc_app/liga/datos/juego_repositorio.dart';
 
@@ -321,5 +322,67 @@ void main() {
         (_) => _estado(estado: 'FINISHED', carrerasLocal: 5, finalEspecial: 'WALK_OFF_GRAND_SLAM'));
     expect(find.text('WALK OFF GRAND SLAM'), findsOneWidget);
     expect(t.takeException(), isNull);
+  });
+
+  Future<void> abrirSencillo(WidgetTester t) async {
+    await t.scrollUntilVisible(find.text('Sencillo'), 200);
+    await t.ensureVisible(find.text('Sencillo'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Sencillo'));
+    await t.pumpAndSettle();
+  }
+
+  testWidgets('dos corredores en la misma base: avisa y no deja anotar', (t) async {
+    await _pintar(t, const AnotadorPantalla(idPartido: 9), (_) => _estado(corredorEnPrimera: true));
+    await abrirSencillo(t);
+    await t.tap(find.widgetWithText(ChoiceChip, 'Se queda'));
+    await t.pump();
+    expect(find.text('Dos corredores no pueden quedar en primera.'), findsOneWidget);
+    expect(t.widget<FilledButton>(find.widgetWithText(FilledButton, 'Anotar')).onPressed, isNull);
+  });
+
+  testWidgets('jugada en el diamante: arrastrar la cara a donde llegó o tocarla y tocar la base', (t) async {
+    t.view.physicalSize = const Size(375, 900);
+    final s = await _pintar(t, const AnotadorPantalla(idPartido: 9), (_) => _estado(corredorEnPrimera: true));
+    await abrirSencillo(t);
+    await t.tap(find.byTooltip('Ver en el diamante'));
+    await t.pumpAndSettle();
+    expect(find.byType(DiamanteJugada), findsOneWidget);
+    expect(t.takeException(), isNull);
+
+    // El de primera anota: se arrastra su cara a home.
+    final cara = t.getCenter(find.bySemanticsLabel(RegExp('^Jugador 101 · en 1ª')));
+    final anota = t.getCenter(find.bySemanticsLabel('Anota'));
+    final gesto = await t.startGesture(cara);
+    for (var i = 1; i <= 10; i++) {
+      await gesto.moveTo(Offset.lerp(cara, anota, i / 10)!);
+      await t.pump(const Duration(milliseconds: 16));
+    }
+    await gesto.up();
+    await t.pumpAndSettle();
+
+    // El bateador llega a segunda: se toca su cara y luego la base.
+    await t.tap(find.bySemanticsLabel(RegExp('^Jugador 102 · bateador')));
+    await t.pump();
+    await t.tap(find.bySemanticsLabel('2ª base'));
+    await t.pumpAndSettle();
+
+    final d = t.widget<DiamanteJugada>(find.byType(DiamanteJugada));
+    expect(d.destino, {0: 2, 1: 4});
+    await t.ensureVisible(find.text('Anotar'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Anotar'));
+    await t.pumpAndSettle();
+    final (_, ruta, cuerpo) = s.peticiones.last;
+    expect(ruta, '/partidos/9/juego/jugada');
+    expect(cuerpo!['movimientos'], containsAll([
+      {'desde': 1, 'hasta': 4},
+      {'desde': 0, 'hasta': 2},
+    ]));
+
+    // Vuelve a la lista para las demás pruebas.
+    await abrirSencillo(t);
+    await t.tap(find.byTooltip('Ver como lista'));
+    await t.pumpAndSettle();
   });
 }
